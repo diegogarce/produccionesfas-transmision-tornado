@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrador - StreamPlatform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Mobile Menu Button -->
+        <button
+            class="md:hidden fixed top-4 left-4 z-50 bg-gray-800 p-2 rounded-lg text-white hover:bg-gray-700 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                </path>
+            </svg>
+        </button>
+
+        <!-- Sidebar - Hidden on mobile, visible on md+ -->
+        <aside class="hidden md:block md:w-64 bg-gray-800 flex-shrink-0">
+            <div class="p-4 border-b border-gray-700">
+                <h1 class="text-2xl font-bold text-white">StreamPlatform</h1>
+                <p class="text-sm text-gray-400">Panel Admin</p>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="admin-dashboard.html"
+                            class="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
+                            </svg>
+                            <span class="font-medium">Eventos</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin-create-event.html"
+                            class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span class="font-medium">Crear Evento</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin-reports.html"
+                            class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                </path>
+                            </svg>
+                            <span class="font-medium">Reportes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#"
+                            class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="font-medium">Configuración</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#"
+                            class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                </path>
+                            </svg>
+                            <span class="font-medium">Moderación</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700 hidden md:block">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="font-bold text-white">AD</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-white">Admin</p>
+                        <p class="text-xs text-gray-400">admin@ejemplo.com</p>
+                    </div>
+                </div>
+                <a href="admin-login.html"
+                    class="mt-3 block text-center text-sm text-gray-400 hover:text-white transition">
+                    Cerrar Sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content - Full width on mobile, adjusted on md+ -->
+        <main class="flex-1 overflow-y-auto bg-gray-900 w-full">
+            <!-- Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-4 md:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="ml-10 md:ml-0">
+                        <h2 class="text-xl md:text-2xl font-bold text-white">Gestión de Eventos</h2>
+                        <p class="text-gray-400 text-sm md:text-base">Administra tus transmisiones en vivo</p>
+                    </div>
+                    <a href="admin-create-event.html"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2 text-sm md:text-base">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                        <span class="hidden sm:inline">Nuevo Evento</span>
+                        <span class="sm:hidden">Nuevo</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="p-4 md:p-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Eventos</p>
+                                <p class="text-3xl font-bold text-white mt-1">12</p>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-blue-600 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">En Vivo</p>
+                                <p class="text-3xl font-bold text-white mt-1">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-600 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Participantes</p>
+                                <p class="text-3xl font-bold text-white mt-1">2,847</p>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-emerald-600 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Próximos</p>
+                                <p class="text-3xl font-bold text-white mt-1">5</p>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-purple-600 bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events List -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="px-6 py-4 border-b border-gray-700">
+                        <h3 class="text-lg font-semibold text-white">Eventos Recientes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left border-b border-gray-700">
+                                    <th class="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Evento</th>
+                                    <th class="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Estado</th>
+                                    <th class="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Fecha</th>
+                                    <th class="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Participantes</th>
+                                    <th class="px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                <tr class="hover:bg-gray-750 transition">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex-shrink-0">
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-white">Conferencia de Tecnología 2024</p>
+                                                <p class="text-sm text-gray-400">Tech | 4 horas</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-3 py-1 bg-red-600 bg-opacity-20 text-red-400 rounded-full text-sm font-medium">
+                                            En Vivo
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-300">8 Dic, 2024</td>
+                                    <td class="px-6 py-4 text-gray-300">1,234</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <a href="live-stream.html" class="text-blue-400 hover:text-blue-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="admin-create-event.html" class="text-gray-400 hover:text-gray-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="text-gray-400 hover:text-red-400">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-750 transition">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded flex-shrink-0">
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-white">Workshop de Marketing Digital</p>
+                                                <p class="text-sm text-gray-400">Marketing | 3 horas</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-3 py-1 bg-blue-600 bg-opacity-20 text-blue-400 rounded-full text-sm font-medium">
+                                            Próximamente
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-300">15 Dic, 2024</td>
+                                    <td class="px-6 py-4 text-gray-300">532</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <a href="event-landing.html" class="text-blue-400 hover:text-blue-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="admin-create-event.html" class="text-gray-400 hover:text-gray-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="text-gray-400 hover:text-red-400">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-750 transition">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded flex-shrink-0">
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-white">Webinar de Liderazgo</p>
+                                                <p class="text-sm text-gray-400">Negocios | 2 horas</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-3 py-1 bg-blue-600 bg-opacity-20 text-blue-400 rounded-full text-sm font-medium">
+                                            Próximamente
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-300">20 Dic, 2024</td>
+                                    <td class="px-6 py-4 text-gray-300">289</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2">
+                                            <a href="event-landing.html" class="text-blue-400 hover:text-blue-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="admin-create-event.html" class="text-gray-400 hover:text-gray-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="text-gray-400 hover:text-red-400">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

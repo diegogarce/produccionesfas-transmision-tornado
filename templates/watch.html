@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream: {{ event['title'] }} · Producciones Fast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            950: '#050511', // Deepest background
+                            900: '#0a0b16', // Surface
+                            800: '#151725', // Lighter Surface
+                            700: '#1f2236', // Borders
+                        },
+                        brand: {
+                            blue: '#4f46e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050511;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass {
+            background: rgba(10, 11, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tab-active {
+            color: white;
+            border-bottom: 2px solid #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+        }
+    </style>
+    {% include "includes/toast.html" %}
+</head>
+
+<body class="bg-[#050511] text-slate-300 min-h-screen overflow-hidden">
+    <div class="h-screen flex flex-col">
+        <!-- Top Navigation Bar (Matching Identity) -->
+        <header class="glass h-16 flex items-center justify-between px-6 z-50">
+            <!-- Left Side: Logo | Platform Name | Status -->
+            <div class="flex items-center h-full">
+                <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
+                    <img src="{{ event['logo_url'] }}" alt="Producciones Fast" class="h-6 w-auto">
+                </a>
+
+                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+
+                <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Live
+                    Platform</span>
+
+                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold tracking-widest text-red-500 uppercase">En Vivo</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <!-- Viewer Count Pill -->
+                <div
+                    class="hidden md:flex bg-[#0f172a] border border-white/10 rounded-full px-4 py-1.5 items-center gap-2 text-xs font-medium text-slate-400">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                        </path>
+                    </svg>
+                    <span id="viewers-count-header">Calculating...</span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-medium text-slate-400 hidden lg:block">{{ user_name }}</span>
+                    <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <!-- Video Stage (Left) -->
+            <div class="flex-1 flex flex-col bg-black relative">
+                <!-- Video Container -->
+                <div class="flex-1 flex items-center justify-center relative group">
+                    <!-- Official Video Player -->
+                    <video id="video-player" class="w-full h-full object-contain bg-black shadow-2xl" autoplay muted
+                        playsinline loop>
+                        <source src="{{ event['video_url'] }}" type="video/mp4">
+                        Tu navegador no soporta el reproductor de video.
+                    </video>
+
+                    <!-- Overlay Controls (Bottom) -->
+                    <div
+                        class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-lg text-white">{{ event['title'] }}</h3>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-black uppercase">Live</span>
+                                <span id="stream-time"
+                                    class="text-xs font-mono opacity-60 text-slate-300">01:24:05</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Bar Mobile -->
+                <div class="lg:hidden p-4 border-t border-white/5 flex items-center justify-between glass">
+                    <span class="text-sm font-bold tracking-tight text-white">{{ event['title'] }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span id="viewers-count-mobile" class="text-xs opacity-60 text-slate-300">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interaction Siderbar (Right) -->
+            <div class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl">
+                <!-- Tab Switching -->
+                <div class="flex h-14 border-b border-white/5">
+                    <button data-tab="chat"
+                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 transition-all tab-btn tab-active">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9l-1.93 1.93A2 2 0 016 18.6V7a2 2 0 012-2h6a2 2 0 012 2v1z">
+                            </path>
+                        </svg>
+                        Comunidad
+                    </button>
+                    <button data-tab="qa"
+                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 transition-all tab-btn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        Preguntas
+                    </button>
+                </div>
+
+                <!-- Chat Content -->
+                <div id="chat-tab" class="flex-1 flex flex-col overflow-hidden">
+                    <div id="chat-panel" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
+                        {% for chat in chats %}
+                        <div class="flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300">
+                            <div
+                                class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400/80 flex items-center justify-center text-[9px] font-black border border-indigo-500/10 flex-shrink-0 mt-0.5">
+                                {{ chat['user_name'][:2].upper() }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{
+                                        chat['user_name'] }}</span>
+                                </div>
+                                <div
+                                    class="bg-white/[0.03] px-3 py-2 rounded-xl rounded-tl-none border border-white/5 inline-block max-w-full">
+                                    <p class="text-sm text-slate-300 leading-snug">{{ chat['message'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% end %}
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
+                        <form id="chat-form" class="relative group">
+                            <input id="chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all pr-12 text-white placeholder-slate-500">
+                            <button type="submit"
+                                class="absolute right-1.5 top-1.5 p-1.5 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Q&A Content -->
+                <div id="qa-panel" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <div id="qa-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
+                        <div class="px-2 py-1 mb-1">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 opacity-60 italic">
+                                Preguntas Aprobadas</p>
+                        </div>
+                        {% for question in approved_questions %}
+                        <div
+                            class="p-3 bg-white/[0.03] border border-white/5 rounded-xl hover:border-emerald-500/20 transition-all group animate-in zoom-in-95 duration-300">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <div class="flex items-center gap-1.5">
+                                    <span
+                                        class="w-1 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                    <span
+                                        class="text-[9px] font-black uppercase tracking-tighter text-emerald-500/80">Respondida</span>
+                                </div>
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">{{ question['user_name']
+                                    }}</span>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-snug">{{ question['question_text'] }}</p>
+                        </div>
+                        {% end %}
+                    </div>
+
+                    <!-- Q&A Input -->
+                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
+                        <form id="question-form" class="flex flex-col gap-2">
+                            <div class="relative">
+                                <textarea id="question-input" placeholder="Tu pregunta para el ponente..." rows="2"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all resize-none custom-scroll text-white placeholder-slate-500"></textarea>
+                                <div
+                                    class="absolute bottom-2 right-2 flex items-center gap-1.5 pointer-events-none opacity-40">
+                                    <span class="text-[8px] font-bold uppercase tracking-tighter text-slate-400">Enter
+                                        para
+                                        enviar</span>
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-white">
+                                Enviar Pregunta
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUserId = "{{ user_id }}";
+        const ws = new WebSocket("{% raw ws_url %}");
+        const chatPanel = document.getElementById("chat-panel");
+        const qaList = document.getElementById("qa-list");
+        const chatForm = document.getElementById("chat-form");
+        const chatInput = document.getElementById("chat-input");
+        const questionForm = document.getElementById("question-form");
+        const questionInput = document.getElementById("question-input");
+        const viewersHeader = document.getElementById("viewers-count-header");
+        const viewersMobile = document.getElementById("viewers-count-mobile");
+
+        // Tabs
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("tab-active"));
+                btn.classList.add("tab-active");
+
+                const tab = btn.dataset.tab;
+                document.getElementById("chat-tab").classList.toggle("hidden", tab !== "chat");
+                document.getElementById("qa-panel").classList.toggle("hidden", tab !== "qa");
+            });
+        });
+
+        chatPanel.scrollTop = chatPanel.scrollHeight;
+
+        function appendChat(payload) {
+            const div = document.createElement("div");
+            div.className = "flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300";
+            div.innerHTML = `
+                <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400/80 flex items-center justify-center text-[9px] font-black border border-indigo-500/10 flex-shrink-0 mt-0.5">
+                    ${payload.user.slice(0, 2).toUpperCase()}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">${payload.user}</span>
+                    </div>
+                    <div class="bg-white/[0.03] px-3 py-2 rounded-xl rounded-tl-none border border-white/5 inline-block max-w-full">
+                        <p class="text-sm text-slate-300 leading-snug">${payload.message}</p>
+                    </div>
+                </div>
+            `;
+            chatPanel.appendChild(div);
+            // Smooth scroll
+            chatPanel.scrollTo({ top: chatPanel.scrollHeight, behavior: 'smooth' });
+        }
+
+        function appendQuestion(payload) {
+            const div = document.createElement("div");
+            div.className = "p-3 bg-white/[0.03] border border-white/5 rounded-xl group animate-in zoom-in-95 duration-300";
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        <span class="text-[9px] font-black uppercase tracking-tighter text-emerald-500/80">Respondida</span>
+                    </div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase">${payload.user}</span>
+                </div>
+                <p class="text-sm text-slate-300 leading-snug">${payload.question}</p>
+            `;
+            // Insert after the title header
+            qaList.insertBefore(div, qaList.children[1]);
+        }
+
+        ws.addEventListener("message", (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.type === "chat") {
+                appendChat(payload);
+            } else if (payload.type === "approved_question") {
+                appendQuestion(payload);
+            } else if (payload.type === "count_update") {
+                if (viewersHeader) viewersHeader.textContent = payload.count + " viendo";
+                if (viewersMobile) viewersMobile.textContent = payload.count + "k"; // Just an example format
+            } else if (payload.type === "force_logout") {
+                if (payload.user_id == currentUserId) {
+                    window.location.href = "/login?error=" + encodeURIComponent("Tu sesión ha sido finalizada por el moderador.");
+                }
+            } else if (payload.type === "event_closed") {
+                window.location.href = "/?error=" + encodeURIComponent("Esta transmisión ha finalizado.");
+            } else if (payload.type === "error") {
+                showToast(payload.message, "error");
+            }
+        });
+
+        chatForm.onsubmit = (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+            ws.send(JSON.stringify({ type: "chat", message }));
+            chatInput.value = "";
+        };
+
+        questionForm.onsubmit = (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+            ws.send(JSON.stringify({ type: "ask", question }));
+            questionInput.value = "";
+            showToast("Pregunta enviada. Aparecerá si es aprobada.", "success");
+        };
+
+        // Heartbeat system
+        setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "ping" }));
+            }
+        }, 60000);
+
+        // Keyframe animations
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+            @keyframes pop { to { opacity: 1; transform: scale(1); } }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

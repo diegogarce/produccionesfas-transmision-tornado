@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Moderador · Producciones Fast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            950: '#050511', // Deepest background
+                            900: '#0a0b16', // Surface
+                            800: '#151725', // Lighter Surface
+                            700: '#1f2236', // Borders
+                        },
+                        brand: {
+                            blue: '#4f46e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050511;
+        }
+
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-area::-webkit-scrollbar-track {
+            background: #0a0b16;
+        }
+
+        .scroll-area::-webkit-scrollbar-thumb {
+            background: #1f2236;
+            border-radius: 3px;
+        }
+
+        .animate-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    {% include "includes/toast.html" %}
+</head>
+
+<body class="bg-[#050511] text-slate-300 font-sans selection:bg-indigo-500/30">
+    <div class="h-screen flex flex-col overflow-hidden">
+        <!-- Top Navigation Bar (Matching Identity) -->
+        <header
+            class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md px-6 h-16 flex items-center justify-between z-50">
+            <!-- Left Side: Logo | Platform Name | Status -->
+            <div class="flex items-center h-full">
+                <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
+                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
+                        class="h-6 w-auto">
+                </a>
+
+                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+
+                <span
+                    class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Moderation
+                    Cockpit</span>
+
+                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold tracking-widest text-emerald-500 uppercase">Sistema Activo</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <!-- Stats (Visible on desktop) -->
+                <div class="hidden md:flex items-center gap-8 px-6 border-r border-white/5 mr-2">
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
+                        <p class="text-xs font-mono font-bold text-white tabular-nums" id="stat-users">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Pendientes</p>
+                        <p class="text-xs font-mono font-bold text-amber-400 tabular-nums" id="stat-pending">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Aprobadas</p>
+                        <p class="text-xs font-mono font-bold text-indigo-400 tabular-nums" id="stat-approved">0</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-medium text-slate-400 hidden lg:block">{{ user_name }}</span>
+                    <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#050511]">
+
+            <!-- Left Panel: Monitor & Participants -->
+            <div class="w-full md:w-[400px] xl:w-[500px] flex flex-col border-r border-white/5 bg-navy-900/30">
+                <!-- Video Monitor -->
+                <div class="aspect-video bg-black relative group overflow-hidden">
+                    <!-- Official Stream Preview -->
+                    <video class="w-full h-full object-cover" autoplay playsinline muted loop>
+                        <source src="https://produccionesfast.com/assets/videos/transmisionesfast.mp4" type="video/mp4">
+                    </video>
+                    <div
+                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span class="text-[10px] font-black tracking-[0.2em] text-white uppercase italic">Vista Previa
+                            Real</span>
+                    </div>
+                    <!-- Overlay Badge -->
+                    <div
+                        class="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-lg">
+                        <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        LIVE
+                    </div>
+                </div>
+
+                <!-- Participants List -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between bg-navy-800/20">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Audiencia Conectada</h2>
+                        <button id="refresh-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto scroll-area px-2 py-2">
+                        <div id="participants-list" class="space-y-1">
+                            {% for u in participants %}
+                            <div
+                                class="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div
+                                        class="w-2 h-2 rounded-full {{ 'bg-red-500' if u.get('banned') else 'bg-emerald-500' }} shadow-lg {{ 'shadow-red-500/20' if u.get('banned') else 'shadow-emerald-500/20' }}">
+                                    </div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="text-xs font-bold text-slate-200 truncate">{{ u.get('user_name',
+                                            'Desconocido') }}</span>
+                                        <span class="text-[9px] text-slate-500 font-mono">{{ u.get('session_minutes', 0)
+                                            }}m conectado</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onclick="updateUserStatus({{ u['user_id'] }}, 'chat_blocked', {{ 'false' if u.get('chat_blocked') else 'true' }})"
+                                        class="p-1.5 rounded-lg {{ 'bg-amber-500/20 text-amber-500' if u.get('chat_blocked') else 'bg-white/5 text-slate-400' }} hover:bg-amber-500/30 transition-colors"
+                                        title="Bloquear Chat">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onclick="updateUserStatus({{ u['user_id'] }}, 'qa_blocked', {{ 'false' if u.get('qa_blocked') else 'true' }})"
+                                        class="p-1.5 rounded-lg {{ 'bg-indigo-500/20 text-indigo-500' if u.get('qa_blocked') else 'bg-white/5 text-slate-400' }} hover:bg-indigo-500/30 transition-colors"
+                                        title="Bloquear Q&A">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onclick="updateUserStatus({{ u['user_id'] }}, 'banned', {{ 'false' if u.get('banned') else 'true' }})"
+                                        class="p-1.5 rounded-lg {{ 'bg-red-500/20 text-red-500' if u.get('banned') else 'bg-white/5 text-slate-400' }} hover:bg-red-500/30 transition-colors"
+                                        title="Expulsar del Evento">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% end %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel: Q&A Flow -->
+            <div class="flex-1 flex flex-col border-r border-white/5 bg-[#050511]">
+                <!-- Tabs for Pending Questions & History -->
+                <div class="flex border-b border-white/5 bg-navy-900/10">
+                    <button id="tab-flow" onclick="switchTab('flow')"
+                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-indigo-500 text-white transition-all">
+                        Control de Flujo
+                    </button>
+                    <button id="tab-history" onclick="switchTab('history')"
+                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all">
+                        Historial (Leídas)
+                    </button>
+                </div>
+
+                <!-- Tab: Control de Flujo -->
+                <div id="section-flow" class="flex flex-col flex-1 overflow-hidden">
+                    <div class="p-4 border-b border-white/5 flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-sm font-bold text-white">Cola de Preguntas</h2>
+                                <span id="pending-count"
+                                    class="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20">0
+                                    NUEVAS</span>
+                            </div>
+                            <button id="open-add-qa-btn"
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                AGREGAR MANUAL
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="qa-search" placeholder="Filtrar por nombre o contenido..."
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
+                            <svg class="w-4 h-4 absolute right-3 top-2 text-slate-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto scroll-area p-4 space-y-4" id="pending-questions">
+                        {% if not pending_questions %}
+                        <div class="flex flex-col items-center justify-center h-full opacity-20 empty-state">
+                            <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                </path>
+                            </svg>
+                            <p class="text-xs font-bold uppercase tracking-widest">Esperando preguntas...</p>
+                        </div>
+                        {% else %}
+                        {% for q in pending_questions %}
+                        <div class="question-card animate-in p-4 rounded-xl border border-white/5 bg-navy-800 shadow-xl shadow-black/20"
+                            data-id="{{ q['id'] }}">
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
+                                    {{ q['user_name'][:2].upper() }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-bold text-white truncate pr-2">{{ q['user_name']
+                                            }}</span>
+                                        <span class="text-[9px] font-medium text-slate-500">{{ q.get('created_at', '')
+                                            }}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-300 leading-relaxed font-medium">{{ q['question_text']
+                                        }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 mt-4">
+                                <button
+                                    class="flex-1 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold text-[10px] uppercase tracking-wider transition-all approve-btn">Aprobar</button>
+                                <button
+                                    class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-slate-400 font-bold text-[10px] uppercase tracking-wider transition-all reject-btn">Rechazar</button>
+                            </div>
+                        </div>
+                        {% end %}
+                        {% end %}
+                    </div>
+                </div>
+
+                <!-- Tab: Historial -->
+                <div id="section-history" class="hidden flex flex-col flex-1 overflow-hidden">
+                    <div class="p-4 border-b border-white/5 bg-navy-900/20">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Memoria del Evento</p>
+                        <h2 class="text-lg font-bold text-white">Preguntas Contestadas</h2>
+                    </div>
+                    <div class="flex-1 overflow-y-auto scroll-area p-4 space-y-4" id="read-questions">
+                        {% if not read_questions %}
+                        <div class="flex flex-col items-center justify-center h-full opacity-20 empty-history">
+                            <p class="text-xs font-bold uppercase tracking-widest">No hay historial aún</p>
+                        </div>
+                        {% else %}
+                        {% for q in read_questions %}
+                        <div class="question-card p-4 rounded-xl border border-white/5 bg-white/[0.02] opacity-60"
+                            data-id="{{ q['id'] }}">
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                    {{ q['user_name'][:2].upper() }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-bold text-slate-300 truncate pr-2">{{ q['user_name']
+                                            }}</span>
+                                        <span class="text-[9px] font-medium text-slate-600">{{ q.get('created_at', '')
+                                            }}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-500 leading-relaxed">{{ q['question_text'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% end %}
+                        {% end %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for manual Q&A -->
+            <div id="add-qa-modal"
+                class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-[#0f172a]/80 backdrop-blur-sm">
+                <div
+                    class="bg-navy-900 w-full max-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-white">Pregunta Externa (WhatsApp)</h3>
+                            <button id="close-add-qa-btn" class="text-slate-500 hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre
+                                    del Usuario</label>
+                                <input type="text" id="manual-user" placeholder="Ej: Juan desde WhatsApp"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Contenido
+                                    de la Pregunta</label>
+                                <textarea id="manual-text" rows="3" placeholder="Escribe la pregunta aquí..."
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"></textarea>
+                            </div>
+                            <button id="submit-manual-qa"
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                                PUBLICAR EN COLA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Combined Chat & Speaker View -->
+            <div class="w-full md:w-[320px] xl:w-[380px] flex flex-col bg-navy-900/20">
+                <!-- Chat Feed (Top Half) -->
+                <div class="h-1/2 flex flex-col border-b border-white/5">
+                    <div class="p-4 border-b border-white/5 bg-navy-800/20">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Chat Comunitario</h2>
+                    </div>
+                    <div class="flex-1 overflow-y-auto scroll-area p-3 space-y-2" id="chat-messages">
+                        {% for msg in chat_messages %}
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]">
+                            <p class="text-[10px] font-bold text-indigo-400 mb-1">{{ msg.get('user_name') }}</p>
+                            <p class="text-xs text-slate-300">{{ msg.get('message') }}</p>
+                            <p class="text-[8px] text-slate-600 mt-1 text-right">{{ msg.get('created_at') }}</p>
+                        </div>
+                        {% end %}
+                    </div>
+                </div>
+
+                <!-- Approved/History (Bottom Half) -->
+                <div class="h-1/2 flex flex-col">
+                    <div class="p-4 border-b border-white/5 bg-navy-800/20 flex items-center justify-between">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">En Pantalla (Speaker)</h2>
+                        <svg class="w-4 h-4 text-indigo-400 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 overflow-y-auto scroll-area p-3 space-y-2 bg-indigo-500/[0.02]"
+                        id="approved-questions">
+                        {% if approved_questions %}
+                        {% for q in approved_questions %}
+                        <div class="question-card animate-in p-4 rounded-xl border border-white/5 bg-indigo-500/10 border-indigo-500/20"
+                            data-id="{{ q['id'] }}">
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
+                                    {{ q['user_name'][:2].upper() }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-bold text-white truncate pr-2">{{ q['user_name']
+                                            }}</span>
+                                        <span class="text-[9px] font-medium text-slate-500">{{ q.get('created_at', '')
+                                            }}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-300 leading-relaxed font-medium">{{ q['question_text']
+                                        }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% end %}
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center py-6 opacity-20 empty-state">
+                            <p class="text-[10px] font-bold uppercase tracking-widest">Sin aprobadas</p>
+                        </div>
+                        {% end %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const ws = new WebSocket("{% raw ws_url %}");
+        const currentEventId = "{{ event['id'] }}";
+        const pendingQuestionsContainer = document.getElementById("pending-questions");
+        const approvedQuestionsContainer = document.getElementById("approved-questions");
+        const readQuestionsContainer = document.getElementById("read-questions");
+        const chatMessagesContainer = document.getElementById("chat-messages");
+        const participantsContainer = document.getElementById("participants-list");
+        const pendingCountBadge = document.getElementById("pending-count");
+
+        function removeEmptyState(container) {
+            const empty = container.querySelector(".empty-state") || container.querySelector(".empty-history");
+            if (empty) empty.remove();
+        }
+
+        function switchTab(tab) {
+            const flowSection = document.getElementById("section-flow");
+            const historySection = document.getElementById("section-history");
+            const flowTab = document.getElementById("tab-flow");
+            const historyTab = document.getElementById("tab-history");
+
+            if (tab === 'history') {
+                flowSection.classList.add('hidden');
+                historySection.classList.remove('hidden');
+                historyTab.classList.replace('text-slate-500', 'text-white');
+                historyTab.classList.replace('border-transparent', 'border-indigo-500');
+                flowTab.classList.replace('text-white', 'text-slate-500');
+                flowTab.classList.replace('border-indigo-500', 'border-transparent');
+            } else {
+                historySection.classList.add('hidden');
+                flowSection.classList.remove('hidden');
+                flowTab.classList.replace('text-slate-500', 'text-white');
+                flowTab.classList.replace('border-transparent', 'border-indigo-500');
+                historyTab.classList.replace('text-white', 'text-slate-500');
+                historyTab.classList.replace('border-indigo-500', 'border-transparent');
+            }
+        }
+
+        ws.addEventListener("open", () => console.log("✓ Cockpit Connected"));
+        ws.addEventListener("close", () => setTimeout(() => location.reload(), 3000));
+
+        let stats = { pending: 0, approved: 0, rejected: 0, users: 0 };
+
+        function createQuestionCard(q, status = 'pending') {
+            const div = document.createElement("div");
+            const isApproved = status === 'approved';
+            const isRead = status === 'read';
+
+            div.className = `question-card animate-in p-4 rounded-xl border border-white/5 ${isApproved ? 'bg-indigo-500/10 border-indigo-500/20' : (isRead ? 'bg-white/[0.02] opacity-60' : 'bg-navy-800 shadow-xl shadow-black/20')}`;
+            div.dataset.id = q.id;
+
+            const avatarBg = isRead ? 'bg-slate-700' : 'bg-gradient-to-br from-indigo-500 to-purple-600';
+            const userColor = isRead ? 'text-slate-300' : 'text-white';
+            const textColor = isRead ? 'text-slate-500' : 'text-slate-300';
+
+            const actions = (status === 'pending') ? `
+                <div class="flex gap-2 mt-4">
+                    <button class="flex-1 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold text-[10px] uppercase tracking-wider transition-all approve-btn">Aprobar</button>
+                    <button class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-slate-400 font-bold text-[10px] uppercase tracking-wider transition-all reject-btn">Rechazar</button>
+                </div>
+            ` : '';
+
+            div.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                        ${q.user.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold ${userColor} truncate pr-2">${q.user}</span>
+                            <span class="text-[9px] font-medium text-slate-500">${q.timestamp}</span>
+                        </div>
+                        <p class="text-sm ${textColor} leading-relaxed font-medium">${q.question}</p>
+                    </div>
+                </div>
+                ${actions}
+            `;
+            return div;
+        }
+
+        function addListeners(container) {
+            container.querySelectorAll(".approve-btn").forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.closest("[data-id]").dataset.id;
+                    ws.send(JSON.stringify({ type: "approve", id: parseInt(id) }));
+                };
+            });
+            container.querySelectorAll(".reject-btn").forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.closest("[data-id]").dataset.id;
+                    ws.send(JSON.stringify({ type: "reject", id: parseInt(id) }));
+                };
+            });
+        }
+
+        function updateUI() {
+            stats.pending = pendingQuestionsContainer.querySelectorAll(".question-card").length;
+            stats.approved = approvedQuestionsContainer.querySelectorAll(".question-card").length;
+
+            if (document.getElementById("stat-pending")) document.getElementById("stat-pending").textContent = stats.pending;
+            if (document.getElementById("stat-approved")) document.getElementById("stat-approved").textContent = stats.approved;
+            if (document.getElementById("stat-users")) document.getElementById("stat-users").textContent = stats.users;
+
+            if (pendingCountBadge) {
+                pendingCountBadge.textContent = `${stats.pending} NUEVAS`;
+                pendingCountBadge.classList.toggle("animate-pulse", stats.pending > 0);
+            }
+        }
+
+        ws.addEventListener("message", (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.type === "pending_question") {
+                removeEmptyState(pendingQuestionsContainer);
+                pendingQuestionsContainer.prepend(createQuestionCard(payload, 'pending'));
+                addListeners(pendingQuestionsContainer);
+                updateUI();
+            } else if (payload.type === "approved_question") {
+                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                removeEmptyState(approvedQuestionsContainer);
+                approvedQuestionsContainer.prepend(createQuestionCard(payload, 'approved'));
+                updateUI();
+            } else if (payload.type === "rejected_question") {
+                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                updateUI();
+            } else if (payload.type === "question_read") {
+                // Find it in Approved, move to History
+                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) {
+                    // Extract data for history
+                    const qData = {
+                        id: payload.id,
+                        user: el.querySelector('span.truncate').textContent,
+                        question: el.querySelector('p').textContent,
+                        timestamp: el.querySelector('span.text-[9px]').textContent
+                    };
+                    el.remove();
+                    removeEmptyState(readQuestionsContainer);
+                    readQuestionsContainer.prepend(createQuestionCard(qData, 'read'));
+                }
+                updateUI();
+            } else if (payload.type === "question_removed") {
+                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                updateUI();
+            } else if (payload.type === "chat") {
+                const div = document.createElement("div");
+                div.className = "bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]";
+                div.innerHTML = `<p class="text-[10px] font-bold text-indigo-400 mb-1">${payload.user}</p><p class="text-xs text-slate-300">${payload.message}</p><p class="text-[8px] text-slate-600 mt-1 text-right">${payload.timestamp}</p>`;
+                chatMessagesContainer.appendChild(div);
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            } else if (payload.type === "active_sessions") {
+                renderParticipants(payload.sessions);
+            }
+        });
+
+        async function refresh() {
+            try {
+                const [qRes, cRes, pRes] = await Promise.all([
+                    fetch(`/api/questions?event_id=${currentEventId}`).then(r => r.json()),
+                    fetch(`/api/chats?event_id=${currentEventId}`).then(r => r.json()),
+                    fetch(`/api/participants?event_id=${currentEventId}`).then(r => r.json())
+                ]);
+
+                // Pending
+                pendingQuestionsContainer.innerHTML = qRes.pending.length ? "" : `<div class="flex flex-col items-center justify-center py-10 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest">Sin pendientes</p></div>`;
+                qRes.pending.forEach(q => pendingQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'pending')));
+                addListeners(pendingQuestionsContainer);
+
+                // Approved
+                approvedQuestionsContainer.innerHTML = qRes.approved.length ? "" : `<div class="flex flex-col items-center justify-center py-6 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest">Sin aprobadas</p></div>`;
+                qRes.approved.forEach(q => approvedQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'approved')));
+
+                // History (Read)
+                readQuestionsContainer.innerHTML = qRes.read.length ? "" : `<div class="flex flex-col items-center justify-center h-full opacity-20 empty-history"><p class="text-xs font-bold uppercase tracking-widest">No hay historial aún</p></div>`;
+                qRes.read.forEach(q => readQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'read')));
+
+                renderParticipants(pRes);
+                updateUI();
+            } catch (e) { console.error("Refresh failed:", e); }
+        }
+
+        function renderParticipants(participants) {
+            participantsContainer.innerHTML = "";
+            participants.forEach(u => {
+                const div = document.createElement("div");
+                div.className = "flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5";
+                div.innerHTML = `<div class="flex items-center gap-3 min-w-0"><div class="w-2 h-2 rounded-full ${u.banned ? 'bg-red-500' : 'bg-emerald-500'}"></div><div class="flex flex-col min-w-0"><span class="text-xs font-bold text-slate-200 truncate">${u.user_name || 'Desconocido'}</span><span class="text-[9px] text-slate-500 font-mono">${u.session_minutes}m</span></div></div>`;
+                participantsContainer.appendChild(div);
+            });
+            stats.users = participants.length;
+            updateUI();
+        }
+
+        async function updateUserStatus(userId, field, value) {
+            const res = await fetch("/api/user/status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, field, value }) });
+            if (res.ok) { showToast('Estado actualizado', 'success'); refresh(); }
+        }
+
+        const modal = document.getElementById("add-qa-modal");
+        document.getElementById("open-add-qa-btn").onclick = () => modal.classList.remove("hidden");
+        document.getElementById("close-add-qa-btn").onclick = () => modal.classList.add("hidden");
+        document.getElementById("submit-manual-qa").onclick = () => {
+            const user = document.getElementById("manual-user").value.trim();
+            const text = document.getElementById("manual-text").value.trim();
+            if (user && text) ws.send(JSON.stringify({ type: "ask", question: text, manual_user: user }));
+            modal.classList.add("hidden");
+        };
+
+        refresh();
+        addListeners(pendingQuestionsContainer);
+    </script>
+</body>
+
+</html>

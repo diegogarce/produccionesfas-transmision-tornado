@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Speaker - StreamPlatform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-area::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .scroll-area::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100">
+    <div class="h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 px-4 md:px-6 py-3 md:py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <h1 class="text-lg md:text-2xl font-bold text-white">Panel del Ponente</h1>
+                    <span
+                        class="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                            </path>
+                        </svg>
+                        SPEAKER
+                    </span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-white">Dr. Carlos Mendoza</p>
+                        <p class="text-xs text-gray-400">Conferencia de Tecnología 2024</p>
+                    </div>
+                    <a href="index.html" class="text-gray-400 hover:text-white text-sm font-medium">Salir</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <!-- Main Panel - Full width on mobile -->
+            <div class="flex-1 flex flex-col overflow-hidden bg-gray-900 w-full">
+                <!-- Info Bar -->
+                <div class="bg-blue-900 bg-opacity-30 border-b border-blue-700 px-6 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                                <span class="text-sm font-semibold text-white">Transmisión en vivo</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-gray-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                                1,234 espectadores
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-300">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            1h 28min en vivo
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Area -->
+                <div class="flex-1 overflow-y-auto scroll-area p-4 md:p-6">
+                    <!-- Pending Questions -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-2xl font-bold text-white">Preguntas Aprobadas</h2>
+                            <span
+                                class="px-3 py-1 bg-blue-600 bg-opacity-20 text-blue-400 rounded-full text-sm font-semibold">
+                                5 pendientes
+                            </span>
+                        </div>
+                        <p class="text-gray-400 mb-6">Estas preguntas fueron aprobadas por el moderador y están listas
+                            para ser respondidas</p>
+
+                        <div class="space-y-4">
+                            <!-- Question 1 - Priority -->
+                            <div
+                                class="bg-gradient-to-r from-blue-900 to-gray-800 border-l-4 border-blue-500 rounded-lg p-5 shadow-lg">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
+                                            CM
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Carlos Méndez</p>
+                                            <p class="text-xs text-gray-400">Aprobada hace 2 minutos</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 bg-yellow-600 text-white rounded-full text-xs font-semibold">
+                                        NUEVA
+                                    </span>
+                                </div>
+                                <p class="text-lg text-white mb-4">
+                                    ¿Cuáles son las principales diferencias entre machine learning supervisado y no
+                                    supervisado en aplicaciones empresariales?
+                                </p>
+                                <div class="flex gap-2">
+                                    <button
+                                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Marcar como Leída
+                                    </button>
+                                    <button
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Question 2 -->
+                            <div class="bg-gray-800 border border-gray-700 rounded-lg p-5">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-sm font-bold">
+                                            MG
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">María González</p>
+                                            <p class="text-xs text-gray-400">Aprobada hace 5 minutos</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-white mb-4">
+                                    ¿Qué framework recomendarían para comenzar con IA? ¿TensorFlow o PyTorch?
+                                </p>
+                                <div class="flex gap-2">
+                                    <button
+                                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Marcar como Leída
+                                    </button>
+                                    <button
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition"
+                                        title="Regresar a moderador">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Question 3 -->
+                            <div class="bg-gray-800 border border-gray-700 rounded-lg p-5">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-sm font-bold">
+                                            JR
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Juan Rodríguez</p>
+                                            <p class="text-xs text-gray-400">Aprobada hace 8 minutos</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-white mb-4">
+                                    ¿Cómo manejan el overfitting en modelos complejos de deep learning?
+                                </p>
+                                <div class="flex gap-2">
+                                    <button
+                                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Marcar como Leída
+                                    </button>
+                                    <button
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition"
+                                        title="Regresar a moderador">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Answered Questions -->
+                    <div>
+                        <h2 class="text-xl font-bold text-white mb-4">Preguntas Respondidas</h2>
+                        <p class="text-gray-400 mb-6">Historial de preguntas que ya fueron abordadas</p>
+
+                        <div class="space-y-3">
+                            <!-- Answered 1 -->
+                            <div class="bg-gray-800 bg-opacity-50 border border-gray-700 rounded-lg p-4 opacity-75">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-center gap-3 flex-1">
+                                        <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-300">Ana López</p>
+                                            <p class="text-gray-400 text-sm mt-1">
+                                                ¿Qué librerías de Python recomiendan para visualización de datos?
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="px-2 py-1 bg-emerald-600 bg-opacity-20 text-emerald-400 text-xs rounded-full">
+                                        Respondida
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Answered 2 -->
+                            <div class="bg-gray-800 bg-opacity-50 border border-gray-700 rounded-lg p-4 opacity-75">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-center gap-3 flex-1">
+                                        <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-300">Pedro Sánchez</p>
+                                            <p class="text-gray-400 text-sm mt-1">
+                                                ¿Cómo se integra la IA con sistemas legados en empresas tradicionales?
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="px-2 py-1 bg-emerald-600 bg-opacity-20 text-emerald-400 text-xs rounded-full">
+                                        Respondida
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Sidebar - Bottom on mobile, side on lg+ -->
+            <div
+                class="w-full lg:w-72 bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700 p-4 md:p-6 flex-shrink-0 order-last lg:order-none">
+                <h3 class="text-sm font-bold text-white mb-6 uppercase tracking-wide">Resumen</h3>
+
+                <div class="grid grid-cols-3 lg:grid-cols-1 gap-3 lg:gap-4">
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-lg p-4 shadow-lg">
+                        <p class="text-xs text-blue-200 mb-2 uppercase">Preguntas Pendientes</p>
+                        <p class="text-4xl font-bold text-white">5</p>
+                        <p class="text-xs text-blue-200 mt-2">Por responder</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-emerald-900 to-emerald-800 rounded-lg p-4 shadow-lg">
+                        <p class="text-xs text-emerald-200 mb-2 uppercase">Respondidas</p>
+                        <p class="text-4xl font-bold text-white">12</p>
+                        <p class="text-xs text-emerald-200 mt-2">En esta sesión</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-4">
+                        <p class="text-xs text-gray-400 mb-2 uppercase">Regresadas</p>
+                        <p class="text-3xl font-bold text-gray-300">2</p>
+                        <p class="text-xs text-gray-400 mt-2">A moderación</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h4 class="text-xs font-bold text-white mb-4 uppercase tracking-wide">Ayuda</h4>
+                    <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4">
+                        <p class="text-sm text-blue-200 mb-3">
+                            <strong>Consejos:</strong>
+                        </p>
+                        <ul class="text-xs text-gray-300 space-y-2">
+                            <li>• Marca como leída después de responder</li>
+                            <li>• Regresa preguntas complejas al moderador</li>
+                            <li>• Las nuevas aparecen arriba</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button
+                        class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold transition">
+                        Finalizar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

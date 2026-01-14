@@ -1,0 +1,315 @@
+<!-- Theme System - Include in all templates -->
+<style id="theme-styles">
+    /* Theme CSS Variables */
+    :root {
+        /* Light Theme (default variables for light) */
+        --bg-primary: #f8fafc;
+        --bg-secondary: #e2e8f0;
+        --bg-card: #ffffff;
+        --bg-input: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --border-color: #e2e8f0;
+        --accent: #3b82f6;
+        --accent-hover: #2563eb;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --scrollbar-track: #e2e8f0;
+        --scrollbar-thumb: #94a3b8;
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-card: #1e293b;
+        --bg-input: #334155;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+        --accent: #38bdf8;
+        --accent-hover: #0ea5e9;
+        --scrollbar-track: #1e293b;
+        --scrollbar-thumb: #475569;
+    }
+
+    /* Tailwind Dark Mode Override */
+    [data-theme="dark"] body {
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="light"] body {
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /*
+      Tailwind utility overrides for LIGHT mode.
+      Many pages were built with fixed dark Tailwind classes (bg-gray-900, text-gray-100, etc).
+      These rules remap the most common ones so the light theme actually looks light without
+      rewriting the whole HTML.
+    */
+    [data-theme="light"] .bg-gray-950 {
+        background-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .bg-gray-900 {
+        background-color: #f8fafc !important;
+    }
+
+    [data-theme="light"] .bg-gray-800 {
+        background-color: #ffffff !important;
+    }
+
+    [data-theme="light"] .bg-gray-700 {
+        background-color: #f1f5f9 !important;
+    }
+
+    [data-theme="light"] .bg-black {
+        background-color: #0f172a !important;
+    }
+
+    [data-theme="light"] .text-gray-100,
+    [data-theme="light"] .text-white {
+        color: #0f172a !important;
+    }
+
+    [data-theme="light"] .text-gray-400 {
+        color: #475569 !important;
+    }
+
+    [data-theme="light"] .text-gray-300 {
+        color: #334155 !important;
+    }
+
+    [data-theme="light"] .text-gray-500 {
+        color: #64748b !important;
+    }
+
+    [data-theme="light"] .text-gray-600 {
+        color: #64748b !important;
+    }
+
+    [data-theme="light"] .border-gray-700 {
+        border-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .border-gray-800 {
+        border-color: #e2e8f0 !important;
+    }
+
+    /* Scrollbars (watch/moderator) */
+    .chat-scroll::-webkit-scrollbar-track,
+    .scroll-area::-webkit-scrollbar-track {
+        background: var(--scrollbar-track) !important;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb,
+    .scroll-area::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb) !important;
+    }
+
+    /* Theme Switcher Button Styles */
+    .theme-switcher {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .theme-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .theme-btn:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .theme-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .theme-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        min-width: 140px;
+        z-index: 1000;
+        display: none;
+    }
+
+    .theme-dropdown.show {
+        display: block;
+    }
+
+    .theme-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 0.875rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        transition: background 0.15s ease;
+    }
+
+    .theme-option:first-child {
+        border-radius: 7px 7px 0 0;
+    }
+
+    .theme-option:last-child {
+        border-radius: 0 0 7px 7px;
+    }
+
+    .theme-option:hover {
+        background: var(--bg-secondary);
+    }
+
+    .theme-option.active {
+        color: var(--accent);
+        font-weight: 500;
+    }
+
+    .theme-option svg {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
+<script>
+    // Theme Management System
+    (function () {
+        const THEME_KEY = 'stream-platform-theme';
+
+        function getSystemTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function getSavedTheme() {
+            return localStorage.getItem(THEME_KEY) || 'system';
+        }
+
+        function getEffectiveTheme() {
+            const saved = getSavedTheme();
+            return saved === 'system' ? getSystemTheme() : saved;
+        }
+
+        function applyTheme(theme) {
+            const effective = theme === 'system' ? getSystemTheme() : theme;
+            document.documentElement.setAttribute('data-theme', effective);
+
+            // document.body may not exist yet (script runs in <head>).
+            if (!document.body) {
+                return;
+            }
+
+            // Update Tailwind classes for compatibility
+            if (effective === 'dark') {
+                document.body.classList.remove('bg-gray-100', 'text-gray-900');
+                document.body.classList.add('bg-gray-900', 'text-gray-100');
+            } else {
+                document.body.classList.remove('bg-gray-900', 'text-gray-100');
+                document.body.classList.add('bg-gray-100', 'text-gray-900');
+            }
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem(THEME_KEY, theme);
+            applyTheme(theme);
+            updateThemeUI(theme);
+        }
+
+        function updateThemeUI(theme) {
+            // Update active state in dropdown
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.theme === theme);
+            });
+
+            // Update button icon
+            const btn = document.querySelector('.theme-btn');
+            if (btn) {
+                const icons = {
+                    light: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>',
+                    dark: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>',
+                    system: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>'
+                };
+                btn.innerHTML = icons[theme] || icons.system;
+            }
+        }
+
+        // Listen for system theme changes (with fallback for older browsers)
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const onSystemThemeChange = () => {
+            if (getSavedTheme() === 'system') {
+                applyTheme('system');
+            }
+        };
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', onSystemThemeChange);
+        } else if (typeof mediaQuery.addListener === 'function') {
+            mediaQuery.addListener(onSystemThemeChange);
+        }
+
+        // Apply theme immediately on load (safe even before <body>)
+        applyTheme(getSavedTheme());
+
+        // Expose to global scope
+        window.ThemeManager = {
+            setTheme,
+            getTheme: getSavedTheme,
+            getEffectiveTheme,
+            updateThemeUI
+        };
+
+        // Initialize UI when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure body classes are applied once <body> exists
+            applyTheme(getSavedTheme());
+            updateThemeUI(getSavedTheme());
+
+            // Setup dropdown toggle
+            const btn = document.querySelector('.theme-btn');
+            const dropdown = document.querySelector('.theme-dropdown');
+
+            if (btn && dropdown) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+
+                document.addEventListener('click', () => {
+                    dropdown.classList.remove('show');
+                });
+
+                dropdown.querySelectorAll('.theme-option').forEach(opt => {
+                    opt.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        setTheme(opt.dataset.theme);
+                        dropdown.classList.remove('show');
+                    });
+                });
+            }
+        });
+    })();
+</script>

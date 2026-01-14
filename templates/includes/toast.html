@@ -1,0 +1,83 @@
+<!-- Toast System -->
+<div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+<style>
+    .toast-entry {
+        animation: toast-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        backdrop-filter: blur(12px);
+    }
+
+    .toast-out {
+        animation: toast-out 0.3s ease forwards;
+    }
+
+    @keyframes toast-in {
+        from {
+            transform: translateX(100%) scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes toast-out {
+        from {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateX(100%) scale(0.9);
+            opacity: 0;
+        }
+    }
+</style>
+
+<script>
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+
+        let bgColor = 'bg-slate-900/80';
+        let borderColor = 'border-white/10';
+        let textColor = 'text-white';
+        let icon = '';
+
+        if (type === 'success') {
+            bgColor = 'bg-emerald-500/20';
+            borderColor = 'border-emerald-500/20';
+            textColor = 'text-emerald-400';
+            icon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        } else if (type === 'error') {
+            bgColor = 'bg-red-500/20';
+            borderColor = 'border-red-500/20';
+            textColor = 'text-red-400';
+            icon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        } else {
+            icon = '<svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        }
+
+        toast.className = `toast-entry pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl border ${borderColor} ${bgColor} ${textColor} shadow-2xl min-w-[300px]`;
+        toast.innerHTML = `
+            <div class="flex-shrink-0">${icon}</div>
+            <div class="text-sm font-semibold tracking-tight">${message}</div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('toast-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // Override window.alert for legacy calls (optional, but safer)
+    /*
+    window.alert = function(msg) {
+        showToast(msg);
+    };
+    */
+</script>
