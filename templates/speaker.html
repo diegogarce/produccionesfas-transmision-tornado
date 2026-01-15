@@ -17,9 +17,9 @@
                     },
                     colors: {
                         navy: {
-                            950: '#050511', // Deepest background
-                            900: '#0a0b16', // Surface
-                            800: '#151725', // Lighter Surface
+                            950: '#050511',
+                            900: '#0a0b16',
+                            800: '#151725',
                         }
                     }
                 }
@@ -38,14 +38,6 @@
 
         .animate-in {
             animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .delay-100 {
-            animation-delay: 0.1s;
-        }
-
-        .delay-200 {
-            animation-delay: 0.2s;
         }
 
         @keyframes slideUp {
@@ -80,24 +72,17 @@
 
 <body class="bg-[#050511] text-slate-100 min-h-screen overflow-hidden">
     <div class="h-screen flex flex-col p-8 lg:p-12 relative text-white">
-        <!-- Background Decoration -->
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-indigo-500/10 blur-[120px] -z-10">
         </div>
 
-        <!-- Top Header (Standardized) -->
         <header class="flex items-center justify-between mb-12 animate-in">
-            <!-- Left: Identity -->
             <div class="flex items-center">
                 <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
                     class="h-8 w-auto drop-shadow-2xl">
-
                 <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
-
                 <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Stage
                     Monitor</span>
-
                 <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
-
                 <div class="flex items-center gap-2">
                     <span class="relative flex h-2.5 w-2.5">
                         <span
@@ -107,8 +92,6 @@
                     <span class="text-[10px] font-bold tracking-[0.3em] text-red-500 uppercase">Live Session</span>
                 </div>
             </div>
-
-            <!-- Right: Speaker Info -->
             <div class="flex items-center gap-8 text-right">
                 <div class="hidden md:block text-white">
                     <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Speaker en Escena
@@ -127,13 +110,11 @@
             </div>
         </header>
 
-        <!-- Main Viewport -->
         <main class="flex-1 flex flex-col lg:flex-row gap-12 overflow-hidden">
-            <!-- Left: Current Highlighted Question -->
             <div class="flex-[1.5] flex flex-col justify-center">
                 <p class="text-xs font-black text-indigo-500 uppercase tracking-[0.5em] mb-4 animate-in">Pregunta Actual
                 </p>
-                <div id="current-question-container" class="animate-in delay-100 min-h-[400px]">
+                <div id="current-question-container" class="animate-in min-h-[400px]">
                     <div class="opacity-10 py-20">
                         <h2 class="text-6xl lg:text-8xl font-black text-white leading-tight">Esperando<br>interacción...
                         </h2>
@@ -141,9 +122,8 @@
                 </div>
             </div>
 
-            <!-- Right: Queue of Next Questions -->
             <div
-                class="flex-1 flex flex-col h-full bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl lg:max-w-md animate-in delay-200">
+                class="flex-1 flex flex-col h-full bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-3xl lg:max-w-md animate-in">
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Próximas en cola</h2>
                     <span id="queue-count"
@@ -176,6 +156,25 @@
         const queueCount = document.getElementById("queue-count");
 
         let currentActiveId = null;
+        let wsConnected = false;
+
+        // WebSocket connection handlers
+        ws.addEventListener("open", () => {
+            console.log("✓ Speaker WebSocket Connected");
+            wsConnected = true;
+        });
+
+        ws.addEventListener("close", (e) => {
+            console.log("✗ Speaker WebSocket Closed:", e.code, e.reason);
+            wsConnected = false;
+            // Try to reconnect after 3 seconds
+            setTimeout(() => location.reload(), 3000);
+        });
+
+        ws.addEventListener("error", (e) => {
+            console.error("✗ Speaker WebSocket Error:", e);
+            wsConnected = false;
+        });
 
         function updateCurrent(payload) {
             currentActiveId = payload.id;
@@ -209,8 +208,6 @@
                     </h2>
                 </div>
             `;
-
-            // Sync the queue list: Hide current question from queue
             syncQueueList();
         }
 
@@ -229,11 +226,25 @@
         }
 
         function markAsRead(id) {
-            ws.send(JSON.stringify({ type: "read", id: id }));
+            if (!wsConnected) {
+                console.error("Cannot send: WebSocket not connected");
+                alert("Conexión perdida. Recargando página...");
+                location.reload();
+                return;
+            }
+            console.log("Sending read for id:", id);
+            ws.send(JSON.stringify({ type: "read", id: parseInt(id) }));
         }
 
         function returnToModerator(id) {
-            ws.send(JSON.stringify({ type: "return_to_moderator", id: id }));
+            if (!wsConnected) {
+                console.error("Cannot send: WebSocket not connected");
+                alert("Conexión perdida. Recargando página...");
+                location.reload();
+                return;
+            }
+            console.log("Sending return_to_moderator for id:", id);
+            ws.send(JSON.stringify({ type: "return_to_moderator", id: parseInt(id) }));
         }
 
         function highlightManual(id) {
@@ -249,9 +260,6 @@
 
         function updateNextInQueue() {
             const items = Array.from(list.querySelectorAll("[data-id]"));
-            // We want the next visible one? No, if we just marked as read, 
-            // we want the first one available in the whole array (which isn't hidden but 
-            // wait, if we REMOVE from DOM, then it's just the first one).
             if (items.length > 0) {
                 const first = items[0];
                 updateCurrent({
@@ -273,6 +281,8 @@
 
         ws.addEventListener("message", (event) => {
             const payload = JSON.parse(event.data);
+            console.log("WS Message:", payload.type, payload);
+
             if (payload.type === "approved_question") {
                 const div = document.createElement("div");
                 div.className = "p-6 rounded-2xl bg-white/5 border border-white/5 animate-in group cursor-pointer";
@@ -293,9 +303,7 @@
                 }
             } else if (payload.type === "question_read" || payload.type === "question_removed") {
                 const el = list.querySelector(`[data-id="${payload.id}"]`);
-                if (el) {
-                    el.remove();
-                }
+                if (el) el.remove();
 
                 if (currentActiveId == payload.id) {
                     updateNextInQueue();

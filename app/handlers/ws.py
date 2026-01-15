@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import traceback
 
 import tornado.websocket
 
@@ -20,6 +21,7 @@ def push_reports_snapshot(event_id=None):
         
     except Exception as exc:
         print(f"[WS] ! Error building reports snapshot: {exc}")
+        traceback.print_exc()
         return
 
 def kick_all_from_event(event_id):
@@ -103,82 +105,86 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         try:
-            payload = json.loads(message)
-        except json.JSONDecodeError:
-            return
-
-        msg_type = payload.get("type")
-        print(f"[WS] {self.role} | Mensaje: {msg_type} | Payload: {payload}")
-
-        if msg_type == "chat":
-            if users_service.is_chat_blocked(self.user_id):
-                self.write_message(json.dumps({"type": "error", "message": "Tu acceso al chat ha sido restringido."}))
-                return
-            text = payload.get("message", "").strip()
-            if not text:
-                return
-            chat_payload = chat_service.add_chat_message(self.user_id, self.user_name, text, event_id=self.event_id)
-            broadcast({"type": "chat", **chat_payload, "timestamp": datetime.now().strftime("%H:%M")}, event_id=self.event_id)
-
-        elif msg_type == "ask":
-            if users_service.is_qa_blocked(self.user_id):
-                self.write_message(json.dumps({"type": "error", "message": "Tu acceso a preguntas ha sido restringido."}))
-                return
-            question = payload.get("question", "").strip()
-            manual_user = payload.get("manual_user", "").strip()
-            if not question:
-                return
-            
-            # Use manual_user if provided (for external questions like WhatsApp)
-            display_name = manual_user if manual_user else self.user_name
-            
-            question_payload = questions_service.add_question(self.user_id, display_name, question, event_id=self.event_id)
-            broadcast({"type": "pending_question", **question_payload}, roles={"moderator"}, event_id=self.event_id)
-
-        elif msg_type == "approve" and self.role == "moderator":
-            question_id = payload.get("id")
             try:
-                question_id = int(question_id)
-            except (TypeError, ValueError):
+                payload = json.loads(message)
+            except json.JSONDecodeError:
                 return
-            approved_payload = questions_service.approve_question(question_id)
-            if approved_payload:
-                broadcast({"type": "approved_question", **approved_payload}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
 
-        elif msg_type == "reject" and self.role == "moderator":
-            question_id = payload.get("id")
-            try:
-                question_id = int(question_id)
-            except (TypeError, ValueError):
-                return
-            questions_service.reject_question(question_id)
-            broadcast({"type": "rejected_question", "id": question_id}, roles={"moderator"}, event_id=self.event_id)
+            msg_type = payload.get("type")
+            print(f"[WS] {self.role} | Mensaje: {msg_type} | Payload: {payload}")
 
-        elif msg_type == "read" and self.role == "speaker":
-            question_id = payload.get("id")
-            try:
-                question_id = int(question_id)
-            except (TypeError, ValueError):
-                return
-            questions_service.mark_question_as_read(question_id)
-            broadcast({"type": "question_read", "id": question_id}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
+            if msg_type == "chat":
+                if users_service.is_chat_blocked(self.user_id):
+                    self.write_message(json.dumps({"type": "error", "message": "Tu acceso al chat ha sido restringido."}))
+                    return
+                text = payload.get("message", "").strip()
+                if not text:
+                    return
+                chat_payload = chat_service.add_chat_message(self.user_id, self.user_name, text, event_id=self.event_id)
+                broadcast({"type": "chat", **chat_payload, "timestamp": datetime.now().strftime("%H:%M")}, event_id=self.event_id)
 
-        elif msg_type == "return_to_moderator" and self.role == "speaker":
-            question_id = payload.get("id")
-            try:
-                question_id = int(question_id)
-            except (TypeError, ValueError):
-                return
-            returned_payload = questions_service.return_question_to_pending(question_id)
-            if returned_payload:
-                # Remove it from the "Approved/Speaker" view for everyone
-                broadcast({"type": "question_removed", "id": question_id}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
-                # Re-add it to the Moderator's "Pending" queue
-                broadcast({"type": "pending_question", **returned_payload}, roles={"moderator"}, event_id=self.event_id)
+            elif msg_type == "ask":
+                if users_service.is_qa_blocked(self.user_id):
+                    self.write_message(json.dumps({"type": "error", "message": "Tu acceso a preguntas ha sido restringido."}))
+                    return
+                question = payload.get("question", "").strip()
+                manual_user = payload.get("manual_user", "").strip()
+                if not question:
+                    return
+                
+                # Use manual_user if provided (for external questions like WhatsApp)
+                display_name = manual_user if manual_user else self.user_name
+                
+                question_payload = questions_service.add_question(self.user_id, display_name, question, event_id=self.event_id)
+                broadcast({"type": "pending_question", **question_payload}, roles={"moderator"}, event_id=self.event_id)
 
-        elif msg_type == "ping":
-            analytics_service.record_ping(self.user_id, event_id=self.event_id)
-            push_reports_snapshot(event_id=self.event_id)
+            elif msg_type == "approve" and self.role == "moderator":
+                question_id = payload.get("id")
+                try:
+                    question_id = int(question_id)
+                except (TypeError, ValueError):
+                    return
+                approved_payload = questions_service.approve_question(question_id)
+                if approved_payload:
+                    broadcast({"type": "approved_question", **approved_payload}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
+
+            elif msg_type == "reject" and self.role == "moderator":
+                question_id = payload.get("id")
+                try:
+                    question_id = int(question_id)
+                except (TypeError, ValueError):
+                    return
+                questions_service.reject_question(question_id)
+                broadcast({"type": "rejected_question", "id": question_id}, roles={"moderator"}, event_id=self.event_id)
+
+            elif msg_type == "read" and self.role == "speaker":
+                question_id = payload.get("id")
+                try:
+                    question_id = int(question_id)
+                except (TypeError, ValueError):
+                    return
+                questions_service.mark_question_as_read(question_id)
+                broadcast({"type": "question_read", "id": question_id}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
+
+            elif msg_type == "return_to_moderator" and self.role == "speaker":
+                question_id = payload.get("id")
+                try:
+                    question_id = int(question_id)
+                except (TypeError, ValueError):
+                    return
+                returned_payload = questions_service.return_question_to_pending(question_id)
+                if returned_payload:
+                    # Remove it from the "Approved/Speaker" view for everyone
+                    broadcast({"type": "question_removed", "id": question_id}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
+                    # Re-add it to the Moderator's "Pending" queue
+                    broadcast({"type": "pending_question", **returned_payload}, roles={"moderator"}, event_id=self.event_id)
+
+            elif msg_type == "ping":
+                analytics_service.record_ping(self.user_id, event_id=self.event_id)
+                push_reports_snapshot(event_id=self.event_id)
+
+        except Exception:
+            traceback.print_exc()
 
     def check_origin(self, origin):
         return True
