@@ -94,31 +94,37 @@
 
     <!-- Top Navigation Bar (Matching Identity) -->
     <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/admin/events" class="hover:opacity-80 transition-opacity flex items-center">
-                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
-                        class="h-6 w-auto">
+                    <img src="{{ event['logo_url'] if event and event.get('logo_url') else 'https://produccionesfast.com/assets/img/logo.png' }}"
+                        alt="Logo" class="h-6 w-auto">
                 </a>
 
-                <!-- <div class="h-8 w-px bg-white/10 mx-6"></div> -->
-
-                <!-- <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase">Live Platform</span> -->
-
-                <div class="h-8 w-px bg-white/10 mx-6"></div>
-                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Reporte de
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
+                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Reporte de
                     Audiencia</span>
 
             </div>
 
-            <!-- Right Side: Status Pill | User | Logout -->
-            <div class="flex items-center gap-6">
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
+                <!-- Link a Moderador -->
+                <a href="/e/{{ event['slug'] }}/mod" target="_blank"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Ir a Moderación">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Moderación</span>
+                </a>
 
-                <!-- User Name (Placeholder if not available) -->
+                <div class="h-6 w-px bg-white/10"></div>
+
                 <span class="text-sm font-medium text-slate-400">Admin User</span>
 
-                <!-- Logout Icon -->
                 <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -126,8 +132,57 @@
                     </svg>
                 </a>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()"
+                class="md:hidden text-slate-400 hover:text-white transition-colors p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
+            <div class="px-4 py-4 space-y-3">
+                <a href="/e/{{ event['slug'] }}/mod" target="_blank"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Moderación
+                </a>
+
+                <div class="border-t border-white/10 pt-3">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            menu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+    </script>
 
     <div class="max-w-7xl mx-auto px-6 py-10">
         <!-- Header -->

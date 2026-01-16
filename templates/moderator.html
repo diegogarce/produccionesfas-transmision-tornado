@@ -71,23 +71,23 @@
     <div class="flex flex-col min-h-screen md:h-screen overflow-hidden pb-10 md:pb-0">
         <!-- Top Navigation Bar (Matching Identity) -->
         <header
-            class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md px-6 h-16 flex items-center justify-between z-50 flex-shrink-0">
+            class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md px-4 sm:px-6 h-16 flex items-center justify-between z-50 flex-shrink-0">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
-                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
-                        class="h-6 w-auto">
+                    <img src="{{ event['logo_url'] if event and event.get('logo_url') else 'https://produccionesfast.com/assets/img/logo.png' }}"
+                        alt="Logo" class="h-6 w-auto">
                 </a>
 
-                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
 
                 <span
                     class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Moderation
                     Cockpit</span>
 
-                <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden lg:block"></div>
 
-                <div class="flex items-center gap-2">
+                <div class="hidden lg:flex items-center gap-2">
                     <span class="relative flex h-2 w-2">
                         <span
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -97,9 +97,10 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-6">
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
                 <!-- Stats (Visible on desktop) -->
-                <div class="hidden md:flex items-center gap-8 px-6 border-r border-white/5 mr-2">
+                <div class="hidden lg:flex items-center gap-8 px-6 border-r border-white/5 mr-2">
                     <div class="text-center">
                         <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
                         <p class="text-xs font-mono font-bold text-white tabular-nums" id="stat-users">0</p>
@@ -115,6 +116,19 @@
                 </div>
 
                 <div class="flex items-center gap-4">
+                    <!-- Link a Reportes -->
+                    <a href="/e/{{ event['slug'] }}/reports" target="_blank"
+                        class="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors"
+                        title="Ver Reportes">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span class="text-xs font-bold uppercase tracking-wider hidden lg:block">Reportes</span>
+                    </a>
+
+                    <div class="h-6 w-px bg-white/10 hidden lg:block"></div>
+
                     <span class="text-sm font-medium text-slate-400 hidden lg:block">{{ user_name }}</span>
                     <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +139,74 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()"
+                class="md:hidden text-slate-400 hover:text-white transition-colors p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-b border-white/5 bg-[#050511] z-40" id="mobile-menu">
+            <div class="px-4 py-4 space-y-3">
+                <!-- Mobile Stats -->
+                <div class="flex items-center justify-around py-3 border-b border-white/10">
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
+                        <p class="text-sm font-mono font-bold text-white tabular-nums" id="stat-users-mobile">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Pendientes</p>
+                        <p class="text-sm font-mono font-bold text-amber-400 tabular-nums" id="stat-pending-mobile">0
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Aprobadas</p>
+                        <p class="text-sm font-mono font-bold text-indigo-400 tabular-nums" id="stat-approved-mobile">0
+                        </p>
+                    </div>
+                </div>
+
+                <a href="/e/{{ event['slug'] }}/reports" target="_blank"
+                    class="flex items-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Reportes
+                </a>
+
+                <div class="border-t border-white/10 pt-3">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">{{ user_name }}</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function toggleMobileMenu() {
+                const menu = document.getElementById('mobile-menu');
+                const menuIcon = document.getElementById('menu-icon');
+                const closeIcon = document.getElementById('close-icon');
+
+                menu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            }
+        </script>
         </header>
 
         <!-- Main Dashboard Grid -->
@@ -449,7 +531,9 @@
         const baseWsUrl = "{% raw ws_url %}";
         const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
         const finalWsUrl = baseWsUrl.replace(/^ws(s)?:\/\//, wsProtocol);
-        const ws = new WebSocket(finalWsUrl);
+        let ws = null;
+        let wsReconnectAttempt = 0;
+        let wsReconnectTimer = null;
         const currentEventId = "{{ event['id'] }}";
         const pendingQuestionsContainer = document.getElementById("pending-questions");
         const approvedQuestionsContainer = document.getElementById("approved-questions");
@@ -457,6 +541,20 @@
         const chatMessagesContainer = document.getElementById("chat-messages");
         const participantsContainer = document.getElementById("participants-list");
         const pendingCountBadge = document.getElementById("pending-count");
+
+        function safeWsSend(payload) {
+            try {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(payload));
+                    return true;
+                }
+            } catch (e) {
+                console.error("WS send failed:", e);
+            }
+            showToast('Reconectando...', 'warning');
+            connectWs();
+            return false;
+        }
 
         function removeEmptyState(container) {
             const empty = container.querySelector(".empty-state") || container.querySelector(".empty-history");
@@ -486,8 +584,97 @@
             }
         }
 
-        ws.addEventListener("open", () => console.log("✓ Cockpit Connected"));
-        ws.addEventListener("close", () => setTimeout(() => location.reload(), 3000));
+        function handleWsMessage(event) {
+            const payload = JSON.parse(event.data);
+            if (payload.type === "pending_question") {
+                removeEmptyState(pendingQuestionsContainer);
+                pendingQuestionsContainer.prepend(createQuestionCard(payload, 'pending'));
+                addListeners(pendingQuestionsContainer);
+                updateUI();
+            } else if (payload.type === "approved_question") {
+                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                removeEmptyState(approvedQuestionsContainer);
+                approvedQuestionsContainer.prepend(createQuestionCard(payload, 'approved'));
+                updateUI();
+            } else if (payload.type === "rejected_question") {
+                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                updateUI();
+            } else if (payload.type === "question_read") {
+                // Find it in Approved, remove if exists
+                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+
+                // Add to History using full payload from server
+                removeEmptyState(readQuestionsContainer);
+                readQuestionsContainer.prepend(createQuestionCard(payload, 'read'));
+                updateUI();
+            } else if (payload.type === "question_removed") {
+                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
+                if (el) el.remove();
+                updateUI();
+            } else if (payload.type === "chat") {
+                const div = document.createElement("div");
+                div.className = "bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]";
+                div.innerHTML = `<p class="text-[10px] font-bold text-indigo-400 mb-1">${payload.user}</p><p class="text-xs text-slate-300">${payload.message}</p><p class="text-[8px] text-slate-600 mt-1 text-right">${payload.timestamp}</p>`;
+                chatMessagesContainer.appendChild(div);
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            } else if (payload.type === "active_sessions") {
+                renderParticipants(payload.sessions);
+            }
+        }
+
+        function connectWs() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+            if (wsReconnectTimer) {
+                clearTimeout(wsReconnectTimer);
+                wsReconnectTimer = null;
+            }
+            ws = new WebSocket(finalWsUrl);
+
+            ws.addEventListener("open", () => {
+                console.log("✓ Cockpit Connected");
+                wsReconnectAttempt = 0;
+                showToast('Conectado', 'success');
+            });
+
+            ws.addEventListener("message", handleWsMessage);
+
+            ws.addEventListener("close", (e) => {
+                // Only force a reload on session-expired closures; otherwise reconnect quietly
+                if (e && e.code === 4001) {
+                    window.location.reload();
+                    return;
+                }
+
+                wsReconnectAttempt += 1;
+                const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(wsReconnectAttempt, 5)));
+                console.log(`✗ Cockpit WS closed (${e.code}). Reconnect in ${delay}ms`);
+                showToast('Conexión perdida. Reintentando...', 'warning');
+                wsReconnectTimer = setTimeout(connectWs, delay);
+            });
+
+            ws.addEventListener("error", (e) => {
+                console.error("✗ Cockpit WS error:", e);
+            });
+        }
+
+        connectWs();
+
+        // Heartbeat / Keep-Alive System (5-min session fix)
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "ping" }));
+                return;
+            }
+            // Fallback HTTP ping if WS is down
+            fetch(`/api/ping?event_id={{ event['id'] }}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+            ).then(res => {
+                if (res.status === 401) window.location.reload();
+            }).catch(() => { });
+        }, 60000); // Ping every 60s
 
         let stats = { pending: 0, approved: 0, rejected: 0, users: 0 };
 
@@ -532,13 +719,13 @@
             container.querySelectorAll(".approve-btn").forEach(btn => {
                 btn.onclick = () => {
                     const id = btn.closest("[data-id]").dataset.id;
-                    ws.send(JSON.stringify({ type: "approve", id: parseInt(id) }));
+                    safeWsSend({ type: "approve", id: parseInt(id) });
                 };
             });
             container.querySelectorAll(".reject-btn").forEach(btn => {
                 btn.onclick = () => {
                     const id = btn.closest("[data-id]").dataset.id;
-                    ws.send(JSON.stringify({ type: "reject", id: parseInt(id) }));
+                    safeWsSend({ type: "reject", id: parseInt(id) });
                 };
             });
         }
@@ -547,9 +734,15 @@
             stats.pending = pendingQuestionsContainer.querySelectorAll(".question-card").length;
             stats.approved = approvedQuestionsContainer.querySelectorAll(".question-card").length;
 
+            // Desktop stats
             if (document.getElementById("stat-pending")) document.getElementById("stat-pending").textContent = stats.pending;
             if (document.getElementById("stat-approved")) document.getElementById("stat-approved").textContent = stats.approved;
             if (document.getElementById("stat-users")) document.getElementById("stat-users").textContent = stats.users;
+
+            // Mobile stats
+            if (document.getElementById("stat-pending-mobile")) document.getElementById("stat-pending-mobile").textContent = stats.pending;
+            if (document.getElementById("stat-approved-mobile")) document.getElementById("stat-approved-mobile").textContent = stats.approved;
+            if (document.getElementById("stat-users-mobile")) document.getElementById("stat-users-mobile").textContent = stats.users;
 
             if (pendingCountBadge) {
                 pendingCountBadge.textContent = `${stats.pending} NUEVAS`;
@@ -557,46 +750,7 @@
             }
         }
 
-        ws.addEventListener("message", (event) => {
-            const payload = JSON.parse(event.data);
-            if (payload.type === "pending_question") {
-                removeEmptyState(pendingQuestionsContainer);
-                pendingQuestionsContainer.prepend(createQuestionCard(payload, 'pending'));
-                addListeners(pendingQuestionsContainer);
-                updateUI();
-            } else if (payload.type === "approved_question") {
-                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
-                if (el) el.remove();
-                removeEmptyState(approvedQuestionsContainer);
-                approvedQuestionsContainer.prepend(createQuestionCard(payload, 'approved'));
-                updateUI();
-            } else if (payload.type === "rejected_question") {
-                const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
-                if (el) el.remove();
-                updateUI();
-            } else if (payload.type === "question_read") {
-                // Find it in Approved, remove if exists
-                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
-                if (el) el.remove();
 
-                // Add to History using full payload from server
-                removeEmptyState(readQuestionsContainer);
-                readQuestionsContainer.prepend(createQuestionCard(payload, 'read'));
-                updateUI();
-            } else if (payload.type === "question_removed") {
-                const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
-                if (el) el.remove();
-                updateUI();
-            } else if (payload.type === "chat") {
-                const div = document.createElement("div");
-                div.className = "bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]";
-                div.innerHTML = `<p class="text-[10px] font-bold text-indigo-400 mb-1">${payload.user}</p><p class="text-xs text-slate-300">${payload.message}</p><p class="text-[8px] text-slate-600 mt-1 text-right">${payload.timestamp}</p>`;
-                chatMessagesContainer.appendChild(div);
-                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-            } else if (payload.type === "active_sessions") {
-                renderParticipants(payload.sessions);
-            }
-        });
 
         async function refresh() {
             try {
@@ -676,7 +830,7 @@
         document.getElementById("submit-manual-qa").onclick = () => {
             const user = document.getElementById("manual-user").value.trim();
             const text = document.getElementById("manual-text").value.trim();
-            if (user && text) ws.send(JSON.stringify({ type: "ask", question: text, manual_user: user }));
+            if (user && text) safeWsSend({ type: "ask", question: text, manual_user: user });
             modal.classList.add("hidden");
         };
 

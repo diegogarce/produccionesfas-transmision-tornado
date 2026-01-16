@@ -5,6 +5,7 @@ import traceback
 import tornado.websocket
 
 from app.services import analytics_service, chat_service, questions_service, users_service
+from app.services import session_service
 
 # Keep per-role client pools. Reports is a first-class role.
 WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set(), "reports": set()}
@@ -84,25 +85,57 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self):
-        secure_id = self.get_secure_cookie("user_id")
-        if not secure_id:
-            print(f"[WS] ! Conexión rechazada: No hay cookie user_id (Cookie Secret puede haber cambiado)")
-            self.close()
-            return
-        try:
-            self.user_id = int(secure_id.decode())
-        except (AttributeError, ValueError):
-            self.close()
+        # Redis session-backed auth
+        s_cookie = self.get_secure_cookie("session_id")
+        if not s_cookie:
+            print("[WS] ! Conexión rechazada: No hay cookie session_id")
+            self.close(code=4001, reason="session_missing")
             return
 
-        self.user_name = (self.get_secure_cookie("user_name") or b"Guest").decode()
-        self.role = self.get_query_argument("role", "viewer")
+        self.session_id = s_cookie.decode()
+        session = session_service.get_session(self.session_id)
+        if not session:
+            print("[WS] ! Conexión rechazada: sesión expirada o inválida")
+            self.close(code=4001, reason="session_expired")
+            return
+
+        self.user_id = session.get("user_id")
+        if not self.user_id:
+            self.close(code=4001, reason="session_invalid")
+            return
+
+        self.user_name = session.get("user_name") or "Guest"
+
+        requested_role = self.get_query_argument("role", "viewer")
+        user_role = session.get("user_role") or "visor"
+
+        # Enforce role permissions to avoid privilege escalation via querystring.
+        if requested_role == "viewer":
+            self.role = "viewer"
+        elif requested_role == "moderator" and user_role in ["moderador", "administrador"]:
+            self.role = "moderator"
+        elif requested_role == "speaker" and user_role in ["speaker", "administrador"]:
+            self.role = "speaker"
+        elif requested_role == "reports" and user_role in ["administrador"]:
+            self.role = "reports"
+        else:
+            print(f"[WS] ! Conexión rechazada: role no permitido requested={requested_role} user_role={user_role}")
+            self.close(code=4003, reason="role_forbidden")
+            return
+
         arg_event = self.get_query_argument("event_id", default=None)
         # Fallback: if client omitted event_id (or malformed), try the cookie set by BaseHandler.prepare
         try:
             self.event_id = int(arg_event) if arg_event else None
         except (TypeError, ValueError):
             self.event_id = None
+
+        if self.event_id is None:
+            # Prefer session-scoped event id
+            try:
+                self.event_id = int(session.get("current_event_id")) if session.get("current_event_id") else None
+            except (TypeError, ValueError):
+                self.event_id = None
 
         if self.event_id is None:
             cookie_event = self.get_secure_cookie("current_event_id")
@@ -134,6 +167,15 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         try:
+            # Refresh/validate session on every WS message (5-min TTL safety).
+            # If the session was purged in Redis, drop the socket so the client re-auths.
+            if not getattr(self, "session_id", None) or not session_service.get_session(self.session_id):
+                try:
+                    self.close(code=4001, reason="session_expired")
+                except Exception:
+                    pass
+                return
+
             try:
                 payload = json.loads(message)
             except json.JSONDecodeError:

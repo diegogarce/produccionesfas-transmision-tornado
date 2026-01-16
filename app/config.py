@@ -26,6 +26,13 @@ MYSQL_CONFIG = {
     "cursorclass": DictCursor,
 }
 
+REDIS_CONFIG = {
+    "host": os.environ.get("REDIS_HOST", "localhost"),
+    # Default local port set to 6380 to match docker-compose mapping
+    "port": int(os.environ.get("REDIS_PORT", 6380)),
+    "db": 0,
+}
+
 # Validación mínima para evitar errores críticos
 if not MYSQL_CONFIG["host"]:
     print("ERROR: DB_HOST no definido en .env", file=sys.stderr)

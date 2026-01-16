@@ -1,22 +1,31 @@
 import tornado.web
+from app.services import session_service
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    def initialize(self):
+        self.session = None
+
     def get_current_user(self):
-        secure_id = self.get_secure_cookie("user_id")
-        if not secure_id:
-            return None
-        try:
-            return int(secure_id.decode())
-        except (ValueError, AttributeError):
-            return None
+        if self.session is None:
+            self._load_session()
+        return self.session.get("user_id") if self.session else None
+
+    def _load_session(self):
+        self.session = None
+        s_cookie = self.get_secure_cookie("session_id")
+        if s_cookie:
+            try:
+                self.session = session_service.get_session(s_cookie.decode())
+            except Exception:
+                self.session = None
 
     def current_user_name(self):
-        name = self.get_secure_cookie("user_name")
-        return name.decode() if name else "Visitante"
+        if self.session is None: self._load_session()
+        return self.session.get("user_name") if self.session else "Visitante"
 
     def prepare(self):
-        # Detect event context from URL
+        # Determine event context from URL
         # URL format: /e/SLUG/...
         path_parts = self.request.path.strip("/").split("/")
         if len(path_parts) >= 2 and path_parts[0] == "e":
@@ -28,11 +37,20 @@ class BaseHandler(tornado.web.RequestHandler):
             elif not path_parts[1].startswith("{"): # Ignore if it looks like a regex/placeholder
                  pass
 
+        # Load session early
+        self._load_session()
+
         # Global check for banned users
         user_id = self.get_current_user()
         if user_id:
             from app.services import users_service
             if users_service.is_user_banned(user_id):
+                # Clear session
+                if self.session:
+                     s_cookie = self.get_secure_cookie("session_id")
+                     if s_cookie: session_service.delete_session(s_cookie.decode())
+                
+                self.clear_cookie("session_id")
                 self.clear_cookie("user_id")
                 self.clear_cookie("user_name")
                 self.clear_cookie("user_role")
@@ -40,12 +58,18 @@ class BaseHandler(tornado.web.RequestHandler):
                 return
 
     def current_event_id(self):
+        # Priority 1: Session (Logged in user context)
+        if self.session is None: self._load_session()
+        if self.session and self.session.get("current_event_id"):
+             return int(self.session.get("current_event_id"))
+        
+        # Priority 2: Cookie context (Implicit navigation context)
         eid = self.get_secure_cookie("current_event_id")
         return int(eid.decode()) if eid else None
 
     def current_user_role(self):
-        role = self.get_secure_cookie("user_role")
-        return role.decode() if role else "visor"
+        if self.session is None: self._load_session()
+        return self.session.get("user_role") if self.session else "visor"
 
     def is_chat_blocked(self):
         user_id = self.get_current_user()

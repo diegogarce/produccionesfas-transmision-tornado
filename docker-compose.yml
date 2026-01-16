@@ -13,7 +13,19 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - COOKIE_SECRET=${COOKIE_SECRET}
+      # Redis interno en la red Docker
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       # Si necesitas persistir logs u otros archivos en tu volumen extra
       - /mnt/tornado/logs:/app/logs
+    restart: always
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: transmisionesfast-redis
+    ports:
+      - "6380:6379"
     restart: always

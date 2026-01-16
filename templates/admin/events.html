@@ -106,33 +106,28 @@
 
     <!-- Top Navigation Bar (Matching Identity) -->
     <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <!-- Left Side: Logo | Platform Name -->
             <div class="flex items-center h-full">
                 <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
                     class="h-6 w-auto opacity-90 hover:opacity-100 transition-opacity">
 
-                <!-- <div class="h-8 w-px bg-white/10 mx-6"></div> -->
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
 
-                <!-- <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase">Live Platform</span> -->
-
-                <div class="h-8 w-px bg-white/10 mx-6"></div>
-
-                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Admin Console</span>
+                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Admin
+                    Console</span>
 
             </div>
 
-            <!-- Right Side: New Event | User | Logout -->
-            <div class="flex items-center gap-6">
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
                 <button onclick="openModal()"
                     class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 border border-indigo-500/50 hover:-translate-y-0.5">
                     + Nuevo
                 </button>
 
-                <!-- User Name (Placeholder) -->
                 <span class="text-sm font-medium text-slate-400">Admin User</span>
 
-                <!-- Logout Icon -->
                 <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -140,8 +135,53 @@
                     </svg>
                 </a>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white transition-colors p-2"
+                id="mobile-menu-btn">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
+            <div class="px-4 py-4 space-y-4">
+                <button onclick="openModal(); toggleMobileMenu();"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-lg text-sm font-bold uppercase tracking-widest transition-all">
+                    + Nuevo Evento
+                </button>
+
+                <div class="border-t border-white/10 pt-4">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            menu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+    </script>
 
     <div class="max-w-7xl mx-auto px-6 py-10">
         <!-- Page Title & Stats -->
@@ -215,7 +255,7 @@
 
                     <!-- Action Grid -->
                     <div class="grid grid-cols-3 gap-2 mb-6">
-                        <a href="/e/{{ event['slug'] }}/mod"
+                        <a href="/e/{{ event['slug'] }}/mod" target="_blank"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-indigo-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +264,7 @@
                             </svg>
                             <span class="text-[9px] uppercase font-bold text-slate-500">Mod</span>
                         </a>
-                        <a href="/e/{{ event['slug'] }}/speaker"
+                        <a href="/e/{{ event['slug'] }}/speaker" target="_blank"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-amber-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +273,7 @@
                             </svg>
                             <span class="text-[9px] uppercase font-bold text-slate-500">Speaker</span>
                         </a>
-                        <a href="/e/{{ event['slug'] }}/reports"
+                        <a href="/e/{{ event['slug'] }}/reports" target="_blank"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-emerald-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -489,6 +529,11 @@
                     body: JSON.stringify(payload)
                 });
 
+                if (res.status === 401) {
+                    window.location.reload();
+                    return;
+                }
+
                 if (res.ok) {
                     showToast('Evento guardado correctamente.', 'success');
                     setTimeout(() => location.reload(), 1000);
@@ -529,6 +574,16 @@
                 showToast('Error al copiar', 'error');
             });
         }
+    </script>
+    <script>
+        // Heartbeat for Admin Session (5 mins TTL)
+        setInterval(() => {
+            fetch('/api/ping', { method: 'POST' })
+                .then(res => {
+                    if (res.status === 401) window.location.reload();
+                })
+                .catch(() => { });
+        }, 60000);
     </script>
 </body>
 

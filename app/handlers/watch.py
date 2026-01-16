@@ -54,17 +54,20 @@ class WatchHandler(BaseHandler):
 class APIPingHandler(BaseHandler):
     """HTTP fallback heartbeat to keep sessions marked as active."""
 
-    @tornado.web.authenticated
+    # Remove @authenticated decorator to prevent 302 Redirect on session expiry
+    # We want a clean 401 for the JS fetch to detect.
     def post(self):
+        # Manual check
+        user_id = self.get_current_user()
+        if not user_id:
+            self.set_status(401)
+            self.write({"error": "session_expired"})
+            return
+
         try:
             event_id = int(self.get_argument("event_id"))
         except (TypeError, ValueError, tornado.web.MissingArgumentError):
             event_id = self.current_event_id()
-
-        user_id = self.get_current_user()
-        if not user_id:
-            self.set_status(401)
-            return
 
         analytics_service.record_ping(user_id, event_id=event_id)
         self.write({"ok": True})

@@ -2,7 +2,7 @@ import tornado.escape
 
 from app.db import create_db_connection
 from app.handlers.base import BaseHandler
-from app.services import analytics_service
+from app.services import analytics_service, session_service
 
 
 class RegistrationHandler(BaseHandler):
@@ -68,10 +68,27 @@ class RegistrationHandler(BaseHandler):
                     )
                     user_id = cursor.lastrowid
                     user_role = "visor"
-        self.set_secure_cookie("user_id", str(user_id))
-        self.set_secure_cookie("user_name", name)
-        self.set_secure_cookie("user_role", user_role)
-        self.set_secure_cookie("current_event_id", str(event_id))
+        
+        # Create Session in Redis
+        session_data = {
+            "user_id": user_id,
+            "user_name": name,
+            "user_role": user_role,
+            "current_event_id": event_id
+        }
+        session_id = session_service.create_session(session_data)
+        is_https = (self.request.protocol == "https") or (self.request.headers.get("X-Forwarded-Proto") == "https")
+        self.set_secure_cookie("session_id", session_id, httponly=True, secure=is_https, samesite="Lax")
+
+        # Cleanup legacy cookies
+        self.clear_cookie("user_id")
+        self.clear_cookie("user_name")
+        self.clear_cookie("user_role")
+        
+        # We might kept current_event_id cookie as fallback in BaseHandler, but session has it now.
+        if event_id:
+            self.set_secure_cookie("current_event_id", str(event_id), httponly=True, secure=is_https, samesite="Lax")
+
         self.redirect(f"/e/{slug}/watch" if slug else "/watch")
 
 
@@ -179,15 +196,27 @@ class LoginHandler(BaseHandler):
         user_id = user["id"]
         user_name = user.get("name") or "Visitante"
         user_role = user.get("role") or "visor"
-        
-        self.set_secure_cookie("user_id", str(user_id))
-        self.set_secure_cookie("user_name", user_name)
-        self.set_secure_cookie("user_role", user_role)
+        selected_event_id = user.get("event_id") or event_id
+
+        # Create Session
+        session_data = {
+            "user_id": user_id,
+            "user_name": user_name,
+            "user_role": user_role,
+            "current_event_id": selected_event_id
+        }
+        session_id = session_service.create_session(session_data)
+        is_https = (self.request.protocol == "https") or (self.request.headers.get("X-Forwarded-Proto") == "https")
+        self.set_secure_cookie("session_id", session_id, httponly=True, secure=is_https, samesite="Lax")
+
+        # Cleanup legacy cookies
+        self.clear_cookie("user_id")
+        self.clear_cookie("user_name")
+        self.clear_cookie("user_role")
 
         # Keep event context consistent for the session.
-        selected_event_id = user.get("event_id") or event_id
         if selected_event_id:
-            self.set_secure_cookie("current_event_id", str(selected_event_id))
+            self.set_secure_cookie("current_event_id", str(selected_event_id), httponly=True, secure=is_https, samesite="Lax")
         
         # Smart redirect based on role
         if user_role == "administrador":
@@ -206,7 +235,13 @@ class LogoutHandler(BaseHandler):
         user_id = self.get_current_user()
         if user_id:
             analytics_service.mark_session_inactive(user_id)
+        
+        # Invalidate session in Redis
+        s_cookie = self.get_secure_cookie("session_id")
+        if s_cookie:
+            session_service.delete_session(s_cookie.decode())
 
+        self.clear_cookie("session_id")
         self.clear_cookie("user_id")
         self.clear_cookie("user_name")
         self.clear_cookie("user_role")

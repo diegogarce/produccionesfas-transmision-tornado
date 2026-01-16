@@ -74,7 +74,8 @@
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
-                    <img src="{{ event['logo_url'] }}" alt="Producciones Fast" class="h-6 w-auto">
+                    <img src="{{ event['logo_url'] if event and event.get('logo_url') else 'https://produccionesfast.com/assets/img/logo.png' }}"
+                        alt="Logo" class="h-6 w-auto">
                 </a>
 
                 <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
@@ -128,7 +129,7 @@
                 <!-- Video Container -->
                 <div class="flex-1 flex items-center justify-center relative group">
                     <!-- Official Video Player -->
-                    <video id="video-player" class="w-full h-full object-contain bg-black shadow-2xl" autoplay muted
+                    <video id="video-player" class="w-full h-full object-contain bg-black shadow-2xl" autoplay controls
                         playsinline loop>
                         <source src="{{ event['video_url'] }}" type="video/mp4">
                         Tu navegador no soporta el reproductor de video.
@@ -143,7 +144,7 @@
                                 <span
                                     class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-black uppercase">Live</span>
                                 <span id="stream-time"
-                                    class="text-xs font-mono opacity-60 text-slate-300">01:24:05</span>
+                                    class="text-xs font-mono opacity-60 text-slate-300">00:00:00</span>
                             </div>
                         </div>
                     </div>
@@ -278,7 +279,10 @@
         const baseWsUrl = "{% raw ws_url %}";
         const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
         const finalWsUrl = baseWsUrl.replace(/^ws(s)?:\/\//, wsProtocol);
-        const ws = new WebSocket(finalWsUrl);
+        let ws = null;
+        let wsReconnectAttempt = 0;
+        let wsReconnectTimer = null;
+        const pendingSends = [];
         const chatPanel = document.getElementById("chat-panel");
         const qaList = document.getElementById("qa-list");
         const chatForm = document.getElementById("chat-form");
@@ -301,6 +305,84 @@
         });
 
         chatPanel.scrollTop = chatPanel.scrollHeight;
+
+        function flushPendingSends() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            while (pendingSends.length) {
+                const payload = pendingSends.shift();
+                ws.send(JSON.stringify(payload));
+            }
+        }
+
+        function safeWsSend(payload) {
+            try {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(payload));
+                    return true;
+                }
+            } catch (e) {
+                console.error("WS send failed:", e);
+            }
+            // Queue and reconnect (no reload)
+            pendingSends.push(payload);
+            showToast("Reconectando…", "warning");
+            connectWs();
+            return false;
+        }
+
+        function connectWs() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+            if (wsReconnectTimer) {
+                clearTimeout(wsReconnectTimer);
+                wsReconnectTimer = null;
+            }
+
+            ws = new WebSocket(finalWsUrl);
+
+            ws.addEventListener("open", () => {
+                wsReconnectAttempt = 0;
+                flushPendingSends();
+            });
+
+            ws.addEventListener("message", (event) => {
+                const payload = JSON.parse(event.data);
+                if (payload.type === "chat") {
+                    appendChat(payload);
+                } else if (payload.type === "approved_question") {
+                    appendQuestion(payload);
+                } else if (payload.type === "count_update") {
+                    if (viewersHeader) viewersHeader.textContent = payload.count + " viendo";
+                    if (viewersMobile) viewersMobile.textContent = payload.count + "k"; // Just an example format
+                } else if (payload.type === "force_logout") {
+                    if (payload.user_id == currentUserId) {
+                        window.location.href = "/login?error=" + encodeURIComponent("Tu sesión ha sido finalizada por el moderador.");
+                    }
+                } else if (payload.type === "event_closed") {
+                    window.location.href = "/?error=" + encodeURIComponent("Esta transmisión ha finalizado.");
+                } else if (payload.type === "error") {
+                    showToast(payload.message, "error");
+                }
+            });
+
+            ws.addEventListener("close", (e) => {
+                // If the server closed the socket due to expired session, reload to trigger login redirect.
+                // Codes 4001/4003 are custom from backend.
+                if (e && (e.code === 4001 || e.code === 4003)) {
+                    window.location.reload();
+                    return;
+                }
+
+                wsReconnectAttempt += 1;
+                const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(wsReconnectAttempt, 5)));
+                wsReconnectTimer = setTimeout(connectWs, delay);
+            });
+
+            ws.addEventListener("error", () => {
+                // Let close handler schedule reconnect
+            });
+        }
+
+        connectWs();
 
         function appendChat(payload) {
             const div = document.createElement("div");
@@ -340,31 +422,13 @@
             qaList.insertBefore(div, qaList.children[1]);
         }
 
-        ws.addEventListener("message", (event) => {
-            const payload = JSON.parse(event.data);
-            if (payload.type === "chat") {
-                appendChat(payload);
-            } else if (payload.type === "approved_question") {
-                appendQuestion(payload);
-            } else if (payload.type === "count_update") {
-                if (viewersHeader) viewersHeader.textContent = payload.count + " viendo";
-                if (viewersMobile) viewersMobile.textContent = payload.count + "k"; // Just an example format
-            } else if (payload.type === "force_logout") {
-                if (payload.user_id == currentUserId) {
-                    window.location.href = "/login?error=" + encodeURIComponent("Tu sesión ha sido finalizada por el moderador.");
-                }
-            } else if (payload.type === "event_closed") {
-                window.location.href = "/?error=" + encodeURIComponent("Esta transmisión ha finalizado.");
-            } else if (payload.type === "error") {
-                showToast(payload.message, "error");
-            }
-        });
+
 
         chatForm.onsubmit = (e) => {
             e.preventDefault();
             const message = chatInput.value.trim();
             if (!message) return;
-            ws.send(JSON.stringify({ type: "chat", message }));
+            safeWsSend({ type: "chat", message });
             chatInput.value = "";
         };
 
@@ -372,21 +436,23 @@
             e.preventDefault();
             const question = questionInput.value.trim();
             if (!question) return;
-            ws.send(JSON.stringify({ type: "ask", question }));
+            safeWsSend({ type: "ask", question });
             questionInput.value = "";
             showToast("Pregunta enviada. Aparecerá si es aprobada.", "success");
         };
 
         // Heartbeat system (WS preferred, HTTP fallback)
         setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: "ping" }));
                 return;
             }
             // If WS can't connect (corporate proxies / mixed content / etc.), keep session alive via HTTP.
             fetch(`/api/ping?event_id={{ event['id'] }}`,
                 { method: 'POST', headers: { 'Content-Type': 'application/json' } }
-            ).catch(() => { /* ignore */ });
+            ).then(res => {
+                if (res.status === 401) window.location.reload();
+            }).catch(() => { /* ignore */ });
         }, 60000);
 
         // Keyframe animations
