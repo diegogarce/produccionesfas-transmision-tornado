@@ -3,6 +3,7 @@ import os
 import tornado.web
 
 from app.config import COOKIE_SECRET
+from app.handlers.home import HomeHandler
 from app.handlers.auth import LoginHandler, LogoutHandler, RegistrationHandler
 from app.handlers.admin import EventsAdminHandler, APIEventsHandler
 from app.handlers.moderator import (
@@ -25,7 +26,7 @@ def make_app():
 
 	return tornado.web.Application(
 		[
-			(r"/", RegistrationHandler),
+			(r"/", HomeHandler),
 			(r"/login", LoginHandler),
 			(r"/logout", LogoutHandler),
 			(r"/watch", WatchHandler),

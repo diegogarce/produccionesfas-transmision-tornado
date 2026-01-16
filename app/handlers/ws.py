@@ -6,11 +6,26 @@ import tornado.websocket
 
 from app.services import analytics_service, chat_service, questions_service, users_service
 
-WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set()}
+# Keep per-role client pools. Reports is a first-class role.
+WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set(), "reports": set()}
 
 
 def push_reports_snapshot(event_id=None):
     try:
+        # If no event_id is provided (e.g., periodic refresh), broadcast a scoped snapshot
+        # per event to avoid mixing data across events in the UI.
+        if event_id is None:
+            event_ids = set()
+            for clients in WEBSOCKET_CLIENTS.values():
+                for client in list(clients):
+                    eid = getattr(client, "event_id", None)
+                    if eid is not None:
+                        event_ids.add(eid)
+
+            for eid in sorted(event_ids):
+                push_reports_snapshot(event_id=eid)
+            return
+
         # 1. Historical data (all registered/seen participants) for the Reports view
         all_participants = analytics_service.list_all_participants_for_report(event_id=event_id)
         broadcast({"type": "active_sessions", "sessions": all_participants}, roles={"reports"}, event_id=event_id)
@@ -134,7 +149,7 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
                 text = payload.get("message", "").strip()
                 if not text:
                     return
-                chat_payload = chat_service.add_chat_message(self.user_id, self.user_name, text, event_id=self.event_id)
+                chat_payload = chat_service.add_chat_message(self.user_id, text, event_id=self.event_id)
                 broadcast({"type": "chat", **chat_payload, "timestamp": datetime.now().strftime("%H:%M")}, event_id=self.event_id)
 
             elif msg_type == "ask":
@@ -145,11 +160,13 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
                 manual_user = payload.get("manual_user", "").strip()
                 if not question:
                     return
-                
-                # Use manual_user if provided (for external questions like WhatsApp)
-                display_name = manual_user if manual_user else self.user_name
-                
-                question_payload = questions_service.add_question(self.user_id, display_name, question, event_id=self.event_id)
+
+                question_payload = questions_service.add_question(
+                    self.user_id,
+                    question,
+                    event_id=self.event_id,
+                    manual_user_name=(manual_user or None),
+                )
                 broadcast({"type": "pending_question", **question_payload}, roles={"moderator"}, event_id=self.event_id)
 
             elif msg_type == "approve" and self.role == "moderator":

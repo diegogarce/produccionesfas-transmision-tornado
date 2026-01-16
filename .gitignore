@@ -1,2 +1,5 @@
 ﻿app/__pycache__
 app/__pycache__
+__pycache__/*
+app/handlers/__pycache__/*
+app/handlers/__pycache__/*

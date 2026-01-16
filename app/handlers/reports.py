@@ -47,6 +47,8 @@ class ReportsHandler(BaseHandler):
             return
 
         event_id = event["id"]
+        # Ensure exports (which rely on current_event_id) are scoped to this event.
+        self.set_secure_cookie("current_event_id", str(event_id))
         # Show all participants (historical list)
         active_sessions = analytics_service.list_all_participants_for_report(event_id=event_id)
         self.render(
@@ -65,15 +67,18 @@ class ReportsExportHandler(BaseHandler):
         active_within_seconds = _safe_int(self.get_query_argument("window", default=None), default=None)
         
         event_id = self.current_event_id()
+        if not event_id:
+            try:
+                event_id = int(self.get_query_argument("event_id"))
+            except (TypeError, ValueError, tornado.web.MissingArgumentError):
+                event_id = None
 
         if kind != "active_sessions":
             self.set_status(400)
             self.finish({"error": "kind inválido"})
             return
 
-        active_sessions = analytics_service.list_all_participants_for_report(
-            event_id=event_id
-        )
+        active_sessions = analytics_service.list_all_participants_for_report(event_id=event_id)
 
         rows = _build_active_sessions_export_rows(active_sessions)
         filename_base = "reporte_sesiones_activas"

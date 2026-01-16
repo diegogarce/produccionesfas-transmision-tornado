@@ -32,6 +32,10 @@ class RegistrationHandler(BaseHandler):
         event = events_service.get_event_by_slug(slug)
         event_id = event["id"] if event else None
 
+        if not event_id:
+            self.render("error.html", message="Evento no encontrado")
+            return
+
         if not (name and email):
             self.render("register.html", event=event, error="Nombre y correo son obligatorios.")
             return
@@ -47,7 +51,10 @@ class RegistrationHandler(BaseHandler):
 
         with create_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id, role FROM users WHERE email=%s", (email,))
+                cursor.execute(
+                    "SELECT id, role FROM users WHERE email=%s AND event_id=%s",
+                    (email, event_id),
+                )
                 user = cursor.fetchone()
                 if user:
                     login_url = f"/e/{slug}/login" if slug else "/login"
@@ -64,6 +71,7 @@ class RegistrationHandler(BaseHandler):
         self.set_secure_cookie("user_id", str(user_id))
         self.set_secure_cookie("user_name", name)
         self.set_secure_cookie("user_role", user_role)
+        self.set_secure_cookie("current_event_id", str(event_id))
         self.redirect(f"/e/{slug}/watch" if slug else "/watch")
 
 
@@ -92,6 +100,13 @@ class LoginHandler(BaseHandler):
         
         from app.services import events_service
         event = events_service.get_event_by_slug(slug)
+
+        event_id = None
+        if event:
+            event_id = event["id"]
+        else:
+            # If no slug, try cookie context. If still missing, login may be ambiguous.
+            event_id = self.current_event_id()
         
         if not email:
             self.render("login.html", event=event, prefill_email=email, error="El correo es obligatorio.")
@@ -109,15 +124,44 @@ class LoginHandler(BaseHandler):
 
         with create_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id, name, password, role FROM users WHERE email=%s", (email,))
-                user = cursor.fetchone()
+                if event_id:
+                    cursor.execute(
+                        "SELECT id, name, password, role, event_id FROM users WHERE email=%s AND event_id=%s",
+                        (email, event_id),
+                    )
+                    user = cursor.fetchone()
+
+                    # Allow a global admin (event_id IS NULL) to log in from an event-scoped URL.
+                    if not user:
+                        cursor.execute(
+                            "SELECT id, name, password, role, event_id FROM users WHERE email=%s AND event_id IS NULL ORDER BY created_at DESC",
+                            (email,),
+                        )
+                        candidate = cursor.fetchone()
+                        if candidate and (candidate.get("role") == "administrador"):
+                            user = candidate
+                else:
+                    # No event context: if there are multiple event-scoped users with the same email,
+                    # force using the event-specific login URL (/e/{slug}/login).
+                    cursor.execute(
+                        "SELECT id, name, password, role, event_id FROM users WHERE email=%s ORDER BY created_at DESC",
+                        (email,),
+                    )
+                    users = cursor.fetchall() or []
+                    if len(users) == 1:
+                        user = users[0]
+                    else:
+                        user = None
 
         if not user:
             self.render(
                 "login.html",
                 event=event,
                 prefill_email=email,
-                error="No encontramos ese correo. Regístrate primero.",
+                error=(
+                    "Cuenta no encontrada para este evento, o el correo existe en más de un evento. "
+                    "Entra desde el link del evento (/e/<slug>/login)."
+                ),
             )
             return
 
@@ -139,6 +183,11 @@ class LoginHandler(BaseHandler):
         self.set_secure_cookie("user_id", str(user_id))
         self.set_secure_cookie("user_name", user_name)
         self.set_secure_cookie("user_role", user_role)
+
+        # Keep event context consistent for the session.
+        selected_event_id = user.get("event_id") or event_id
+        if selected_event_id:
+            self.set_secure_cookie("current_event_id", str(selected_event_id))
         
         # Smart redirect based on role
         if user_role == "administrador":
