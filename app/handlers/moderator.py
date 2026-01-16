@@ -98,7 +98,7 @@ class APIUserStatusHandler(BaseHandler):
 
     @tornado.web.authenticated
     def post(self):
-        if not self.is_admin():
+        if not self.is_moderator():
             self.set_status(403)
             return
 
@@ -113,7 +113,8 @@ class APIUserStatusHandler(BaseHandler):
             if success:
                 # Trigger a refresh of active sessions for all reports/moderators
                 from app.handlers import ws
-                ws.push_reports_snapshot()
+                event_id = self.current_event_id()
+                ws.push_reports_snapshot(event_id=event_id)
                 
                 # If banned, we might want to notify via WS to force kick (future enhancement)
                 if field == "banned" and value:

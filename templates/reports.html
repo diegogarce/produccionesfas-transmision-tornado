@@ -143,7 +143,7 @@
                 </a>
                 <!-- <h1 class="text-3xl font-bold text-white">Consola de Audiencia</h1> -->
                 <!-- <p class="text-slate-500 mt-1">Monitoreo de participantes en tiempo real.</p> -->
-                
+
                 <div class="mb-12 animate-fade-in">
                     <h1 class="text-3xl font-bold text-white mb-2">Reporte de Audiencia</h1>
                     <p class="text-slate-500">Monitoreo de participantes en tiempo real.</p>
@@ -227,7 +227,11 @@
         });
 
         // WebSocket Logic
-        const ws = new WebSocket("{% raw ws_url %}");
+        // Dynamically determine protocol (ws or wss) based on page loading environment
+        const baseWsUrl = "{% raw ws_url %}";
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const finalWsUrl = baseWsUrl.replace(/^ws(s)?:\/\//, wsProtocol);
+        const ws = new WebSocket(finalWsUrl);
 
         ws.addEventListener("open", () => {
             statusEl.textContent = 'Conectado';

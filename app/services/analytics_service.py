@@ -1,7 +1,8 @@
 from app.db import _normalize_timestamps, create_db_connection
 
 
-DEFAULT_ACTIVE_WINDOW_SECONDS = 120
+# Active window for "connected" audience; bumped to be more tolerant of slow networks
+DEFAULT_ACTIVE_WINDOW_SECONDS = 600
 
 
 def mark_session_inactive(user_id: int):
@@ -21,27 +22,51 @@ def mark_session_inactive(user_id: int):
 def ensure_session_analytics(user_id: int, event_id: int = None):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
-            # Check for a record specifically for this user and this event
-            cursor.execute("SELECT id FROM session_analytics WHERE user_id=%s AND event_id=%s", (user_id, event_id))
-            if cursor.fetchone():
-                cursor.execute(
-                    "UPDATE session_analytics SET last_ping=NOW() WHERE user_id=%s AND event_id=%s",
-                    (user_id, event_id),
-                )
+            # NOTE: In the current DB schema, session_analytics has UNIQUE(user_id).
+            # That means we track one active session row per user and overwrite event_id when they join an event.
+            cursor.execute(
+                "SELECT id, event_id FROM session_analytics WHERE user_id=%s",
+                (user_id,),
+            )
+            existing = cursor.fetchone()
+
+            if existing:
+                # If user switched events, reset the session counters for the new event.
+                if event_id is not None and existing.get("event_id") != event_id:
+                    cursor.execute(
+                        "UPDATE session_analytics SET event_id=%s, start_time=NOW(), last_ping=NOW(), total_minutes=0 WHERE user_id=%s",
+                        (event_id, user_id),
+                    )
+                else:
+                    cursor.execute(
+                        "UPDATE session_analytics SET last_ping=NOW(), event_id=%s WHERE user_id=%s",
+                        (event_id, user_id),
+                    )
             else:
                 cursor.execute(
-                    "INSERT IGNORE INTO session_analytics (user_id, event_id, start_time, last_ping, total_minutes) VALUES (%s, %s, NOW(), NOW(), 0)",
+                    "INSERT INTO session_analytics (user_id, event_id, start_time, last_ping, total_minutes) VALUES (%s, %s, NOW(), NOW(), 0)",
                     (user_id, event_id),
                 )
 
 def record_ping(user_id: int, event_id: int = None):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
-            # We need both user_id and event_id to increment the correct session
-            cursor.execute(
-                "UPDATE session_analytics SET last_ping=NOW(), total_minutes=total_minutes+1 WHERE user_id=%s AND event_id=%s",
-                (user_id, event_id),
+            # Update by user_id (schema uses UNIQUE(user_id)).
+            updated = cursor.execute(
+                "UPDATE session_analytics SET last_ping=NOW(), total_minutes=total_minutes+1, event_id=%s WHERE user_id=%s",
+                (event_id, user_id),
             )
+
+            # If no row was updated, create it on the fly.
+            if updated == 0:
+                cursor.execute(
+                    "INSERT INTO session_analytics (user_id, event_id, start_time, last_ping, total_minutes) VALUES (%s, %s, NOW(), NOW(), 0)",
+                    (user_id, event_id),
+                )
+                cursor.execute(
+                    "UPDATE session_analytics SET last_ping=NOW(), total_minutes=total_minutes+1, event_id=%s WHERE user_id=%s",
+                    (event_id, user_id),
+                )
 
 
 def list_users_for_report():
@@ -95,6 +120,8 @@ def list_active_sessions_for_report(active_within_seconds: int = DEFAULT_ACTIVE_
         with conn.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
+
+    print(f"[AN] active sessions event_id={event_id} window={active_within_seconds}s count={len(rows)}")
 
     return [_normalize_timestamps(row) for row in rows]
 

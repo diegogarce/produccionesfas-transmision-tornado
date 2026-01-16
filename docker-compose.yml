@@ -3,31 +3,17 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: tornado_app
+    container_name: transmisionesfast-tornado
     ports:
       - "8888:8888"
     environment:
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=Pr0ducc10n35F45t2050
-      - DB_NAME=transmision_tornado
-      - COOKIE_SECRET=vErY-sEcReT-kEy-fOr-tOrNaDo
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: mariadb:10.11
-    container_name: tornado_db
-    restart: always
-    environment:
-      - MYSQL_ROOT_PASSWORD=Pr0ducc10n35F45t2050
-      - MYSQL_DATABASE=transmision_tornado
-    ports:
-      - "3306:3306"
+      # Credenciales para tu base de datos remota
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - COOKIE_SECRET=${COOKIE_SECRET}
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
-volumes:
-  mysql_data:
+      # Si necesitas persistir logs u otros archivos en tu volumen extra
+      - /mnt/tornado/logs:/app/logs
+    restart: always

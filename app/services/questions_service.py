@@ -126,4 +126,16 @@ def mark_question_as_read(question_id: int):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='read' WHERE id=%s", (question_id,))
-    return True
+            cursor.execute(
+                "SELECT user_name, question_text FROM questions WHERE id=%s",
+                (question_id,),
+            )
+            row = cursor.fetchone()
+    if not row:
+        return None
+    return {
+        "id": question_id,
+        "user": row["user_name"],
+        "question": row["question_text"],
+        "timestamp": datetime.now().strftime("%H:%M"),
+    }

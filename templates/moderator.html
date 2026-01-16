@@ -68,10 +68,10 @@
 </head>
 
 <body class="bg-[#050511] text-slate-300 font-sans selection:bg-indigo-500/30">
-    <div class="h-screen flex flex-col overflow-hidden">
+    <div class="flex flex-col min-h-screen md:h-screen overflow-hidden pb-10 md:pb-0">
         <!-- Top Navigation Bar (Matching Identity) -->
         <header
-            class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md px-6 h-16 flex items-center justify-between z-50">
+            class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md px-6 h-16 flex items-center justify-between z-50 flex-shrink-0">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -128,7 +128,7 @@
         </header>
 
         <!-- Main Dashboard Grid -->
-        <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#050511]">
+        <main class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#050511]">
 
             <!-- Left Panel: Monitor & Participants -->
             <div class="w-full md:w-[400px] xl:w-[500px] flex flex-col border-r border-white/5 bg-navy-900/30">
@@ -179,8 +179,7 @@
                                             }}m conectado</span>
                                     </div>
                                 </div>
-                                <div
-                                    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex items-center gap-1">
                                     <button
                                         onclick="updateUserStatus({{ u['user_id'] }}, 'chat_blocked', {{ 'false' if u.get('chat_blocked') else 'true' }})"
                                         class="p-1.5 rounded-lg {{ 'bg-amber-500/20 text-amber-500' if u.get('chat_blocked') else 'bg-white/5 text-slate-400' }} hover:bg-amber-500/30 transition-colors"
@@ -446,7 +445,11 @@
     </div>
 
     <script>
-        const ws = new WebSocket("{% raw ws_url %}");
+        // Dynamically determine protocol (ws or wss) based on page loading environment
+        const baseWsUrl = "{% raw ws_url %}";
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const finalWsUrl = baseWsUrl.replace(/^ws(s)?:\/\//, wsProtocol);
+        const ws = new WebSocket(finalWsUrl);
         const currentEventId = "{{ event['id'] }}";
         const pendingQuestionsContainer = document.getElementById("pending-questions");
         const approvedQuestionsContainer = document.getElementById("approved-questions");
@@ -572,20 +575,13 @@
                 if (el) el.remove();
                 updateUI();
             } else if (payload.type === "question_read") {
-                // Find it in Approved, move to History
+                // Find it in Approved, remove if exists
                 const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
-                if (el) {
-                    // Extract data for history
-                    const qData = {
-                        id: payload.id,
-                        user: el.querySelector('span.truncate').textContent,
-                        question: el.querySelector('p').textContent,
-                        timestamp: el.querySelector('span.text-[9px]').textContent
-                    };
-                    el.remove();
-                    removeEmptyState(readQuestionsContainer);
-                    readQuestionsContainer.prepend(createQuestionCard(qData, 'read'));
-                }
+                if (el) el.remove();
+
+                // Add to History using full payload from server
+                removeEmptyState(readQuestionsContainer);
+                readQuestionsContainer.prepend(createQuestionCard(payload, 'read'));
                 updateUI();
             } else if (payload.type === "question_removed") {
                 const el = approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
@@ -633,7 +629,36 @@
             participants.forEach(u => {
                 const div = document.createElement("div");
                 div.className = "flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5";
-                div.innerHTML = `<div class="flex items-center gap-3 min-w-0"><div class="w-2 h-2 rounded-full ${u.banned ? 'bg-red-500' : 'bg-emerald-500'}"></div><div class="flex flex-col min-w-0"><span class="text-xs font-bold text-slate-200 truncate">${u.user_name || 'Desconocido'}</span><span class="text-[9px] text-slate-500 font-mono">${u.session_minutes}m</span></div></div>`;
+
+                const isChatBlocked = !!u.chat_blocked;
+                const isQaBlocked = !!u.qa_blocked;
+                const isBanned = !!u.banned;
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-2 h-2 rounded-full ${isBanned ? 'bg-red-500 shadow-red-500/20' : 'bg-emerald-500 shadow-emerald-500/20'} shadow-lg"></div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-slate-200 truncate">${u.user_name || 'Desconocido'}</span>
+                            <span class="text-[9px] text-slate-500 font-mono">${u.session_minutes}m conectado</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="updateUserStatus(${u.user_id}, 'chat_blocked', ${!isChatBlocked})" 
+                                class="p-1.5 rounded-lg ${isChatBlocked ? 'bg-amber-500/20 text-amber-500' : 'bg-white/5 text-slate-400'} hover:bg-amber-500/30 transition-colors" 
+                                title="${isChatBlocked ? 'Desbloquear Chat' : 'Bloquear Chat'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        </button>
+                        <button onclick="updateUserStatus(${u.user_id}, 'qa_blocked', ${!isQaBlocked})" 
+                                class="p-1.5 rounded-lg ${isQaBlocked ? 'bg-indigo-500/20 text-indigo-500' : 'bg-white/5 text-slate-400'} hover:bg-indigo-500/30 transition-colors" 
+                                title="${isQaBlocked ? 'Desbloquear Q&A' : 'Bloquear Q&A'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </button>
+                        <button onclick="updateUserStatus(${u.user_id}, 'banned', ${!isBanned})" 
+                                class="p-1.5 rounded-lg ${isBanned ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-slate-400'} hover:bg-red-500/30 transition-colors" 
+                                title="${isBanned ? 'Unban' : 'Expulsar del Evento'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                        </button>
+                    </div>`;
                 participantsContainer.appendChild(div);
             });
             stats.users = participants.length;

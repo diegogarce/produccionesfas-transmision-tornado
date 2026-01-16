@@ -8,9 +8,5 @@ __pycache__
 db_data/
 mysql_data/
 .env
-Dockerfile
-docker-compose.yml
-init.sql
-requirements.txt
 node_modules/
 .DS_Store

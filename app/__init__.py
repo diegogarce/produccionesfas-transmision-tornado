@@ -15,6 +15,7 @@ from app.handlers.moderator import (
 from app.handlers.reports import ReportsExportHandler, ReportsHandler
 from app.handlers.speaker import SpeakerHandler
 from app.handlers.watch import WatchHandler
+from app.handlers.watch import APIPingHandler
 from app.handlers.ws import LiveWebSocket
 
 
@@ -33,6 +34,7 @@ def make_app():
 			(r"/reports", ReportsHandler),
 			(r"/reports/export", ReportsExportHandler),
 			(r"/ws", LiveWebSocket),
+			(r"/api/ping", APIPingHandler),
 			(r"/api/questions", APIQuestionsHandler),
 			(r"/api/participants", APIParticipantsHandler),
 			(r"/api/chats", APIChatsHandler),

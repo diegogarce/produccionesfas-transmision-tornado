@@ -69,4 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.current_user_role() in ["moderador", "administrador"]
 
     def get_ws_scheme(self):
-        return "wss" if self.request.protocol == "https" else "ws"
+        # Detect if we are in HTTPS via direct protocol or proxy header
+        if self.request.protocol == "https" or self.request.headers.get("X-Forwarded-Proto") == "https":
+            return "wss"
+        return "ws"

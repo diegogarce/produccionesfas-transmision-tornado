@@ -18,6 +18,8 @@ def push_reports_snapshot(event_id=None):
         # 2. Truly active sessions (live viewers) for the Moderator view
         active_viewers = analytics_service.list_active_sessions_for_report(event_id=event_id)
         broadcast({"type": "active_sessions", "sessions": active_viewers}, roles={"moderator"}, event_id=event_id)
+
+        print(f"[WS] snapshot event_id={event_id} active={len(active_viewers)} total={len(all_participants)}")
         
     except Exception as exc:
         print(f"[WS] ! Error building reports snapshot: {exc}")
@@ -59,7 +61,7 @@ def broadcast(payload, roles=None, event_id=None):
             except tornado.websocket.WebSocketClosedError:
                 WEBSOCKET_CLIENTS[role].discard(client)
     
-    print(f"[WS] ✓ Enviado a {sent_count} clientes")
+    print(f"[WS] OK: Enviado a {sent_count} clientes")
 
 
 class LiveWebSocket(tornado.websocket.WebSocketHandler):
@@ -69,6 +71,7 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
     def open(self):
         secure_id = self.get_secure_cookie("user_id")
         if not secure_id:
+            print(f"[WS] ! Conexión rechazada: No hay cookie user_id (Cookie Secret puede haber cambiado)")
             self.close()
             return
         try:
@@ -80,10 +83,21 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
         self.user_name = (self.get_secure_cookie("user_name") or b"Guest").decode()
         self.role = self.get_query_argument("role", "viewer")
         arg_event = self.get_query_argument("event_id", default=None)
+        # Fallback: if client omitted event_id (or malformed), try the cookie set by BaseHandler.prepare
         try:
             self.event_id = int(arg_event) if arg_event else None
         except (TypeError, ValueError):
             self.event_id = None
+
+        if self.event_id is None:
+            cookie_event = self.get_secure_cookie("current_event_id")
+            try:
+                self.event_id = int(cookie_event.decode()) if cookie_event else None
+            except (TypeError, ValueError):
+                self.event_id = None
+
+        # Keep accepting connections even if event_id is missing.
+        # Audience counting also has an HTTP fallback on /api/ping.
 
         WEBSOCKET_CLIENTS.setdefault(self.role, set()).add(self)
         
@@ -94,14 +108,14 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
         # Push update to everyone interested (moderators/reports)
         push_reports_snapshot(event_id=self.event_id)
         
-        print(f"[WS] ✓ Conectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
+        print(f"[WS] OK: Conectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
 
     def on_close(self):
         WEBSOCKET_CLIENTS.get(self.role, set()).discard(self)
         if getattr(self, "role", None) == "viewer" and getattr(self, "user_id", None) is not None:
             analytics_service.mark_session_inactive(self.user_id)
             push_reports_snapshot(event_id=self.event_id)
-        print(f"[WS] ✗ Desconectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
+        print(f"[WS] OUT: Desconectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
 
     def on_message(self, message):
         try:
@@ -163,8 +177,9 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
                     question_id = int(question_id)
                 except (TypeError, ValueError):
                     return
-                questions_service.mark_question_as_read(question_id)
-                broadcast({"type": "question_read", "id": question_id}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
+                read_payload = questions_service.mark_question_as_read(question_id)
+                if read_payload:
+                    broadcast({"type": "question_read", **read_payload}, roles={"viewer", "speaker", "moderator"}, event_id=self.event_id)
 
             elif msg_type == "return_to_moderator" and self.role == "speaker":
                 question_id = payload.get("id")

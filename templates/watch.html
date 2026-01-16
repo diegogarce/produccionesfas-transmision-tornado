@@ -67,10 +67,10 @@
     {% include "includes/toast.html" %}
 </head>
 
-<body class="bg-[#050511] text-slate-300 min-h-screen overflow-hidden">
-    <div class="h-screen flex flex-col">
+<body class="bg-[#050511] text-slate-300 min-h-screen">
+    <div class="flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
         <!-- Top Navigation Bar (Matching Identity) -->
-        <header class="glass h-16 flex items-center justify-between px-6 z-50">
+        <header class="glass h-16 flex items-center justify-between px-6 z-50 flex-shrink-0">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -122,7 +122,7 @@
         </header>
 
         <!-- Main Layout -->
-        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <div class="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
             <!-- Video Stage (Left) -->
             <div class="flex-1 flex flex-col bg-black relative">
                 <!-- Video Container -->
@@ -160,7 +160,8 @@
             </div>
 
             <!-- Interaction Siderbar (Right) -->
-            <div class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl">
+            <div
+                class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl min-h-[500px] lg:min-h-0">
                 <!-- Tab Switching -->
                 <div class="flex h-14 border-b border-white/5">
                     <button data-tab="chat"
@@ -273,7 +274,11 @@
 
     <script>
         const currentUserId = "{{ user_id }}";
-        const ws = new WebSocket("{% raw ws_url %}");
+        // Dynamically determine protocol (ws or wss) based on page loading environment
+        const baseWsUrl = "{% raw ws_url %}";
+        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const finalWsUrl = baseWsUrl.replace(/^ws(s)?:\/\//, wsProtocol);
+        const ws = new WebSocket(finalWsUrl);
         const chatPanel = document.getElementById("chat-panel");
         const qaList = document.getElementById("qa-list");
         const chatForm = document.getElementById("chat-form");
@@ -372,11 +377,16 @@
             showToast("Pregunta enviada. Aparecerá si es aprobada.", "success");
         };
 
-        // Heartbeat system
+        // Heartbeat system (WS preferred, HTTP fallback)
         setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: "ping" }));
+                return;
             }
+            // If WS can't connect (corporate proxies / mixed content / etc.), keep session alive via HTTP.
+            fetch(`/api/ping?event_id={{ event['id'] }}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+            ).catch(() => { /* ignore */ });
         }, 60000);
 
         // Keyframe animations

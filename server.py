@@ -8,7 +8,10 @@ from app.handlers.ws import push_reports_snapshot
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(8888)
+    # Create HTTP server with xheaders=True to correctly handle X-Forwarded-Proto/For
+    import tornado.httpserver
+    server = tornado.httpserver.HTTPServer(app, xheaders=True)
+    server.listen(8888)
     print("Tornado live platform running on http://localhost:8888")
 
     # Keep reports refreshed even if pings are sparse.
