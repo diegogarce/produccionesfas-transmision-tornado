@@ -6,6 +6,7 @@ from app.config import COOKIE_SECRET
 from app.handlers.home import HomeHandler
 from app.handlers.auth import LoginHandler, LogoutHandler, RegistrationHandler
 from app.handlers.admin import EventsAdminHandler, APIEventsHandler
+from app.handlers.assets import LogoUploadHandler
 from app.handlers.moderator import (
     APIChatsHandler,
     APIParticipantsHandler,
@@ -42,6 +43,7 @@ def make_app():
 			(r"/api/user/status", APIUserStatusHandler),
 			(r"/admin/events", EventsAdminHandler),
 			(r"/api/admin/events", APIEventsHandler),
+			(r"/api/admin/events/logo", LogoUploadHandler),
 			# Dynamic Event Routes
 			(r"/e/([^/]+)/?", RegistrationHandler),
 			(r"/e/([^/]+)/login", LoginHandler),
@@ -53,6 +55,7 @@ def make_app():
 		cookie_secret=COOKIE_SECRET,
 		login_url="/",
 		template_path=template_path,
+		static_path=os.path.join(base_dir, "static"),
 		xsrf_cookies=False,
 		debug=True,
 	)

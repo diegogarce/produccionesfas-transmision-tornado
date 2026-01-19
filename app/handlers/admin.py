@@ -26,13 +26,18 @@ class APIEventsHandler(BaseHandler):
             title = data.get("title")
             logo_url = data.get("logo_url")
             video_url = data.get("video_url")
+            theme_color = data.get("theme_color")
+            header_bg_color = data.get("header_bg_color")
+            header_text_color = data.get("header_text_color")
+            body_bg_color = data.get("body_bg_color")
+            body_text_color = data.get("body_text_color")
             
             if not slug or not title:
                 self.set_status(400)
                 self.write({"status": "error", "message": "Slug and Title are required"})
                 return
             
-            event_id = events_service.create_event(slug, title, logo_url, video_url)
+            event_id = events_service.create_event(slug, title, logo_url, video_url, theme_color, header_bg_color, header_text_color, body_bg_color, body_text_color)
             self.write({"status": "success", "event_id": event_id})
         except Exception as e:
             self.set_status(500)
@@ -50,9 +55,14 @@ class APIEventsHandler(BaseHandler):
             title = data.get("title")
             logo_url = data.get("logo_url")
             video_url = data.get("video_url")
+            theme_color = data.get("theme_color")
+            header_bg_color = data.get("header_bg_color")
+            header_text_color = data.get("header_text_color")
+            body_bg_color = data.get("body_bg_color")
+            body_text_color = data.get("body_text_color")
             is_active = data.get("is_active")
             
-            events_service.update_event(event_id, title, logo_url, video_url, is_active)
+            events_service.update_event(event_id, title, logo_url, video_url, theme_color, header_bg_color, header_text_color, body_bg_color, body_text_color, is_active)
             
             # If the event was closed, kick all users
             if not is_active:

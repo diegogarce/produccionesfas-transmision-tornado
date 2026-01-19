@@ -30,9 +30,48 @@
         }
     </script>
     <style>
+        :root {
+            --dynamic-accent: #4f46e5;
+            --header-bg: #0a0b16;
+            --header-text: #cbd5e1;
+            --body-bg: #050511;
+            --body-text: #cbd5e1;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #050511;
+            background-color: var(--body-bg) !important;
+            color: var(--body-text) !important;
+        }
+
+        header,
+        .glass {
+            background-color: var(--header-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--header-text) !important;
+        }
+
+        /* Update specific text colors in header */
+        header .text-slate-300,
+        header .text-slate-400,
+        header .text-slate-500,
+        header .text-slate-600 {
+            color: var(--header-text) !important;
+            opacity: 0.8;
+        }
+
+        [data-theme-accent-text] {
+            color: var(--dynamic-accent) !important;
+        }
+
+        [data-theme-accent-bg] {
+            background-color: var(--dynamic-accent) !important;
+            border-color: var(--dynamic-accent) !important;
+            color: white !important;
+        }
+
+        [data-theme-accent-border] {
+            border-color: var(--dynamic-accent) !important;
         }
 
         .scroll-area::-webkit-scrollbar {
@@ -67,7 +106,28 @@
     {% include "includes/toast.html" %}
 </head>
 
-<body class="bg-[#050511] text-slate-300 font-sans selection:bg-indigo-500/30">
+<body class="font-sans selection:bg-indigo-500/30" data-event-id="{{ event['id'] }}"
+    data-event-title="{{ event['title'] }}" data-event-slug="{{ event['slug'] }}"
+    data-event-logo-url="{{ event.get('logo_url', '') }}" data-event-video-url="{{ event.get('video_url', '') }}"
+    data-event-is-active="{{ 1 if event.get('is_active') else 0 }}"
+    data-theme-accent="{{ event['theme_color'] if event and event.get('theme_color') else '#4f46e5' }}"
+    data-theme-header-bg="{{ event['header_bg_color'] if event and event.get('header_bg_color') else '#0a0b16' }}"
+    data-theme-header-text="{{ event['header_text_color'] if event and event.get('header_text_color') else '#cbd5e1' }}"
+    data-theme-body-bg="{{ event['body_bg_color'] if event and event.get('body_bg_color') else '#050511' }}"
+    data-theme-body-text="{{ event['body_text_color'] if event and event.get('body_text_color') else '#cbd5e1' }}">
+    <script>
+            (() => {
+                const root = document.documentElement;
+                const d = document.body?.dataset || {};
+
+                const set = (name, v, fallback) => root.style.setProperty(name, v || fallback);
+                set('--dynamic-accent', d.themeAccent, '#4f46e5');
+                set('--header-bg', d.themeHeaderBg, '#0a0b16');
+                set('--header-text', d.themeHeaderText, '#cbd5e1');
+                set('--body-bg', d.themeBodyBg, '#050511');
+                set('--body-text', d.themeBodyText, '#cbd5e1');
+            })();
+    </script>
     <div class="flex flex-col min-h-screen md:h-screen overflow-hidden pb-10 md:pb-0">
         <!-- Top Navigation Bar (Matching Identity) -->
         <header
@@ -81,8 +141,8 @@
 
                 <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
 
-                <span
-                    class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Moderation
+                <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block"
+                    data-theme-accent-text>Moderation
                     Cockpit</span>
 
                 <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden lg:block"></div>
@@ -210,15 +270,17 @@
         </header>
 
         <!-- Main Dashboard Grid -->
-        <main class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#050511]">
+        <main class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
+            style="background-color: var(--body-bg);">
 
             <!-- Left Panel: Monitor & Participants -->
-            <div class="w-full md:w-[400px] xl:w-[500px] flex flex-col border-r border-white/5 bg-navy-900/30">
+            <div class="w-full md:w-[400px] xl:w-[500px] flex flex-col border-r border-white/5"
+                style="background-color: rgba(0,0,0,0.1);">
                 <!-- Video Monitor -->
                 <div class="aspect-video bg-black relative group overflow-hidden">
                     <!-- Official Stream Preview -->
                     <video class="w-full h-full object-cover" autoplay playsinline muted loop>
-                        <source src="https://produccionesfast.com/assets/videos/transmisionesfast.mp4" type="video/mp4">
+                        <source src="{{ event['video_url'] }}" type="video/mp4">
                     </video>
                     <div
                         class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -235,8 +297,10 @@
 
                 <!-- Participants List -->
                 <div class="flex-1 flex flex-col overflow-hidden">
-                    <div class="p-4 border-b border-white/5 flex items-center justify-between bg-navy-800/20">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Audiencia Conectada</h2>
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between"
+                        style="background-color: rgba(255,255,255,0.03);">
+                        <h2 class="text-xs font-bold uppercase tracking-wider"
+                            style="color: var(--body-text); opacity: 0.6;">Audiencia Conectada</h2>
                         <button id="refresh-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -255,9 +319,12 @@
                                         class="w-2 h-2 rounded-full {{ 'bg-red-500' if u.get('banned') else 'bg-emerald-500' }} shadow-lg {{ 'shadow-red-500/20' if u.get('banned') else 'shadow-emerald-500/20' }}">
                                     </div>
                                     <div class="flex flex-col min-w-0">
-                                        <span class="text-xs font-bold text-slate-200 truncate">{{ u.get('user_name',
+                                        <span class="text-xs font-bold truncate" style="color: var(--body-text);">{{
+                                            u.get('user_name',
                                             'Desconocido') }}</span>
-                                        <span class="text-[9px] text-slate-500 font-mono">{{ u.get('session_minutes', 0)
+                                        <span class="text-[9px] font-mono"
+                                            style="color: var(--body-text); opacity: 0.6;">{{ u.get('session_minutes',
+                                            0)
                                             }}m conectado</span>
                                     </div>
                                 </div>
@@ -301,15 +368,17 @@
             </div>
 
             <!-- Center Panel: Q&A Flow -->
-            <div class="flex-1 flex flex-col border-r border-white/5 bg-[#050511]">
+            <div class="flex-1 flex flex-col border-r border-white/5" style="background-color: var(--body-bg);">
                 <!-- Tabs for Pending Questions & History -->
-                <div class="flex border-b border-white/5 bg-navy-900/10">
+                <div class="flex border-b border-white/5" style="background-color: rgba(255,255,255,0.03);">
                     <button id="tab-flow" onclick="switchTab('flow')"
-                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-indigo-500 text-white transition-all">
+                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-indigo-500 text-white transition-all"
+                        data-theme-accent-border>
                         Control de Flujo
                     </button>
                     <button id="tab-history" onclick="switchTab('history')"
-                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all">
+                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent transition-all hover:opacity-100 opacity-60"
+                        style="color: var(--body-text);" data-theme-accent-border>
                         Historial (Leídas)
                     </button>
                 </div>
@@ -319,13 +388,15 @@
                     <div class="p-4 border-b border-white/5 flex flex-col gap-4">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <h2 class="text-sm font-bold text-white">Cola de Preguntas</h2>
+                                <h2 class="text-sm font-bold" style="color: var(--body-text);">Cola de Preguntas</h2>
                                 <span id="pending-count"
-                                    class="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20">0
+                                    class="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20"
+                                    data-theme-accent-bg>0
                                     NUEVAS</span>
                             </div>
                             <button id="open-add-qa-btn"
-                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-2">
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-2"
+                                data-theme-accent-bg>
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 4v16m8-8H4"></path>
@@ -335,9 +406,10 @@
                         </div>
                         <div class="relative">
                             <input type="text" id="qa-search" placeholder="Filtrar por nombre o contenido..."
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
-                            <svg class="w-4 h-4 absolute right-3 top-2 text-slate-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                                class="w-full border rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 transition-all"
+                                style="background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--body-text);">
+                            <svg class="w-4 h-4 absolute right-3 top-2" style="color: var(--body-text); opacity: 0.6;"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -347,17 +419,19 @@
                     <div class="flex-1 overflow-y-auto scroll-area p-4 space-y-4" id="pending-questions">
                         {% if not pending_questions %}
                         <div class="flex flex-col items-center justify-center h-full opacity-20 empty-state">
-                            <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-12 h-12 mb-2" style="color: var(--body-text);" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
                                 </path>
                             </svg>
-                            <p class="text-xs font-bold uppercase tracking-widest">Esperando preguntas...</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--body-text);">
+                                Esperando preguntas...</p>
                         </div>
                         {% else %}
                         {% for q in pending_questions %}
-                        <div class="question-card animate-in p-4 rounded-xl border border-white/5 bg-navy-800 shadow-xl shadow-black/20"
-                            data-id="{{ q['id'] }}">
+                        <div class="question-card animate-in p-4 rounded-xl border border-white/5 shadow-xl shadow-black/20"
+                            style="background-color: rgba(0,0,0,0.3);" data-id="{{ q['id'] }}">
                             <div class="flex items-start gap-3">
                                 <div
                                     class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
@@ -365,12 +439,15 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-bold text-white truncate pr-2">{{ q['user_name']
+                                        <span class="text-xs font-bold truncate pr-2"
+                                            style="color: var(--body-text);">{{ q['user_name']
                                             }}</span>
-                                        <span class="text-[9px] font-medium text-slate-500">{{ q.get('created_at', '')
+                                        <span class="text-[9px] font-medium"
+                                            style="color: var(--body-text); opacity: 0.6;">{{ q.get('created_at', '')
                                             }}</span>
                                     </div>
-                                    <p class="text-sm text-slate-300 leading-relaxed font-medium">{{ q['question_text']
+                                    <p class="text-sm leading-relaxed font-medium" style="color: var(--body-text);">{{
+                                        q['question_text']
                                         }}
                                     </p>
                                 </div>
@@ -379,7 +456,8 @@
                                 <button
                                     class="flex-1 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold text-[10px] uppercase tracking-wider transition-all approve-btn">Aprobar</button>
                                 <button
-                                    class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-slate-400 font-bold text-[10px] uppercase tracking-wider transition-all reject-btn">Rechazar</button>
+                                    class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 hover:text-red-400 font-bold text-[10px] uppercase tracking-wider transition-all reject-btn"
+                                    style="color: var(--body-text); opacity: 0.7;">Rechazar</button>
                             </div>
                         </div>
                         {% end %}
@@ -389,32 +467,37 @@
 
                 <!-- Tab: Historial -->
                 <div id="section-history" class="hidden flex flex-col flex-1 overflow-hidden">
-                    <div class="p-4 border-b border-white/5 bg-navy-900/20">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Memoria del Evento</p>
-                        <h2 class="text-lg font-bold text-white">Preguntas Contestadas</h2>
+                    <div class="p-4 border-b border-white/5" style="background-color: rgba(0,0,0,0.2);">
+                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-60"
+                            style="color: var(--body-text);">Memoria del Evento</p>
+                        <h2 class="text-lg font-bold" style="color: var(--body-text);">Preguntas Contestadas</h2>
                     </div>
                     <div class="flex-1 overflow-y-auto scroll-area p-4 space-y-4" id="read-questions">
                         {% if not read_questions %}
                         <div class="flex flex-col items-center justify-center h-full opacity-20 empty-history">
-                            <p class="text-xs font-bold uppercase tracking-widest">No hay historial aún</p>
+                            <p class="text-xs font-bold uppercase tracking-widest" style="color: var(--body-text);">No
+                                hay historial aún</p>
                         </div>
                         {% else %}
                         {% for q in read_questions %}
-                        <div class="question-card p-4 rounded-xl border border-white/5 bg-white/[0.02] opacity-60"
-                            data-id="{{ q['id'] }}">
+                        <div class="question-card p-4 rounded-xl border border-white/5 opacity-60"
+                            style="background-color: rgba(255,255,255,0.02);" data-id="{{ q['id'] }}">
                             <div class="flex items-start gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                                    style="background-color: rgba(255,255,255,0.1);">
                                     {{ q['user_name'][:2].upper() }}
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-bold text-slate-300 truncate pr-2">{{ q['user_name']
+                                        <span class="text-xs font-bold truncate pr-2"
+                                            style="color: var(--body-text);">{{ q['user_name']
                                             }}</span>
-                                        <span class="text-[9px] font-medium text-slate-600">{{ q.get('created_at', '')
+                                        <span class="text-[9px] font-medium"
+                                            style="color: var(--body-text); opacity: 0.6;">{{ q.get('created_at', '')
                                             }}</span>
                                     </div>
-                                    <p class="text-sm text-slate-500 leading-relaxed">{{ q['question_text'] }}</p>
+                                    <p class="text-sm leading-relaxed" style="color: var(--body-text); opacity: 0.8;">{{
+                                        q['question_text'] }}</p>
                                 </div>
                             </div>
                         </div>
@@ -427,12 +510,14 @@
             <!-- Modal for manual Q&A -->
             <div id="add-qa-modal"
                 class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-[#0f172a]/80 backdrop-blur-sm">
-                <div
-                    class="bg-navy-900 w-full max-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in">
+                <div class="w-full max-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in"
+                    style="background-color: var(--body-bg);">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-white">Pregunta Externa (WhatsApp)</h3>
-                            <button id="close-add-qa-btn" class="text-slate-500 hover:text-white transition-colors">
+                            <h3 class="text-lg font-bold text-white" style="color: var(--body-text);">Pregunta Externa
+                                (WhatsApp)</h3>
+                            <button id="close-add-qa-btn" class="text-slate-500 hover:text-white transition-colors"
+                                style="color: var(--body-text); opacity: 0.6;">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M6 18L18 6M6 6l12 12"></path>
@@ -441,21 +526,24 @@
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label
-                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nombre
+                                <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                                    style="color: var(--body-text); opacity: 0.7;">Nombre
                                     del Usuario</label>
                                 <input type="text" id="manual-user" placeholder="Ej: Juan desde WhatsApp"
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
+                                    class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                                    style="background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--body-text);">
                             </div>
                             <div>
-                                <label
-                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Contenido
+                                <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                                    style="color: var(--body-text); opacity: 0.7;">Contenido
                                     de la Pregunta</label>
                                 <textarea id="manual-text" rows="3" placeholder="Escribe la pregunta aquí..."
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"></textarea>
+                                    class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all resize-none"
+                                    style="background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--body-text);"></textarea>
                             </div>
                             <button id="submit-manual-qa"
-                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                                class="w-full font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98] text-white"
+                                data-theme-accent-bg>
                                 PUBLICAR EN COLA
                             </button>
                         </div>
@@ -464,18 +552,23 @@
             </div>
 
             <!-- Right Panel: Combined Chat & Speaker View -->
-            <div class="w-full md:w-[320px] xl:w-[380px] flex flex-col bg-navy-900/20">
+            <div class="w-full md:w-[320px] xl:w-[380px] flex flex-col" style="background-color: rgba(0,0,0,0.2);">
                 <!-- Chat Feed (Top Half) -->
                 <div class="h-1/2 flex flex-col border-b border-white/5">
-                    <div class="p-4 border-b border-white/5 bg-navy-800/20">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Chat Comunitario</h2>
+                    <div class="p-4 border-b border-white/5" style="background-color: rgba(0,0,0,0.2);">
+                        <h2 class="text-xs font-bold uppercase tracking-wider"
+                            style="color: var(--body-text); opacity: 0.6;">Chat Comunitario</h2>
                     </div>
                     <div class="flex-1 overflow-y-auto scroll-area p-3 space-y-2" id="chat-messages">
                         {% for msg in chat_messages %}
-                        <div class="bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]">
-                            <p class="text-[10px] font-bold text-indigo-400 mb-1">{{ msg.get('user_name') }}</p>
-                            <p class="text-xs text-slate-300">{{ msg.get('message') }}</p>
-                            <p class="text-[8px] text-slate-600 mt-1 text-right">{{ msg.get('created_at') }}</p>
+                        <div class="p-3 rounded-xl border border-white/5 animate-in max-w-[90%]"
+                            style="background-color: rgba(255,255,255,0.05);">
+                            <p class="text-[10px] font-bold mb-1" style="color: var(--body-text); opacity: 0.9;">{{
+                                msg.get('user_name') }}</p>
+                            <p class="text-xs" style="color: var(--body-text); opacity: 0.8;">{{ msg.get('message') }}
+                            </p>
+                            <p class="text-[8px] mt-1 text-right" style="color: var(--body-text); opacity: 0.4;">{{
+                                msg.get('created_at') }}</p>
                         </div>
                         {% end %}
                     </div>
@@ -483,19 +576,22 @@
 
                 <!-- Approved/History (Bottom Half) -->
                 <div class="h-1/2 flex flex-col">
-                    <div class="p-4 border-b border-white/5 bg-navy-800/20 flex items-center justify-between">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">En Pantalla (Speaker)</h2>
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between"
+                        style="background-color: rgba(0,0,0,0.2);">
+                        <h2 class="text-xs font-bold uppercase tracking-wider"
+                            style="color: var(--body-text); opacity: 0.6;">En Pantalla (Speaker)</h2>
                         <svg class="w-4 h-4 text-indigo-400 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                             <path
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z">
                             </path>
                         </svg>
                     </div>
-                    <div class="flex-1 overflow-y-auto scroll-area p-3 space-y-2 bg-indigo-500/[0.02]"
-                        id="approved-questions">
+                    <div class="flex-1 overflow-y-auto scroll-area p-3 space-y-2"
+                        style="background-color: rgba(79, 70, 229, 0.02);" id="approved-questions">
                         {% if approved_questions %}
                         {% for q in approved_questions %}
-                        <div class="question-card animate-in p-4 rounded-xl border border-white/5 bg-indigo-500/10 border-indigo-500/20"
+                        <div class="question-card animate-in p-4 rounded-xl border"
+                            style="background-color: rgba(79, 70, 229, 0.1); border-color: rgba(79, 70, 229, 0.2);"
                             data-id="{{ q['id'] }}">
                             <div class="flex items-start gap-3">
                                 <div
@@ -517,7 +613,9 @@
                         {% end %}
                         {% else %}
                         <div class="flex flex-col items-center justify-center py-6 opacity-20 empty-state">
-                            <p class="text-[10px] font-bold uppercase tracking-widest">Sin aprobadas</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--body-text);">
+                                Sin
+                                aprobadas</p>
                         </div>
                         {% end %}
                     </div>
@@ -534,7 +632,7 @@
         let ws = null;
         let wsReconnectAttempt = 0;
         let wsReconnectTimer = null;
-        const currentEventId = "{{ event['id'] }}";
+        const currentEventId = document.body?.dataset?.eventId || "";
         const pendingQuestionsContainer = document.getElementById("pending-questions");
         const approvedQuestionsContainer = document.getElementById("approved-questions");
         const readQuestionsContainer = document.getElementById("read-questions");
@@ -669,7 +767,7 @@
                 return;
             }
             // Fallback HTTP ping if WS is down
-            fetch(`/api/ping?event_id={{ event['id'] }}`,
+            fetch(`/api/ping?event_id=${encodeURIComponent(currentEventId)}`,
                 { method: 'POST', headers: { 'Content-Type': 'application/json' } }
             ).then(res => {
                 if (res.status === 401) window.location.reload();
@@ -761,16 +859,16 @@
                 ]);
 
                 // Pending
-                pendingQuestionsContainer.innerHTML = qRes.pending.length ? "" : `<div class="flex flex-col items-center justify-center py-10 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest">Sin pendientes</p></div>`;
+                pendingQuestionsContainer.innerHTML = qRes.pending.length ? "" : `<div class="flex flex-col items-center justify-center py-10 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--body-text);">Sin pendientes</p></div>`;
                 qRes.pending.forEach(q => pendingQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'pending')));
                 addListeners(pendingQuestionsContainer);
 
                 // Approved
-                approvedQuestionsContainer.innerHTML = qRes.approved.length ? "" : `<div class="flex flex-col items-center justify-center py-6 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest">Sin aprobadas</p></div>`;
+                approvedQuestionsContainer.innerHTML = qRes.approved.length ? "" : `<div class="flex flex-col items-center justify-center py-6 opacity-20 empty-state"><p class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--body-text);">Sin aprobadas</p></div>`;
                 qRes.approved.forEach(q => approvedQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'approved')));
 
                 // History (Read)
-                readQuestionsContainer.innerHTML = qRes.read.length ? "" : `<div class="flex flex-col items-center justify-center h-full opacity-20 empty-history"><p class="text-xs font-bold uppercase tracking-widest">No hay historial aún</p></div>`;
+                readQuestionsContainer.innerHTML = qRes.read.length ? "" : `<div class="flex flex-col items-center justify-center h-full opacity-20 empty-history"><p class="text-xs font-bold uppercase tracking-widest" style="color: var(--body-text);">No hay historial aún</p></div>`;
                 qRes.read.forEach(q => readQuestionsContainer.appendChild(createQuestionCard({ id: q.id, user: q.user_name, question: q.question_text, timestamp: q.created_at }, 'read')));
 
                 renderParticipants(pRes);
@@ -836,6 +934,150 @@
 
         refresh();
         addListeners(pendingQuestionsContainer);
+    </script>
+    <div id="theme-control-panel"
+        class="fixed bottom-4 right-4 z-50 flex flex-col gap-3 p-4 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl transition-all duration-300 translate-y-[calc(100%-3rem)] hover:translate-y-0 group/panel">
+        <div class="flex items-center justify-between cursor-pointer pb-2 border-b border-white/10">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-slate-300 font-bold">Personalizar Tema</span>
+            <svg class="w-3 h-3 text-slate-500 group-hover/panel:rotate-180 transition-transform" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+        </div>
+
+        <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-1">
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] uppercase text-slate-500 font-bold">Acento</label>
+                <div class="flex gap-2">
+                    <input type="color" id="picker-accent"
+                        class="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
+                    <button id="btn-save-theme"
+                        class="text-[9px] bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 h-8 flex-1 uppercase font-bold">Guardar</button>
+                </div>
+            </div>
+
+            <div class="col-span-2 h-px bg-white/5 my-1"></div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] uppercase text-indigo-400 font-bold">Header BG</label>
+                <input type="color" id="picker-header-bg"
+                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] uppercase text-indigo-400 font-bold">Header Txt</label>
+                <input type="color" id="picker-header-text"
+                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] uppercase text-indigo-400 font-bold">Body BG</label>
+                <input type="color" id="picker-body-bg"
+                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[9px] uppercase text-indigo-400 font-bold">Body Txt</label>
+                <input type="color" id="picker-body-text"
+                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const d = document.body?.dataset || {};
+            const defaults = {
+                accent: d.themeAccent || "#4f46e5",
+                headerBg: d.themeHeaderBg || "#0a0b16",
+                headerText: d.themeHeaderText || "#cbd5e1",
+                bodyBg: d.themeBodyBg || "#050511",
+                bodyText: d.themeBodyText || "#cbd5e1"
+            };
+
+            const root = document.documentElement;
+
+            const pickers = {
+                accent: document.getElementById('picker-accent'),
+                headerBg: document.getElementById('picker-header-bg'),
+                headerText: document.getElementById('picker-header-text'),
+                bodyBg: document.getElementById('picker-body-bg'),
+                bodyText: document.getElementById('picker-body-text')
+            };
+
+            const saveBtn = document.getElementById('btn-save-theme');
+
+            function applyTheme(config) {
+                if (config.accent) root.style.setProperty('--dynamic-accent', config.accent);
+                if (config.headerBg) root.style.setProperty('--header-bg', config.headerBg);
+                if (config.headerText) root.style.setProperty('--header-text', config.headerText);
+                if (config.bodyBg) root.style.setProperty('--body-bg', config.bodyBg);
+                if (config.bodyText) root.style.setProperty('--body-text', config.bodyText);
+            }
+
+            // Init values from server defaults
+            applyTheme(defaults);
+            if (pickers.accent) pickers.accent.value = defaults.accent;
+            if (pickers.headerBg) pickers.headerBg.value = defaults.headerBg;
+            if (pickers.headerText) pickers.headerText.value = defaults.headerText;
+            if (pickers.bodyBg) pickers.bodyBg.value = defaults.bodyBg;
+            if (pickers.bodyText) pickers.bodyText.value = defaults.bodyText;
+
+            // Live preview
+            Object.keys(pickers).forEach(key => {
+                pickers[key].addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    if (key === 'accent') root.style.setProperty('--dynamic-accent', val);
+                    else if (key === 'headerBg') root.style.setProperty('--header-bg', val);
+                    else if (key === 'headerText') root.style.setProperty('--header-text', val);
+                    else if (key === 'bodyBg') root.style.setProperty('--body-bg', val);
+                    else if (key === 'bodyText') root.style.setProperty('--body-text', val);
+                });
+            });
+
+            // Save to server
+            saveBtn.addEventListener('click', async () => {
+                const payload = {
+                    id: Number(d.eventId),
+                    title: d.eventTitle || "",
+                    slug: d.eventSlug || "",
+                    logo_url: d.eventLogoUrl || "",
+                    video_url: d.eventVideoUrl || "",
+                    is_active: Number(d.eventIsActive || 0),
+                    theme_color: pickers.accent.value,
+                    header_bg_color: pickers.headerBg.value,
+                    header_text_color: pickers.headerText.value,
+                    body_bg_color: pickers.bodyBg.value,
+                    body_text_color: pickers.bodyText.value
+                };
+
+                saveBtn.textContent = "Guardando...";
+                try {
+                    const res = await fetch('/api/admin/events', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        document.body.dataset.themeAccent = payload.theme_color;
+                        document.body.dataset.themeHeaderBg = payload.header_bg_color;
+                        document.body.dataset.themeHeaderText = payload.header_text_color;
+                        document.body.dataset.themeBodyBg = payload.body_bg_color;
+                        document.body.dataset.themeBodyText = payload.body_text_color;
+
+                        showToast('Tema actualizado globalmente', 'success');
+                        saveBtn.textContent = "Guardado";
+                        setTimeout(() => saveBtn.textContent = "Guardar", 2000);
+                    } else {
+                        showToast('Error al guardar tema', 'error');
+                        saveBtn.textContent = "Error";
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast('Error de conexión', 'error');
+                    saveBtn.textContent = "Error";
+                }
+            });
+        })();
     </script>
 </body>
 

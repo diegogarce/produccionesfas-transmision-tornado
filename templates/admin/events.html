@@ -363,10 +363,89 @@
                         class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
                 </div>
 
+                <!-- Theme Configuration -->
+                <div class="space-y-4 border border-white/5 rounded-xl p-4 bg-black/20">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2">
+                        Personalización Visual</h3>
+
+                    <!-- Base Accent -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Acento
+                                (Botones/Links)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="theme_color" value="#4f46e5"
+                                    class="w-10 h-10 rounded-lg border border-white/10 p-1 cursor-pointer bg-navy-950">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <!-- Header Section -->
+                        <div class="space-y-3">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">Header</span>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] text-slate-500">Fondo</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="header_bg_color" value="#0a0b16"
+                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] text-slate-500">Texto</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="header_text_color" value="#cbd5e1"
+                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Body Section -->
+                        <div class="space-y-3">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">Cuerpo</span>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] text-slate-500">Fondo</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="body_bg_color" value="#050511"
+                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] text-slate-500">Texto</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="body_text_color" value="#cbd5e1"
+                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Logo URL</label>
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Logo del evento</label>
+                        <span id="logo-upload-status" class="text-xs text-slate-500 min-h-[1rem]"></span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="logo-upload-trigger"
+                            class="bg-navy-800 hover:bg-navy-700 border border-white/10 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-300 transition-all">
+                            Subir imagen
+                        </button>
+                        <span class="text-[11px] text-slate-500">PNG, JPG o WebP hasta 5 MB.</span>
+                    </div>
+                    <input type="file" id="logo_upload_input" accept="image/png,image/jpeg,image/webp" class="sr-only">
                     <input type="text" id="logo_url" value="https://produccionesfast.com/assets/img/logo.png"
+                        data-default-logo="https://produccionesfast.com/assets/img/logo.png"
                         class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
+                    <div class="flex items-center gap-4 pt-2">
+                        <img id="logo-preview" src="https://produccionesfast.com/assets/img/logo.png"
+                            alt="Logo del evento"
+                            class="w-16 h-16 rounded-lg border border-white/10 object-contain bg-white/5">
+                        <p class="text-xs text-slate-500 max-w-sm">Este logo se mostrará en todas las páginas de evento
+                            y reportes.</p>
+                    </div>
                 </div>
 
                 <div class="pt-2">
@@ -400,13 +479,99 @@
         const modal = document.getElementById('event-modal');
         const form = document.getElementById('event-form');
         let editingId = null;
+        const logoUrlInput = document.getElementById('logo_url');
+        const logoUploadInput = document.getElementById('logo_upload_input');
+        const logoUploadTrigger = document.getElementById('logo-upload-trigger');
+        const logoUploadStatus = document.getElementById('logo-upload-status');
+        const logoPreview = document.getElementById('logo-preview');
+        const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+        const defaultLogoUrl = logoUrlInput.dataset.defaultLogo || logoUrlInput.value || '';
+        const themeColorInput = document.getElementById('theme_color');
+        const headerBgInput = document.getElementById('header_bg_color');
+        const headerTextInput = document.getElementById('header_text_color');
+        const bodyBgInput = document.getElementById('body_bg_color');
+        const bodyTextInput = document.getElementById('body_text_color');
+
+        const DEFAULT_THEME_COLOR = '#4f46e5';
+        const DEFAULT_HEADER_BG = '#0a0b16';
+        const DEFAULT_HEADER_TEXT = '#cbd5e1';
+        const DEFAULT_BODY_BG = '#050511';
+        const DEFAULT_BODY_TEXT = '#cbd5e1';
+
+        function updateLogoPreview(source) {
+            logoPreview.src = source || defaultLogoUrl;
+        }
+
+        function setLogoStatus(message = '', tone = '') {
+            logoUploadStatus.textContent = message;
+            logoUploadStatus.classList.remove('text-emerald-400', 'text-amber-400', 'text-red-400', 'text-slate-500');
+            if (!message) {
+                logoUploadStatus.classList.add('text-slate-500');
+                return;
+            }
+            const toneClass = tone === 'success' ? 'text-emerald-400' : tone === 'error' ? 'text-red-400' : 'text-amber-400';
+            logoUploadStatus.classList.add(toneClass);
+        }
+
+        function resetLogoState() {
+            setLogoStatus();
+            updateLogoPreview(logoUrlInput.value || defaultLogoUrl);
+        }
+
+        function resetThemeColor() {
+            if (themeColorInput) themeColorInput.value = DEFAULT_THEME_COLOR;
+            if (headerBgInput) headerBgInput.value = DEFAULT_HEADER_BG;
+            if (headerTextInput) headerTextInput.value = DEFAULT_HEADER_TEXT;
+            if (bodyBgInput) bodyBgInput.value = DEFAULT_BODY_BG;
+            if (bodyTextInput) bodyTextInput.value = DEFAULT_BODY_TEXT;
+        }
+
+        async function uploadLogoAsset(file) {
+            const payload = new FormData();
+            payload.append('logo', file);
+            setLogoStatus('Subiendo logo...', 'neutral');
+            try {
+                const res = await fetch('/api/admin/events/logo', {
+                    method: 'POST',
+                    body: payload,
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || 'No fue posible subir el archivo.');
+                }
+                logoUrlInput.value = data.logo_url;
+                updateLogoPreview(data.logo_url);
+                setLogoStatus('Logo cargado', 'success');
+            } catch (err) {
+                setLogoStatus('No se pudo subir', 'error');
+                showToast('No se pudo subir el logo.', 'error');
+            }
+        }
+
+        logoUploadTrigger.addEventListener('click', () => logoUploadInput.click());
+        logoUploadInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > LOGO_MAX_BYTES) {
+                setLogoStatus('El archivo supera 5 MB', 'error');
+                showToast('El logo supera el tamaño permitido.', 'error');
+                logoUploadInput.value = '';
+                return;
+            }
+            await uploadLogoAsset(file);
+            logoUploadInput.value = '';
+        });
+
+        logoUrlInput.addEventListener('input', () => updateLogoPreview(logoUrlInput.value || defaultLogoUrl));
 
         function openModal() {
             editingId = null;
             form.reset();
             document.getElementById('modal-title').textContent = "Nuevo Evento";
+            resetLogoState();
             document.getElementById('slug').disabled = false;
             document.getElementById('is_active').checked = true;
+            resetThemeColor();
             modal.classList.remove('hidden');
         }
 
@@ -422,7 +587,17 @@
             document.getElementById('slug').value = event.slug;
             document.getElementById('slug').disabled = true;
             document.getElementById('video_url').value = event.video_url;
-            document.getElementById('logo_url').value = event.logo_url;
+            const logoValue = event.logo_url || defaultLogoUrl;
+
+            if (themeColorInput) themeColorInput.value = event.theme_color || DEFAULT_THEME_COLOR;
+            if (headerBgInput) headerBgInput.value = event.header_bg_color || DEFAULT_HEADER_BG;
+            if (headerTextInput) headerTextInput.value = event.header_text_color || DEFAULT_HEADER_TEXT;
+            if (bodyBgInput) bodyBgInput.value = event.body_bg_color || DEFAULT_BODY_BG;
+            if (bodyTextInput) bodyTextInput.value = event.body_text_color || DEFAULT_BODY_TEXT;
+
+            setLogoStatus();
+            const themeValue = event.theme_color || DEFAULT_THEME_COLOR;
+            if (themeColorInput) themeColorInput.value = themeValue;
             document.getElementById('is_active').checked = event.is_active;
             modal.classList.remove('hidden');
         }
@@ -432,18 +607,14 @@
             editEvent(data);
         }
 
-        function toggleWithData(btn) {
-            const data = JSON.parse(btn.getAttribute('data-event'));
-            toggleEventStatus(data.id, data.title, data.slug, data.video_url, data.logo_url, data.is_active);
-        }
-
-        async function toggleEventStatus(id, title, slug, video_url, logo_url, current_status) {
+        async function toggleEventStatus(event) {
+            const current_status = event.is_active;
             const action = current_status ? 'Finalizar' : 'Iniciar';
             const actionText = current_status ? 'cerrar' : 'activar';
 
             const result = await Swal.fire({
                 title: `¿${action} transmisión?`,
-                text: `Estás a punto de ${actionText} el evento "${title}". ${current_status ? 'Los usuarios ya no podrán ver el stream.' : 'Será visible para todos.'}`,
+                text: `Estás a punto de ${actionText} el evento "${event.title}". ${current_status ? 'Los usuarios ya no podrán ver el stream.' : 'Será visible para todos.'}`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: current_status ? '#ef4444' : '#10b981',
@@ -464,11 +635,16 @@
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id: id,
-                        title: title,
-                        slug: slug,
-                        video_url: video_url,
-                        logo_url: logo_url,
+                        id: event.id,
+                        title: event.title,
+                        slug: event.slug,
+                        video_url: event.video_url,
+                        logo_url: event.logo_url,
+                        theme_color: event.theme_color,
+                        header_bg_color: event.header_bg_color,
+                        header_text_color: event.header_text_color,
+                        body_bg_color: event.body_bg_color,
+                        body_text_color: event.body_text_color,
                         is_active: current_status ? 0 : 1
                     })
                 });
@@ -516,6 +692,11 @@
                 slug: slug,
                 video_url: document.getElementById('video_url').value,
                 logo_url: document.getElementById('logo_url').value,
+                theme_color: themeColorInput ? themeColorInput.value : DEFAULT_THEME_COLOR,
+                header_bg_color: headerBgInput ? headerBgInput.value : DEFAULT_HEADER_BG,
+                header_text_color: headerTextInput ? headerTextInput.value : DEFAULT_HEADER_TEXT,
+                body_bg_color: bodyBgInput ? bodyBgInput.value : DEFAULT_BODY_BG,
+                body_text_color: bodyTextInput ? bodyTextInput.value : DEFAULT_BODY_TEXT,
                 is_active: document.getElementById('is_active').checked ? 1 : 0
             };
 
