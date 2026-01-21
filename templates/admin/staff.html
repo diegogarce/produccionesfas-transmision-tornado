@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Personal · Producciones Fast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        navy: { 950: '#050511', 900: '#0a0b16', 800: '#151725', 700: '#1f2236' },
+                        brand: { blue: '#4f46e5', accent: '#6366f1' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050511;
+        }
+
+        .glass-panel {
+            background: rgba(10, 11, 22, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+    {% include "../includes/toast.html" %}
+</head>
+
+<body class="text-slate-300 min-h-screen antialiased">
+    <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center h-full">
+                <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
+                    class="h-6 w-auto opacity-90">
+                <div class="h-8 w-px bg-white/10 mx-4"></div>
+                <div class="flex gap-4">
+                    <a href="/admin/events"
+                        class="text-[10px] font-bold tracking-widest text-slate-500 hover:text-white uppercase transition-colors">Eventos</a>
+                    <a href="/admin/staff"
+                        class="text-[10px] font-bold tracking-widest text-indigo-400 uppercase">Personal</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if is_superadmin %}
+                <button onclick="openModal()"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-widest transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Nuevo Staff</span>
+                </button>
+                {% end %}
+
+                <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-10">
+        <div class="mb-10">
+            <h1 class="text-3xl font-bold text-white mb-2">Administración de Staff</h1>
+            <p class="text-slate-500">Gestiona los roles globales de administradores, moderadores y speakers del
+                sistema.</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto text-sm">
+            <table class="w-full text-left">
+                <thead class="bg-white/5 border-b border-white/10">
+                    <tr>
+                        <th class="px-6 py-4 font-semibold text-slate-400">Usuario</th>
+                        <th class="px-6 py-4 font-semibold text-slate-400">Rol Global</th>
+                        <th class="px-6 py-4 font-semibold text-slate-400">Eventos Activos</th>
+                        <th class="px-6 py-4 font-semibold text-slate-400 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for person in staff %}
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-white">{{ person['name'] or 'Sin nombre' }}</div>
+                            <div class="text-xs text-slate-500">{{ person['email'] }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if person['global_role'] == 'superadmin' %}
+                            <span
+                                class="px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase">Superadmin</span>
+                            {% elif person['global_role'] == 'admin' %}
+                            <span
+                                class="px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase">Admin</span>
+                            {% elif person['global_role'] == 'moderator' %}
+                            <span
+                                class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase">Moderator</span>
+                            {% elif person['global_role'] == 'speaker' %}
+                            <span
+                                class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase">Speaker</span>
+                            {% else %}
+                            <span
+                                class="px-2 py-1 rounded-md bg-white/5 text-slate-500 text-[10px] font-bold uppercase">{{
+                                person['global_role'] }}</span>
+                            {% end %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-white font-medium">{{ person['event_count'] }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick='editStaff({{ json_encode(person) }})'
+                                class="text-indigo-400 hover:text-indigo-300 font-bold text-xs uppercase">Editar</button>
+                        </td>
+                    </tr>
+                    {% end %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Staff -->
+    <div id="staff-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-navy-900 border border-white/10 w-full max-w-md rounded-2xl shadow-2xl p-6 overflow-hidden">
+            <h2 id="modal-title" class="text-xl font-bold text-white mb-6">Nuevo Staff</h2>
+            <form id="staff-form" class="space-y-4">
+                <input type="hidden" id="staff-id">
+                <div>
+                    <label
+                        class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Nombre</label>
+                    <input type="text" id="name" required
+                        class="w-full bg-navy-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 transition-all outline-none">
+                </div>
+                <div>
+                    <label
+                        class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email</label>
+                    <input type="email" id="email" required
+                        class="w-full bg-navy-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 transition-all outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tipo de
+                        perfil</label>
+                    <select id="role"
+                        class="w-full bg-navy-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 transition-all outline-none appearance-none">
+                        <option value="superadmin">Superadmin (Todo el sistema)</option>
+                        <option value="admin">Administrador (Gestión de eventos)</option>
+                        <option value="moderator">Moderador (Chat y Preguntas)</option>
+                        <option value="speaker">Speaker (Ponente)</option>
+                        <option value="viewer">Viewer (Usuario normal)</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()"
+                        class="flex-1 px-4 py-3 text-sm font-bold text-slate-400 hover:text-white transition-colors">Cancelar</button>
+                    <button type="submit"
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('staff-modal');
+        const form = document.getElementById('staff-form');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            document.getElementById('modal-title').innerText = 'Nuevo Staff';
+            document.getElementById('staff-id').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('email').disabled = false;
+            document.getElementById('name').value = '';
+            document.getElementById('role').value = 'admin';
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        function editStaff(person) {
+            openModal();
+            document.getElementById('modal-title').innerText = 'Editar Staff';
+            document.getElementById('staff-id').value = person.id;
+            document.getElementById('email').value = person.email;
+            document.getElementById('email').disabled = true;
+            document.getElementById('name').value = person.name || '';
+            document.getElementById('role').value = person.global_role;
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('staff-id').value,
+                email: document.getElementById('email').value,
+                name: document.getElementById('name').value,
+                role: document.getElementById('role').value
+            };
+            try {
+                const res = await fetch('/api/admin/staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast('Personal guardado.', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Error al guardar.', 'error');
+                }
+            } catch (err) {
+                showToast('Error de red.', 'error');
+            }
+        };
+    </script>
+</body>
+
+</html>

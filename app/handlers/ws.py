@@ -4,8 +4,10 @@ import traceback
 
 import tornado.websocket
 
+from app.db import now_hhmm_in_timezone
 from app.services import analytics_service, chat_service, questions_service, users_service
 from app.services import session_service
+from app.services import events_service
 
 # Keep per-role client pools. Reports is a first-class role.
 WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set(), "reports": set()}
@@ -107,21 +109,9 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
         self.user_name = session.get("user_name") or "Guest"
 
         requested_role = self.get_query_argument("role", "viewer")
-        user_role = session.get("user_role") or "visor"
+        user_role = session.get("user_role") or "viewer"
 
-        # Enforce role permissions to avoid privilege escalation via querystring.
-        if requested_role == "viewer":
-            self.role = "viewer"
-        elif requested_role == "moderator" and user_role in ["moderador", "administrador"]:
-            self.role = "moderator"
-        elif requested_role == "speaker" and user_role in ["speaker", "administrador"]:
-            self.role = "speaker"
-        elif requested_role == "reports" and user_role in ["administrador"]:
-            self.role = "reports"
-        else:
-            print(f"[WS] ! Conexión rechazada: role no permitido requested={requested_role} user_role={user_role}")
-            self.close(code=4003, reason="role_forbidden")
-            return
+        is_superadmin = user_role == "superadmin"
 
         arg_event = self.get_query_argument("event_id", default=None)
         # Fallback: if client omitted event_id (or malformed), try the cookie set by BaseHandler.prepare
@@ -144,8 +134,66 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
             except (TypeError, ValueError):
                 self.event_id = None
 
+        # Enforce role permissions to avoid privilege escalation via querystring.
+        # For non-viewer roles, we require an event_id so we can validate assignment.
+        staff_role = None
+        if self.event_id is not None:
+            try:
+                from app.services import staff_service
+                staff_role = staff_service.get_event_role(int(self.user_id), int(self.event_id))
+            except Exception:
+                staff_role = None
+
+        try:
+            session_event_id = int(session.get("current_event_id")) if session.get("current_event_id") else None
+        except (TypeError, ValueError):
+            session_event_id = None
+
+        if requested_role == "viewer":
+            self.role = "viewer"
+        elif requested_role == "moderator":
+            if self.event_id is None:
+                self.close(code=4002, reason="event_missing")
+                return
+            # Allowed if superadmin, event-assigned staff, or per-event moderator account
+            if is_superadmin or staff_role in ["admin", "moderator"] or (user_role in ["moderator", "moderador"] and session_event_id == self.event_id):
+                self.role = "moderator"
+            else:
+                self.close(code=4003, reason="role_forbidden")
+                return
+        elif requested_role == "speaker":
+            if self.event_id is None:
+                self.close(code=4002, reason="event_missing")
+                return
+            if is_superadmin or staff_role in ["admin", "speaker"] or (user_role == "speaker" and session_event_id == self.event_id):
+                self.role = "speaker"
+            else:
+                self.close(code=4003, reason="role_forbidden")
+                return
+        elif requested_role == "reports":
+            if self.event_id is None:
+                self.close(code=4002, reason="event_missing")
+                return
+            if is_superadmin or staff_role == "admin":
+                self.role = "reports"
+            else:
+                self.close(code=4003, reason="role_forbidden")
+                return
+        else:
+            print(f"[WS] ! Conexión rechazada: role inválido requested={requested_role}")
+            self.close(code=4003, reason="role_forbidden")
+            return
+
         # Keep accepting connections even if event_id is missing.
         # Audience counting also has an HTTP fallback on /api/ping.
+
+        self.event_timezone = None
+        if self.event_id is not None:
+            try:
+                event = events_service.get_event_by_id(self.event_id) or {}
+                self.event_timezone = event.get("timezone")
+            except Exception:
+                self.event_timezone = None
 
         WEBSOCKET_CLIENTS.setdefault(self.role, set()).add(self)
         
@@ -192,7 +240,14 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
                 if not text:
                     return
                 chat_payload = chat_service.add_chat_message(self.user_id, text, event_id=self.event_id)
-                broadcast({"type": "chat", **chat_payload, "timestamp": datetime.now().strftime("%H:%M")}, event_id=self.event_id)
+                broadcast(
+                    {
+                        "type": "chat",
+                        **chat_payload,
+                        "timestamp": now_hhmm_in_timezone(self.event_timezone),
+                    },
+                    event_id=self.event_id,
+                )
 
             elif msg_type == "ask":
                 if users_service.is_qa_blocked(self.user_id):

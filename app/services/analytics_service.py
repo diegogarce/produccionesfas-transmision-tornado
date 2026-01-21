@@ -74,7 +74,11 @@ def list_analytics_for_report():
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT sa.user_id, sa.start_time, sa.last_ping, sa.total_minutes, u.name AS user_name FROM session_analytics sa JOIN users u ON u.id=sa.user_id ORDER BY sa.last_ping DESC"
+                "SELECT sa.user_id, sa.start_time, sa.last_ping, sa.total_minutes, u.name AS user_name, e.timezone AS timezone "
+                "FROM session_analytics sa "
+                "JOIN users u ON u.id=sa.user_id "
+                "LEFT JOIN events e ON e.id=sa.event_id "
+                "ORDER BY sa.last_ping DESC"
             )
             rows = cursor.fetchall()
     return [_normalize_timestamps(row) for row in rows]
@@ -96,9 +100,11 @@ def list_active_sessions_for_report(active_within_seconds: int = DEFAULT_ACTIVE_
         "  u.banned, "
         "  sa.start_time, "
         "  sa.last_ping, "
-        "  sa.total_minutes AS session_minutes "
+        "  sa.total_minutes AS session_minutes, "
+        "  e.timezone AS timezone "
         "FROM session_analytics sa "
         "JOIN users u ON u.id = sa.user_id "
+        "LEFT JOIN events e ON e.id = sa.event_id "
         f"WHERE sa.last_ping >= DATE_SUB(NOW(), INTERVAL {active_within_seconds} SECOND) "
     )
     
@@ -130,9 +136,11 @@ def list_all_participants_for_report(event_id: int = None):
         "  u.banned, "
         "  sa.start_time, "
         "  sa.last_ping, "
-        "  sa.total_minutes AS session_minutes "
+        "  sa.total_minutes AS session_minutes, "
+        "  e.timezone AS timezone "
         "FROM session_analytics sa "
         "JOIN users u ON u.id = sa.user_id "
+        "LEFT JOIN events e ON e.id = sa.event_id "
     )
     
     params = []

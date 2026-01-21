@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evento no encontrado · Producciones Fast</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {% include "includes/theme.html" %}
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap"
         rel="stylesheet">
     <style>
@@ -22,6 +23,9 @@
 </head>
 
 <body class="bg-[#020617] text-slate-100 min-h-screen flex items-center justify-center p-4 text-center">
+    <div class="fixed top-4 right-4 z-[60]">
+        {% include "includes/theme_switcher.html" %}
+    </div>
     <div class="glass max-w-sm w-full p-8 rounded-[2.5rem] shadow-2xl">
         <div class="bg-red-500/10 w-16 h-16 rounded-2xl mb-6 mx-auto flex items-center justify-center text-red-500">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -9,6 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jQuery & Select2 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -98,7 +102,48 @@
             border-color: #6366f1 !important;
             color: #6366f1 !important;
         }
+
+        /* Select2 Dark Theme */
+        .select2-container--default .select2-selection--single {
+            background-color: #0a0b16 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 0.75rem !important;
+            height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #fff !important;
+            line-height: 46px !important;
+            padding-left: 1rem !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px !important;
+        }
+
+        .select2-dropdown {
+            background-color: #151725 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+        }
+
+        .select2-search__field {
+            background-color: #0a0b16 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: #4f46e5 !important;
+        }
+
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: rgba(79, 70, 229, 0.2) !important;
+        }
     </style>
+    {% include "../includes/theme.html" %}
     {% include "../includes/toast.html" %}
 </head>
 
@@ -107,81 +152,39 @@
     <!-- Top Navigation Bar (Matching Identity) -->
     <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <!-- Left Side: Logo | Platform Name -->
             <div class="flex items-center h-full">
                 <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
-                    class="h-6 w-auto opacity-90 hover:opacity-100 transition-opacity">
-
-                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
-
-                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Admin
-                    Console</span>
-
+                    class="h-6 w-auto opacity-90">
+                <div class="h-8 w-px bg-white/10 mx-4"></div>
+                <div class="flex gap-4">
+                    <a href="/admin/events"
+                        class="text-[10px] font-bold tracking-widest text-slate-500 hover:text-white uppercase transition-colors">Eventos</a>
+                    {% if is_superadmin %}
+                    <a href="/admin/staff"
+                        class="text-[10px] font-bold tracking-widest text-indigo-400 uppercase">Personal</a>
+                    {% end %}
+                </div>
             </div>
-
-            <!-- Desktop Menu -->
-            <div class="hidden md:flex items-center gap-6">
+            <div class="flex items-center gap-4">
+                {% if is_superadmin %}
                 <button onclick="openModal()"
-                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 border border-indigo-500/50 hover:-translate-y-0.5">
-                    + Nuevo
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-widest transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Nuevo Evento</span>
                 </button>
-
-                <span class="text-sm font-medium text-slate-400">Admin User</span>
+                {% end %}
 
                 <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </a>
             </div>
-
-            <!-- Mobile Menu Button -->
-            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white transition-colors p-2"
-                id="mobile-menu-btn">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Mobile Menu Panel -->
-        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
-            <div class="px-4 py-4 space-y-4">
-                <button onclick="openModal(); toggleMobileMenu();"
-                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-lg text-sm font-bold uppercase tracking-widest transition-all">
-                    + Nuevo Evento
-                </button>
-
-                <div class="border-t border-white/10 pt-4">
-                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
-                    <a href="/logout"
-                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Cerrar Sesión
-                    </a>
-                </div>
-            </div>
         </div>
     </nav>
-
-    <script>
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const menuIcon = document.getElementById('menu-icon');
-            const closeIcon = document.getElementById('close-icon');
-
-            menu.classList.toggle('hidden');
-            menuIcon.classList.toggle('hidden');
-            closeIcon.classList.toggle('hidden');
-        }
-    </script>
 
     <div class="max-w-7xl mx-auto px-6 py-10">
         <!-- Page Title & Stats -->
@@ -192,6 +195,20 @@
 
         <!-- Events Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+            {% if not events and not is_superadmin %}
+            <div class="col-span-full py-20 text-center animate-fade-in">
+                <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-3">Estamos listos para transmitir tu primer evento</h2>
+                <p class="text-slate-500 max-w-sm mx-auto">Contacta con el administrador para que te asigne un evento y
+                    comiences la transmisión.</p>
+            </div>
+            {% end %}
+
             {% for event in events %}
             <!-- Event Card -->
             <div
@@ -264,6 +281,7 @@
                             </svg>
                             <span class="text-[9px] uppercase font-bold text-slate-500">Mod</span>
                         </a>
+
                         <a href="/e/{{ event['slug'] }}/speaker" target="_blank"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-amber-400 transition-colors"
@@ -273,6 +291,7 @@
                             </svg>
                             <span class="text-[9px] uppercase font-bold text-slate-500">Speaker</span>
                         </a>
+
                         <a href="/e/{{ event['slug'] }}/reports" target="_blank"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-emerald-400 transition-colors"
@@ -284,7 +303,18 @@
                         </a>
                     </div>
 
-                    <!-- Footer Controls -->
+                    <a href="/e/{{ event['slug'] }}/watch" target="_blank"
+                        class="w-full bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/main mb-4">
+                        Abrir Sala
+                        <svg class="w-4 h-4 transform group-hover/main:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
+
+                    {% if is_superadmin %}
+                    <!-- Footer Controls (Superadmin Only) -->
                     <div class="flex items-center gap-3 pt-4 border-t border-white/5">
                         <button data-event='{{ json_encode(event) }}' onclick='openEditWithData(this)'
                             class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">
@@ -295,17 +325,19 @@
                             class="text-xs font-semibold transition-colors {{ 'text-red-400 hover:text-red-300' if event['is_active'] else 'text-green-400 hover:text-green-300' }}">
                             {{ 'Detener' if event['is_active'] else 'Iniciar' }}
                         </button>
-
-                        <a href="/e/{{ event['slug'] }}/watch" target="_blank"
-                            class="ml-auto bg-white text-navy-950 hover:bg-slate-200 text-xs font-bold px-4 py-2 rounded-full transition-all">
-                            Abrir
-                        </a>
+                        <div class="h-4 w-px bg-white/10"></div>
+                        <button data-event='{{ json_encode(event) }}' onclick='openStaffWithData(this)'
+                            class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+                            Staff
+                        </button>
                     </div>
+                    {% end %}
                 </div>
             </div>
             {% end %}
 
             <!-- New Event Card (Empty State) -->
+            {% if is_superadmin %}
             <button onclick="openModal()"
                 class="border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-indigo-500/30 hover:bg-white/5 transition-all group h-full min-h-[300px]">
                 <div
@@ -318,6 +350,7 @@
                 <h3 class="text-lg font-bold text-slate-400 group-hover:text-white mb-1">Crear Evento</h3>
                 <p class="text-sm text-slate-600">Configura una nueva transmisión</p>
             </button>
+            {% end %}
         </div>
     </div>
 
@@ -325,7 +358,7 @@
     <div id="event-modal"
         class="fixed inset-0 bg-[#050511]/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all duration-300">
         <div
-            class="bg-navy-900 border border-white/5 max-w-lg w-full rounded-2xl p-8 relative shadow-2xl animate-fade-in">
+            class="bg-navy-900 border border-white/5 max-w-4xl w-full rounded-2xl p-8 relative shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]">
             <!-- Close Button -->
             <button onclick="closeModal()"
                 class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
@@ -335,145 +368,244 @@
             </button>
 
             <h2 id="modal-title" class="text-2xl font-bold text-white mb-1">Nuevo Evento</h2>
-            <p class="text-slate-500 text-sm mb-6">Detalles de la transmisión</p>
+            <p class="text-slate-500 text-sm mb-8">Configura los detalles y la apariencia de tu transmisión</p>
 
-            <form id="event-form" class="space-y-5">
+            <form id="event-form">
                 <input type="hidden" id="event-id">
 
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Nombre</label>
-                    <input type="text" id="title" placeholder="Ej: Tech Summit 2026" required
-                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium">
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <!-- Columna Izquierda: Información General -->
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Información General
+                            </h3>
+                        </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Slug URL</label>
-                    <div class="flex">
-                        <span
-                            class="bg-navy-800 border border-r-0 border-white/10 rounded-l-lg px-3 py-3 text-slate-500 text-sm flex items-center">/e/</span>
-                        <input type="text" id="slug" placeholder="tech-summit-2026" required
-                            class="w-full bg-navy-950 border border-white/10 rounded-r-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium">
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Video Stream URL</label>
-                    <input type="text" id="video_url"
-                        value="https://produccionesfast.com/assets/videos/transmisionesfast.mp4"
-                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
-                </div>
-
-                <!-- Theme Configuration -->
-                <div class="space-y-4 border border-white/5 rounded-xl p-4 bg-black/20">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2">
-                        Personalización Visual</h3>
-
-                    <!-- Base Accent -->
-                    <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Acento
-                                (Botones/Links)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color" id="theme_color" value="#4f46e5"
-                                    class="w-10 h-10 rounded-lg border border-white/10 p-1 cursor-pointer bg-navy-950">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nombre del
+                                Evento</label>
+                            <input type="text" id="title" placeholder="Ej: Tech Summit 2026" required
+                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug
+                                URL</label>
+                            <div class="flex">
+                                <span
+                                    class="bg-navy-800 border border-r-0 border-white/10 rounded-l-lg px-3 py-3 text-slate-500 text-sm flex items-center font-mono">/e/</span>
+                                <input type="text" id="slug" placeholder="tech-summit-2026" required
+                                    class="w-full bg-navy-950 border border-white/10 rounded-r-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium font-mono">
                             </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video Stream
+                                URL</label>
+                            <input type="text" id="video_url"
+                                value="https://produccionesfast.com/assets/videos/transmisionesfast.mp4"
+                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Zona horaria
+                                del evento</label>
+                            <select id="timezone"
+                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                <option value="America/Mexico_City" selected>CDMX (America/Mexico_City)</option>
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">USA Este (America/New_York)</option>
+                                <option value="America/Los_Angeles">USA Pacífico (America/Los_Angeles)</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-4">
+                            <label
+                                class="flex items-center gap-3 cursor-pointer group p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
+                                <div class="relative">
+                                    <input type="checkbox" id="is_active" class="peer sr-only">
+                                    <div
+                                        class="w-10 h-6 bg-navy-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Evento
+                                        Activo</span>
+                                    <span class="text-[10px] text-slate-500">Visible para el público</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 pt-2">
-                        <!-- Header Section -->
+                    <!-- Columna Derecha: Personalización Visual -->
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.172-1.172a4 4 0 115.656 5.656L10 17.657" />
+                            </svg>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Personalización
+                                Visual</h3>
+                        </div>
+
                         <div class="space-y-3">
-                            <span
-                                class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">Header</span>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] text-slate-500">Fondo</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" id="header_bg_color" value="#0a0b16"
-                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Logo del
+                                    Evento</label>
+                                <span id="logo-upload-status" class="text-[10px] text-indigo-400 font-bold"></span>
                             </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] text-slate-500">Texto</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" id="header_text_color" value="#cbd5e1"
-                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+
+                            <div class="bg-navy-950 border border-white/10 rounded-xl p-4 space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="relative group">
+                                        <img id="logo-preview" src="https://produccionesfast.com/assets/img/logo.png"
+                                            alt="Logo preview"
+                                            class="w-20 h-20 rounded-lg border border-white/10 object-contain bg-navy-900 p-2 transition-transform group-hover:scale-105">
+                                        <button type="button" id="logo-upload-trigger"
+                                            class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex-1 space-y-1">
+                                        <p class="text-xs text-slate-300 font-medium">Cambiar Logo</p>
+                                        <p class="text-[10px] text-slate-500 leading-relaxed">Recomendado: PNG
+                                            transparente, máx 5MB.</p>
+                                        <input type="file" id="logo_upload_input"
+                                            accept="image/png,image/jpeg,image/webp" class="sr-only">
+                                    </div>
                                 </div>
+                                <input type="text" id="logo_url"
+                                    value="https://produccionesfast.com/assets/img/logo.png"
+                                    data-default-logo="https://produccionesfast.com/assets/img/logo.png"
+                                    class="w-full bg-navy-900 border border-white/5 rounded-lg px-3 py-2 text-[11px] font-mono text-slate-400 focus:outline-none focus:border-indigo-500/30 transition-all">
                             </div>
                         </div>
 
-                        <!-- Body Section -->
-                        <div class="space-y-3">
-                            <span
-                                class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block">Cuerpo</span>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] text-slate-500">Fondo</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" id="body_bg_color" value="#050511"
-                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
-                                </div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] text-slate-500">Texto</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color" id="body_text_color" value="#cbd5e1"
-                                        class="w-8 h-8 rounded border border-white/10 p-0.5 cursor-pointer bg-navy-950">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Colores del
+                                    Header</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div
+                                        class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                                        <input type="color" id="header_bg_color" value="#0a0b16"
+                                            class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] font-bold text-slate-500 uppercase">Fondo</span>
+                                            <input type="text" id="header_bg_color_text" value="#0a0b16"
+                                                class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                                        <input type="color" id="header_text_color" value="#e2e8f0"
+                                            class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] font-bold text-slate-500 uppercase">Texto</span>
+                                            <input type="text" id="header_text_color_text" value="#e2e8f0"
+                                                class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Logo del evento</label>
-                        <span id="logo-upload-status" class="text-xs text-slate-500 min-h-[1rem]"></span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" id="logo-upload-trigger"
-                            class="bg-navy-800 hover:bg-navy-700 border border-white/10 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-300 transition-all">
-                            Subir imagen
-                        </button>
-                        <span class="text-[11px] text-slate-500">PNG, JPG o WebP hasta 5 MB.</span>
-                    </div>
-                    <input type="file" id="logo_upload_input" accept="image/png,image/jpeg,image/webp" class="sr-only">
-                    <input type="text" id="logo_url" value="https://produccionesfast.com/assets/img/logo.png"
-                        data-default-logo="https://produccionesfast.com/assets/img/logo.png"
-                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
-                    <div class="flex items-center gap-4 pt-2">
-                        <img id="logo-preview" src="https://produccionesfast.com/assets/img/logo.png"
-                            alt="Logo del evento"
-                            class="w-16 h-16 rounded-lg border border-white/10 object-contain bg-white/5">
-                        <p class="text-xs text-slate-500 max-w-sm">Este logo se mostrará en todas las páginas de evento
-                            y reportes.</p>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                        <div class="relative">
-                            <input type="checkbox" id="is_active" class="peer sr-only">
-                            <div
-                                class="w-10 h-6 bg-navy-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white">
-                            </div>
-                        </div>
-                        <span class="text-sm font-medium text-slate-400 group-hover:text-white transition-colors">Evento
-                            público (Activo)</span>
-                    </label>
-                </div>
-
-                <div class="flex gap-3 pt-6">
+                <div class="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-white/5">
                     <button type="button" onclick="closeModal()"
-                        class="flex-1 px-4 py-3 rounded-lg font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm">
+                        class="px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-widest">
                         Cancelar
                     </button>
                     <button type="submit"
-                        class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-sm">
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-xs uppercase tracking-widest">
                         Guardar Evento
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    {% if is_superadmin %}
+    <!-- Modal Staff por Evento (Superadmin) -->
+    <div id="staff-modal"
+        class="fixed inset-0 bg-[#050511]/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all duration-300">
+        <div
+            class="bg-navy-900 border border-white/5 max-w-3xl w-full rounded-2xl p-8 relative shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]">
+            <button onclick="closeStaffModal()"
+                class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h2 id="staff-modal-title" class="text-2xl font-bold text-white mb-1">Staff del Evento</h2>
+            <p class="text-slate-500 text-sm mb-8">Admin / Moderator / Speaker para este evento</p>
+
+            <input type="hidden" id="staff-event-id" value="">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Asignaciones</h3>
+                        <button id="staff-refresh" type="button"
+                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-400 transition-colors">
+                            Actualizar
+                        </button>
+                    </div>
+                    <div id="staff-list"
+                        class="bg-navy-950 border border-white/10 rounded-2xl p-4 space-y-3 min-h-[240px]">
+                        <div class="text-xs text-slate-500">Cargando…</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300 mb-3">Agregar / Cambiar rol
+                    </h3>
+                    <div class="bg-navy-950 border border-white/10 rounded-2xl p-4">
+                        <form id="staff-form" class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Email</label>
+                                <select id="staff-email" class="w-full bg-navy-900 border border-white/10 rounded-xl"
+                                    style="width: 100%;">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Rol</label>
+                                <select id="staff-role"
+                                    class="w-full bg-navy-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/30">
+                                    <option value="admin">Admin</option>
+                                    <option value="moderator">Moderator</option>
+                                    <option value="speaker">Speaker</option>
+                                </select>
+                                <p class="text-xs text-slate-500 mt-2">Si el usuario ya existe, se actualiza su rol en
+                                    este evento.</p>
+                            </div>
+                            <button id="staff-submit" type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-xs uppercase tracking-widest">
+                                Guardar Staff
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% end %}
 
     <script>
         const modal = document.getElementById('event-modal');
@@ -484,19 +616,25 @@
         const logoUploadTrigger = document.getElementById('logo-upload-trigger');
         const logoUploadStatus = document.getElementById('logo-upload-status');
         const logoPreview = document.getElementById('logo-preview');
+        const headerBgColor = document.getElementById('header_bg_color');
+        const headerBgColorText = document.getElementById('header_bg_color_text');
+        const headerTextColor = document.getElementById('header_text_color');
+        const headerTextColorText = document.getElementById('header_text_color_text');
         const LOGO_MAX_BYTES = 5 * 1024 * 1024;
         const defaultLogoUrl = logoUrlInput.dataset.defaultLogo || logoUrlInput.value || '';
-        const themeColorInput = document.getElementById('theme_color');
-        const headerBgInput = document.getElementById('header_bg_color');
-        const headerTextInput = document.getElementById('header_text_color');
-        const bodyBgInput = document.getElementById('body_bg_color');
-        const bodyTextInput = document.getElementById('body_text_color');
 
-        const DEFAULT_THEME_COLOR = '#4f46e5';
-        const DEFAULT_HEADER_BG = '#0a0b16';
-        const DEFAULT_HEADER_TEXT = '#cbd5e1';
-        const DEFAULT_BODY_BG = '#050511';
-        const DEFAULT_BODY_TEXT = '#cbd5e1';
+        function normalizeHexColor(value) {
+            if (!value) return '';
+            const trimmed = String(value).trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed.toLowerCase();
+            if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+                const r = trimmed[1];
+                const g = trimmed[2];
+                const b = trimmed[3];
+                return (`#${r}${r}${g}${g}${b}${b}`).toLowerCase();
+            }
+            return '';
+        }
 
         function updateLogoPreview(source) {
             logoPreview.src = source || defaultLogoUrl;
@@ -518,12 +656,17 @@
             updateLogoPreview(logoUrlInput.value || defaultLogoUrl);
         }
 
-        function resetThemeColor() {
-            if (themeColorInput) themeColorInput.value = DEFAULT_THEME_COLOR;
-            if (headerBgInput) headerBgInput.value = DEFAULT_HEADER_BG;
-            if (headerTextInput) headerTextInput.value = DEFAULT_HEADER_TEXT;
-            if (bodyBgInput) bodyBgInput.value = DEFAULT_BODY_BG;
-            if (bodyTextInput) bodyTextInput.value = DEFAULT_BODY_TEXT;
+        function resetHeaderColors() {
+            const bg = normalizeHexColor(headerBgColorText.value) || headerBgColor.value;
+            const fg = normalizeHexColor(headerTextColorText.value) || headerTextColor.value;
+            if (bg) {
+                headerBgColor.value = bg;
+                headerBgColorText.value = bg;
+            }
+            if (fg) {
+                headerTextColor.value = fg;
+                headerTextColorText.value = fg;
+            }
         }
 
         async function uploadLogoAsset(file) {
@@ -564,14 +707,31 @@
 
         logoUrlInput.addEventListener('input', () => updateLogoPreview(logoUrlInput.value || defaultLogoUrl));
 
+        headerBgColor.addEventListener('input', () => {
+            headerBgColorText.value = headerBgColor.value;
+        });
+        headerBgColorText.addEventListener('input', () => {
+            const normalized = normalizeHexColor(headerBgColorText.value);
+            if (normalized) headerBgColor.value = normalized;
+        });
+
+        headerTextColor.addEventListener('input', () => {
+            headerTextColorText.value = headerTextColor.value;
+        });
+        headerTextColorText.addEventListener('input', () => {
+            const normalized = normalizeHexColor(headerTextColorText.value);
+            if (normalized) headerTextColor.value = normalized;
+        });
+
         function openModal() {
             editingId = null;
             form.reset();
             document.getElementById('modal-title').textContent = "Nuevo Evento";
             resetLogoState();
+            resetHeaderColors();
             document.getElementById('slug').disabled = false;
             document.getElementById('is_active').checked = true;
-            resetThemeColor();
+            document.getElementById('timezone').value = 'America/Mexico_City';
             modal.classList.remove('hidden');
         }
 
@@ -587,17 +747,23 @@
             document.getElementById('slug').value = event.slug;
             document.getElementById('slug').disabled = true;
             document.getElementById('video_url').value = event.video_url;
+            document.getElementById('timezone').value = event.timezone || 'America/Mexico_City';
             const logoValue = event.logo_url || defaultLogoUrl;
-
-            if (themeColorInput) themeColorInput.value = event.theme_color || DEFAULT_THEME_COLOR;
-            if (headerBgInput) headerBgInput.value = event.header_bg_color || DEFAULT_HEADER_BG;
-            if (headerTextInput) headerTextInput.value = event.header_text_color || DEFAULT_HEADER_TEXT;
-            if (bodyBgInput) bodyBgInput.value = event.body_bg_color || DEFAULT_BODY_BG;
-            if (bodyTextInput) bodyTextInput.value = event.body_text_color || DEFAULT_BODY_TEXT;
-
+            logoUrlInput.value = logoValue;
+            updateLogoPreview(logoValue);
             setLogoStatus();
-            const themeValue = event.theme_color || DEFAULT_THEME_COLOR;
-            if (themeColorInput) themeColorInput.value = themeValue;
+
+            const bg = normalizeHexColor(event.header_bg_color) || headerBgColor.value;
+            const fg = normalizeHexColor(event.header_text_color) || headerTextColor.value;
+            if (bg) {
+                headerBgColor.value = bg;
+                headerBgColorText.value = bg;
+            }
+            if (fg) {
+                headerTextColor.value = fg;
+                headerTextColorText.value = fg;
+            }
+
             document.getElementById('is_active').checked = event.is_active;
             modal.classList.remove('hidden');
         }
@@ -607,14 +773,215 @@
             editEvent(data);
         }
 
-        async function toggleEventStatus(event) {
-            const current_status = event.is_active;
+        // Staff (superadmin)
+        const staffModal = document.getElementById('staff-modal');
+        const staffEventIdInput = document.getElementById('staff-event-id');
+        const staffModalTitle = document.getElementById('staff-modal-title');
+        const staffList = document.getElementById('staff-list');
+        const staffForm = document.getElementById('staff-form');
+        const staffEmailInput = document.getElementById('staff-email');
+        const staffRoleSelect = document.getElementById('staff-role');
+        const staffRefreshBtn = document.getElementById('staff-refresh');
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function roleBadge(role) {
+            const r = String(role || '').toLowerCase();
+            if (r === 'admin') return '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Admin</span>';
+            if (r === 'moderator') return '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Moderator</span>';
+            if (r === 'speaker') return '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">Speaker</span>';
+            return `<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10">${escapeHtml(r || 'unknown')}</span>`;
+        }
+
+        function openStaffModal() {
+            if (!staffModal) return;
+            staffModal.classList.remove('hidden');
+        }
+
+        function closeStaffModal() {
+            if (!staffModal) return;
+            staffModal.classList.add('hidden');
+        }
+
+        async function fetchStaffForEvent(eventId) {
+            const res = await fetch(`/api/admin/event-staff?event_id=${encodeURIComponent(eventId)}`);
+            if (res.status === 401) {
+                window.location.reload();
+                return null;
+            }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || 'No fue posible cargar el staff.');
+            }
+            return data.staff || [];
+        }
+
+        function renderStaffList(staff) {
+            if (!staffList) return;
+            if (!Array.isArray(staff) || staff.length === 0) {
+                staffList.innerHTML = '<div class="text-xs text-slate-500">Aún no hay asignaciones para este evento.</div>';
+                return;
+            }
+
+            staffList.innerHTML = staff.map(row => {
+                const userId = row.user_id;
+                const name = escapeHtml(row.name || '');
+                const email = escapeHtml(row.email || '');
+                const badge = roleBadge(row.role);
+                return `
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <div class="text-sm font-semibold text-white truncate">${name || email}</div>
+                                ${badge}
+                            </div>
+                            <div class="text-xs text-slate-500 truncate">${email}</div>
+                        </div>
+                        <button type="button" data-user-id="${userId}"
+                            class="text-xs font-bold text-red-300 hover:text-red-200 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors">
+                            Quitar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Bind remove buttons
+            staffList.querySelectorAll('button[data-user-id]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const userId = parseInt(btn.getAttribute('data-user-id'), 10);
+                    const eventId = parseInt(staffEventIdInput.value, 10);
+                    if (!userId || !eventId) return;
+                    try {
+                        const res = await fetch('/api/admin/event-staff', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ event_id: eventId, user_id: userId })
+                        });
+                        if (res.status === 401) {
+                            window.location.reload();
+                            return;
+                        }
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(data.message || 'No se pudo quitar el staff.');
+                        showToast('Staff actualizado.', 'success');
+                        await refreshStaff();
+                    } catch (err) {
+                        showToast(err?.message || 'No se pudo quitar el staff.', 'error');
+                    }
+                });
+            });
+        }
+
+        async function refreshStaff() {
+            if (!staffModal || !staffEventIdInput) return;
+            const eventId = staffEventIdInput.value;
+            if (!eventId) return;
+            staffList.innerHTML = '<div class="text-xs text-slate-500">Cargando…</div>';
+            try {
+                const staff = await fetchStaffForEvent(eventId);
+                if (!staff) return;
+                renderStaffList(staff);
+            } catch (err) {
+                staffList.innerHTML = '<div class="text-xs text-red-300">No se pudo cargar el staff.</div>';
+            }
+        }
+
+        async function openStaffWithData(btn) {
+            if (!staffModal) return;
+            const data = JSON.parse(btn.getAttribute('data-event'));
+            staffEventIdInput.value = data.id;
+            staffModalTitle.textContent = `Staff del Evento: ${data.title}`;
+
+            // Initialize Select2 with AJAX if not done
+            const $emailSelect = $('#staff-email');
+            if (!$emailSelect.hasClass("select2-hidden-accessible")) {
+                $emailSelect.select2({
+                    tags: true,
+                    placeholder: "Teclea o busca un correo...",
+                    allowClear: true,
+                    dropdownParent: $('#staff-modal'),
+                    ajax: {
+                        url: '/api/admin/event-staff',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                mode: 'users',
+                                q: params.term
+                            };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.results || []
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            // Reset selection
+            $emailSelect.val('').trigger('change');
+
+            staffRoleSelect.value = 'admin';
+            openStaffModal();
+            refreshStaff();
+        }
+
+        if (staffRefreshBtn) {
+            staffRefreshBtn.addEventListener('click', () => refreshStaff());
+        }
+
+        if (staffForm) {
+            staffForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const eventId = parseInt(staffEventIdInput.value, 10);
+                const email = ($('#staff-email').val() || '').trim().toLowerCase();
+                const role = staffRoleSelect.value;
+                if (!eventId || !email) {
+                    showToast('Completa el email.', 'error');
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/admin/event-staff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ event_id: eventId, email: email, role: role })
+                    });
+                    if (res.status === 401) {
+                        window.location.reload();
+                        return;
+                    }
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || 'No se pudo guardar el staff.');
+                    showToast('Staff guardado.', 'success');
+                    $('#staff-email').val('').trigger('change');
+                    await refreshStaff();
+                } catch (err) {
+                    showToast(err?.message || 'No se pudo guardar el staff.', 'error');
+                }
+            });
+        }
+
+        function toggleWithData(btn) {
+            const data = JSON.parse(btn.getAttribute('data-event'));
+            toggleEventStatus(data.id, data.title, data.slug, data.video_url, data.logo_url, data.header_bg_color, data.header_text_color, data.is_active, data.timezone);
+        }
+
+        async function toggleEventStatus(id, title, slug, video_url, logo_url, header_bg_color, header_text_color, current_status, timezone) {
             const action = current_status ? 'Finalizar' : 'Iniciar';
             const actionText = current_status ? 'cerrar' : 'activar';
 
             const result = await Swal.fire({
                 title: `¿${action} transmisión?`,
-                text: `Estás a punto de ${actionText} el evento "${event.title}". ${current_status ? 'Los usuarios ya no podrán ver el stream.' : 'Será visible para todos.'}`,
+                text: `Estás a punto de ${actionText} el evento "${title}". ${current_status ? 'Los usuarios ya no podrán ver el stream.' : 'Será visible para todos.'}`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: current_status ? '#ef4444' : '#10b981',
@@ -635,16 +1002,14 @@
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id: event.id,
-                        title: event.title,
-                        slug: event.slug,
-                        video_url: event.video_url,
-                        logo_url: event.logo_url,
-                        theme_color: event.theme_color,
-                        header_bg_color: event.header_bg_color,
-                        header_text_color: event.header_text_color,
-                        body_bg_color: event.body_bg_color,
-                        body_text_color: event.body_text_color,
+                        id: id,
+                        title: title,
+                        slug: slug,
+                        video_url: video_url,
+                        logo_url: logo_url,
+                        header_bg_color: header_bg_color,
+                        header_text_color: header_text_color,
+                        timezone: timezone || 'America/Mexico_City',
                         is_active: current_status ? 0 : 1
                     })
                 });
@@ -692,11 +1057,9 @@
                 slug: slug,
                 video_url: document.getElementById('video_url').value,
                 logo_url: document.getElementById('logo_url').value,
-                theme_color: themeColorInput ? themeColorInput.value : DEFAULT_THEME_COLOR,
-                header_bg_color: headerBgInput ? headerBgInput.value : DEFAULT_HEADER_BG,
-                header_text_color: headerTextInput ? headerTextInput.value : DEFAULT_HEADER_TEXT,
-                body_bg_color: bodyBgInput ? bodyBgInput.value : DEFAULT_BODY_BG,
-                body_text_color: bodyTextInput ? bodyTextInput.value : DEFAULT_BODY_TEXT,
+                header_bg_color: normalizeHexColor(headerBgColorText.value) || headerBgColor.value,
+                header_text_color: normalizeHexColor(headerTextColorText.value) || headerTextColor.value,
+                timezone: document.getElementById('timezone').value || 'America/Mexico_City',
                 is_active: document.getElementById('is_active').checked ? 1 : 0
             };
 
@@ -730,8 +1093,15 @@
             if (e.target === modal) closeModal();
         });
 
+        if (staffModal) {
+            staffModal.addEventListener('click', (e) => {
+                if (e.target === staffModal) closeStaffModal();
+            });
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+            if (e.key === 'Escape' && staffModal && !staffModal.classList.contains('hidden')) closeStaffModal();
         });
 
         function copyToClipboard(text) {

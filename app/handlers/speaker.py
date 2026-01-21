@@ -7,10 +7,6 @@ from app.services import questions_service
 class SpeakerHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, slug=None):
-        if not self.is_speaker():
-            self.redirect("/watch")
-            return
-            
         from app.services import events_service
         event = None
         if slug:
@@ -24,6 +20,9 @@ class SpeakerHandler(BaseHandler):
             return
 
         event_id = event["id"]
+        if not self.is_speaker_for_event(event_id):
+            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            return
         approved = questions_service.list_questions(status="approved", event_id=event_id)
         self.render(
             "speaker.html",

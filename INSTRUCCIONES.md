@@ -10,11 +10,36 @@ The system requires User Registration, a Video Player with Real-time interaction
 - **Frontend:** HTML5, CSS3, Vanilla JS (No frameworks).
 - **Auth:** Cookie-based session after Registration.
 
+## Timezone Policy (Importante)
+- La base de datos almacena timestamps en **UTC**.
+- La aplicación convierte a hora local usando `events.timezone` (IANA, por ejemplo `America/Mexico_City`) al momento de **presentar** datos (UI, WS, reportes/export).
+- En `app/db.py` se fuerza `SET time_zone = '+00:00'` por conexión para que `NOW()` y `CURRENT_TIMESTAMP` sean consistentes.
+- El runtime debe tener base de zonas horarias disponible (IANA). En contenedores mínimos o Windows, `ZoneInfo` puede fallar si falta tzdata; por eso el proyecto incluye `tzdata` en `requirements.txt` y el Dockerfile instala `tzdata` a nivel sistema.
+
 ## 3. Database Schema (Already created)
 - `users`: id, name, email, phone.
 - `chat_messages`: id, user_id, user_name, message.
 - `questions`: id, user_id, user_name, question_text, status.
 - `session_analytics`: id, user_id, start_time, last_ping, total_minutes.
+
+Nota: el schema real incluye `events.timezone` y tablas adicionales (p.ej. `events`, `event_staff`).
+
+## Roles por Evento (RBAC)
+- `users.role` define rol **global**. Se usa `superadmin` (y por compatibilidad `administrador`) para ver/administrar todos los eventos.
+- `event_staff` define permisos **por evento**:
+    - `admin`: administra ese evento (configuración/toggle/reportes) y puede operar como moderator/speaker.
+    - `moderator`: acceso a `/e/<slug>/mod`.
+    - `speaker`: acceso a `/e/<slug>/speaker`.
+- Un usuario con rol global `superadmin` ve todos los eventos (todas las slugs).
+
+### Asignación de staff (superadmin)
+API: `POST /api/admin/event-staff`
+- Body JSON ejemplo:
+    - `{ "event_id": 1, "email": "alguien@produccionesfast.com", "role": "admin" }`
+
+Listar staff por evento: `GET /api/admin/event-staff?event_id=1`
+
+Eliminar asignación: `DELETE /api/admin/event-staff?event_id=1&user_id=123`
 
 ## 4. Required Pages (Routes & Logic)
 

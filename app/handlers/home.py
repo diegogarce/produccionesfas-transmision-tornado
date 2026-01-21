@@ -9,6 +9,10 @@ class HomeHandler(BaseHandler):
         if self.current_user:
             from app.services import events_service
 
+            if self.is_admin():
+                self.redirect("/admin/events")
+                return
+
             event_id = self.current_event_id()
             if event_id:
                 event = events_service.get_event_by_id(event_id)

@@ -30,10 +30,6 @@ def _build_active_sessions_export_rows(active_sessions):
 class ReportsHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, slug=None):
-        if not self.is_admin():
-            self.redirect("/watch")
-            return
-            
         from app.services import events_service
         event = None
         if slug:
@@ -47,6 +43,10 @@ class ReportsHandler(BaseHandler):
             return
 
         event_id = event["id"]
+
+        if not self.is_admin_for_event(event_id):
+            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            return
         # Ensure exports (which rely on current_event_id) are scoped to this event.
         self.set_secure_cookie("current_event_id", str(event_id))
         # Show all participants (historical list)
@@ -101,7 +101,14 @@ class ReportsExportHandler(BaseHandler):
     def _send_csv(self, filename_base, rows):
         import csv
         import io
-        from datetime import datetime
+        from app.db import now_in_timezone
+        from app.services import events_service
+
+        event_id = self.current_event_id()
+        event_tz = None
+        if event_id:
+            event = events_service.get_event_by_id(event_id) or {}
+            event_tz = event.get("timezone")
 
         output = io.StringIO(newline="")
         writer = csv.writer(output)
@@ -122,7 +129,7 @@ class ReportsExportHandler(BaseHandler):
         csv_text = "\ufeff" + output.getvalue()
         data = csv_text.encode("utf-8")
 
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = now_in_timezone(event_tz).strftime("%Y%m%d_%H%M%S")
         filename = f"{filename_base}_{ts}.csv"
         self.set_header("Content-Type", "text/csv; charset=utf-8")
         self.set_header("Content-Disposition", f'attachment; filename="{filename}"')
@@ -137,7 +144,14 @@ class ReportsExportHandler(BaseHandler):
             return
 
         import io
-        from datetime import datetime
+        from app.db import now_in_timezone
+        from app.services import events_service
+
+        event_id = self.current_event_id()
+        event_tz = None
+        if event_id:
+            event = events_service.get_event_by_id(event_id) or {}
+            event_tz = event.get("timezone")
 
         wb = Workbook()
         ws = wb.active
@@ -161,7 +175,7 @@ class ReportsExportHandler(BaseHandler):
         wb.save(stream)
         stream.seek(0)
 
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = now_in_timezone(event_tz).strftime("%Y%m%d_%H%M%S")
         filename = f"{filename_base}_{ts}.xlsx"
         self.set_header(
             "Content-Type",
@@ -182,13 +196,20 @@ class ReportsExportHandler(BaseHandler):
             return
 
         import io
-        from datetime import datetime
+        from app.db import now_in_timezone
+        from app.services import events_service
+
+        event_id = self.current_event_id()
+        event_tz = None
+        if event_id:
+            event = events_service.get_event_by_id(event_id) or {}
+            event_tz = event.get("timezone")
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         styles = getSampleStyleSheet()
 
-        ts_human = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ts_human = now_in_timezone(event_tz).strftime("%Y-%m-%d %H:%M:%S")
         elements = [
             Paragraph("Reporte: Sesiones activas", styles["Title"]),
             Paragraph(f"Generado: {ts_human}", styles["Normal"]),
@@ -228,7 +249,7 @@ class ReportsExportHandler(BaseHandler):
         pdf_bytes = buffer.getvalue()
         buffer.close()
 
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = now_in_timezone(event_tz).strftime("%Y%m%d_%H%M%S")
         filename = f"{filename_base}_{ts}.pdf"
         self.set_header("Content-Type", "application/pdf")
         self.set_header("Content-Disposition", f'attachment; filename="{filename}"')

@@ -1,20 +1,39 @@
-import redis
 import json
 import uuid
+
 from app.config import REDIS_CONFIG
 
-# Initialize Redis connection
-# In production, you might want to handle connection errors gracefully
 try:
-    redis_client = redis.Redis(
-        host=REDIS_CONFIG["host"],
-        port=REDIS_CONFIG["port"],
-        db=REDIS_CONFIG["db"],
-        decode_responses=True # Automatically decode bytes to strings
-    )
-except Exception as e:
-    print(f"Warning: Could not connect to Redis: {e}")
-    redis_client = None
+    import redis  # type: ignore
+except Exception:
+    redis = None
+
+
+def _create_redis_client():
+    if redis is None:
+        return None
+
+    # Important: keep import-time side effects fast.
+    # Without connect/socket timeouts, local dev environments can hang.
+    try:
+        client = redis.Redis(
+            host=REDIS_CONFIG["host"],
+            port=REDIS_CONFIG["port"],
+            db=REDIS_CONFIG["db"],
+            decode_responses=True,
+            socket_connect_timeout=1.0,
+            socket_timeout=1.0,
+            health_check_interval=30,
+        )
+        client.ping()
+        return client
+    except Exception as e:
+        print(f"Warning: Could not connect to Redis: {e}")
+        return None
+
+
+# Initialize Redis connection (best-effort)
+redis_client = _create_redis_client()
 
 SESSION_TTL = 300  # 5 minutes in seconds
 

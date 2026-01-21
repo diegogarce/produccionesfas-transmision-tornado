@@ -30,84 +30,33 @@
         }
     </script>
     <style>
-        :root {
-            --dynamic-accent: {
-                    {
-                    event['theme_color'] if event and event.get('theme_color') else '#4f46e5'
-                }
-            }
-
-            ;
-
-            --header-bg: {
-                    {
-                    event['header_bg_color'] if event and event.get('header_bg_color') else '#0a0b16'
-                }
-            }
-
-            ;
-
-            --header-text: {
-                    {
-                    event['header_text_color'] if event and event.get('header_text_color') else '#cbd5e1'
-                }
-            }
-
-            ;
-
-            --body-bg: {
-                    {
-                    event['body_bg_color'] if event and event.get('body_bg_color') else '#050511'
-                }
-            }
-
-            ;
-
-            --body-text: {
-                    {
-                    event['body_text_color'] if event and event.get('body_text_color') else '#cbd5e1'
-                }
-            }
-
-            ;
-        }
-
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--body-bg) !important;
-            color: var(--body-text) !important;
+            background-color: #050511;
         }
 
-        header,
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         .glass {
-            background-color: var(--header-bg) !important;
+            background: rgba(10, 11, 22, 0.85);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--header-text) !important;
         }
-
-        /* Force text colors in header to follow theme unless overridden */
-        header .text-slate-300,
-        header .text-slate-400,
-        header .text-slate-500,
-        header .text-slate-600 {
-            color: var(--header-text) !important;
-            opacity: 0.8;
-        }
-
-        [data-theme-accent-text] {
-            color: var(--dynamic-accent) !important;
-        }
-
-        [data-theme-accent-bg] {
-            background-color: var(--dynamic-accent) !important;
-            border-color: var(--dynamic-accent) !important;
-            color: white !important;
-        }
-
-        [data-theme-accent-border] {
-            border-color: var(--dynamic-accent) !important;
-        }
-
 
         .tab-active {
             color: white;
@@ -115,13 +64,15 @@
             background: rgba(79, 70, 229, 0.1);
         }
     </style>
+    {% include "includes/theme.html" %}
     {% include "includes/toast.html" %}
 </head>
 
-<body class="min-h-screen">
+<body class="bg-[#050511] text-slate-300 min-h-screen">
     <div class="flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
         <!-- Top Navigation Bar (Matching Identity) -->
-        <header class="glass h-16 flex items-center justify-between px-6 z-50 flex-shrink-0">
+        <header class="glass event-header h-16 flex items-center justify-between px-6 z-50 flex-shrink-0"
+            style="{% if event and event.get('header_bg_color') %}--event-header-bg: {{ event.get('header_bg_color') }};{% end %}{% if event and event.get('header_text_color') %}--event-header-text: {{ event.get('header_text_color') }};{% end %}">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
                 <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
@@ -131,8 +82,7 @@
 
                 <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
 
-                <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block"
-                    data-theme-accent-text>Live
+                <span class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Live
                     Platform</span>
 
                 <div class="h-8 w-px bg-white/10 mx-6 hidden sm:block"></div>
@@ -148,6 +98,7 @@
             </div>
 
             <div class="flex items-center gap-6">
+                {% include "includes/theme_switcher.html" %}
                 <!-- Viewer Count Pill -->
                 <div
                     class="hidden md:flex bg-[#0f172a] border border-white/10 rounded-full px-4 py-1.5 items-center gap-2 text-xs font-medium text-slate-400">
@@ -213,13 +164,12 @@
             </div>
 
             <!-- Interaction Siderbar (Right) -->
-            <div class="w-full lg:w-[400px] border-l border-white/5 flex flex-col backdrop-blur-xl min-h-[500px] lg:min-h-0"
-                style="background-color: var(--body-bg);">
+            <div
+                class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl min-h-[500px] lg:min-h-0">
                 <!-- Tab Switching -->
                 <div class="flex h-14 border-b border-white/5">
                     <button data-tab="chat"
-                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all tab-btn tab-active"
-                        style="color: var(--body-text);" data-theme-accent-border>
+                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 transition-all tab-btn tab-active">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9l-1.93 1.93A2 2 0 016 18.6V7a2 2 0 012-2h6a2 2 0 012 2v1z">
@@ -228,8 +178,7 @@
                         Comunidad
                     </button>
                     <button data-tab="qa"
-                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all tab-btn"
-                        style="color: var(--body-text); opacity: 0.7;" data-theme-accent-border>
+                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 transition-all tab-btn">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
@@ -244,20 +193,18 @@
                     <div id="chat-panel" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
                         {% for chat in chats %}
                         <div class="flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300">
-                            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-black border flex-shrink-0 mt-0.5"
-                                style="background-color: rgba(255,255,255,0.05); color: var(--body-text); border-color: rgba(255,255,255,0.1);">
+                            <div
+                                class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400/80 flex items-center justify-center text-[9px] font-black border border-indigo-500/10 flex-shrink-0 mt-0.5">
                                 {{ chat['user_name'][:2].upper() }}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-0.5">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider"
-                                        style="color: var(--body-text); opacity: 0.7;">{{
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{
                                         chat['user_name'] }}</span>
                                 </div>
-                                <div class="px-3 py-2 rounded-xl rounded-tl-none border inline-block max-w-full"
-                                    style="background-color: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05);">
-                                    <p class="text-sm leading-snug" style="color: var(--body-text);">{{ chat['message']
-                                        }}</p>
+                                <div
+                                    class="bg-white/[0.03] px-3 py-2 rounded-xl rounded-tl-none border border-white/5 inline-block max-w-full">
+                                    <p class="text-sm text-slate-300 leading-snug">{{ chat['message'] }}</p>
                                 </div>
                             </div>
                         </div>
@@ -265,14 +212,12 @@
                     </div>
 
                     <!-- Chat Input -->
-                    <div class="p-3 border-t border-white/5" style="background-color: rgba(0,0,0,0.2);">
+                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
                         <form id="chat-form" class="relative group">
                             <input id="chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
-                                class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all pr-12"
-                                style="background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--body-text);">
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all pr-12 text-white placeholder-slate-500">
                             <button type="submit"
-                                class="absolute right-1.5 top-1.5 p-1.5 rounded-lg text-white transition-colors"
-                                data-theme-accent-bg>
+                                class="absolute right-1.5 top-1.5 p-1.5 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                         d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -286,13 +231,12 @@
                 <div id="qa-panel" class="hidden flex-1 flex flex-col overflow-hidden">
                     <div id="qa-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
                         <div class="px-2 py-1 mb-1">
-                            <p class="text-[10px] font-bold uppercase tracking-widest opacity-60 italic"
-                                style="color: var(--body-text);">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 opacity-60 italic">
                                 Preguntas Aprobadas</p>
                         </div>
                         {% for question in approved_questions %}
-                        <div class="p-3 border rounded-xl transition-all group animate-in zoom-in-95 duration-300"
-                            style="background-color: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05);">
+                        <div
+                            class="p-3 bg-white/[0.03] border border-white/5 rounded-xl hover:border-emerald-500/20 transition-all group animate-in zoom-in-95 duration-300">
                             <div class="flex items-center justify-between mb-1.5">
                                 <div class="flex items-center gap-1.5">
                                     <span
@@ -300,34 +244,29 @@
                                     <span
                                         class="text-[9px] font-black uppercase tracking-tighter text-emerald-500/80">Respondida</span>
                                 </div>
-                                <span class="text-[8px] font-bold uppercase"
-                                    style="color: var(--body-text); opacity: 0.6;">{{ question['user_name']
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">{{ question['user_name']
                                     }}</span>
                             </div>
-                            <p class="text-sm leading-snug" style="color: var(--body-text);">{{
-                                question['question_text'] }}</p>
+                            <p class="text-sm text-slate-300 leading-snug">{{ question['question_text'] }}</p>
                         </div>
                         {% end %}
                     </div>
 
                     <!-- Q&A Input -->
-                    <div class="p-3 border-t border-white/5" style="background-color: rgba(0,0,0,0.2);">
+                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
                         <form id="question-form" class="flex flex-col gap-2">
                             <div class="relative">
                                 <textarea id="question-input" placeholder="Tu pregunta para el ponente..." rows="2"
-                                    class="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none transition-all resize-none custom-scroll"
-                                    style="background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--body-text);"></textarea>
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all resize-none custom-scroll text-white placeholder-slate-500"></textarea>
                                 <div
                                     class="absolute bottom-2 right-2 flex items-center gap-1.5 pointer-events-none opacity-40">
-                                    <span class="text-[8px] font-bold uppercase tracking-tighter"
-                                        style="color: var(--body-text);">Enter
+                                    <span class="text-[8px] font-bold uppercase tracking-tighter text-slate-400">Enter
                                         para
                                         enviar</span>
                                 </div>
                             </div>
                             <button type="submit"
-                                class="w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-white hover:opacity-90"
-                                data-theme-accent-bg>
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-white">
                                 Enviar Pregunta
                             </button>
                         </form>
@@ -452,17 +391,15 @@
             const div = document.createElement("div");
             div.className = "flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300";
             div.innerHTML = `
-                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-black border flex-shrink-0 mt-0.5"
-                     style="background-color: rgba(255,255,255,0.05); color: var(--body-text); border-color: rgba(255,255,255,0.1);">
+                <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400/80 flex items-center justify-center text-[9px] font-black border border-indigo-500/10 flex-shrink-0 mt-0.5">
                     ${payload.user.slice(0, 2).toUpperCase()}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-0.5">
-                        <span class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--body-text); opacity: 0.7;">${payload.user}</span>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">${payload.user}</span>
                     </div>
-                    <div class="px-3 py-2 rounded-xl rounded-tl-none border inline-block max-w-full"
-                         style="background-color: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05);">
-                        <p class="text-sm leading-snug" style="color: var(--body-text);">${payload.message}</p>
+                    <div class="bg-white/[0.03] px-3 py-2 rounded-xl rounded-tl-none border border-white/5 inline-block max-w-full">
+                        <p class="text-sm text-slate-300 leading-snug">${payload.message}</p>
                     </div>
                 </div>
             `;
@@ -473,18 +410,16 @@
 
         function appendQuestion(payload) {
             const div = document.createElement("div");
-            div.className = "p-3 border rounded-xl transition-all group animate-in zoom-in-95 duration-300";
-            div.style.cssText = "background-color: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05);";
-
+            div.className = "p-3 bg-white/[0.03] border border-white/5 rounded-xl group animate-in zoom-in-95 duration-300";
             div.innerHTML = `
                 <div class="flex items-center justify-between mb-1.5">
                     <div class="flex items-center gap-1.5">
                         <span class="w-1 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                         <span class="text-[9px] font-black uppercase tracking-tighter text-emerald-500/80">Respondida</span>
                     </div>
-                    <span class="text-[8px] font-bold uppercase" style="color: var(--body-text); opacity: 0.6;">${payload.user}</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase">${payload.user}</span>
                 </div>
-                <p class="text-sm leading-snug" style="color: var(--body-text);">${payload.question}</p>
+                <p class="text-sm text-slate-300 leading-snug">${payload.question}</p>
             `;
             // Insert after the title header
             qaList.insertBefore(div, qaList.children[1]);
@@ -530,137 +465,6 @@
             @keyframes pop { to { opacity: 1; transform: scale(1); } }
         `;
         document.head.appendChild(style);
-    </script>
-    <div id="theme-control-panel"
-        class="fixed bottom-4 right-4 z-50 flex flex-col gap-3 p-4 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl transition-all duration-300 translate-y-[calc(100%-3rem)] hover:translate-y-0 group/panel">
-        <div class="flex items-center justify-between cursor-pointer pb-2 border-b border-white/10">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-slate-300 font-bold">Personalizar Tema</span>
-            <svg class="w-3 h-3 text-slate-500 group-hover/panel:rotate-180 transition-transform" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-            </svg>
-        </div>
-
-        <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-1">
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] uppercase text-slate-500 font-bold">Acento</label>
-                <div class="flex gap-2">
-                    <input type="color" id="picker-accent"
-                        class="w-8 h-8 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
-                    <button id="btn-reset"
-                        class="text-[9px] bg-white/10 hover:bg-white/20 text-white rounded px-2 h-8 flex-1 uppercase font-bold">Reset</button>
-                </div>
-            </div>
-
-            <div class="col-span-2 h-px bg-white/5 my-1"></div>
-
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] uppercase text-indigo-400 font-bold">Header BG</label>
-                <input type="color" id="picker-header-bg"
-                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] uppercase text-indigo-400 font-bold">Header Txt</label>
-                <input type="color" id="picker-header-text"
-                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
-            </div>
-
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] uppercase text-indigo-400 font-bold">Body BG</label>
-                <input type="color" id="picker-body-bg"
-                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] uppercase text-indigo-400 font-bold">Body Txt</label>
-                <input type="color" id="picker-body-text"
-                    class="w-full h-6 rounded cursor-pointer border border-white/20 bg-transparent p-0" />
-            </div>
-        </div>
-    </div>
-
-    <script>
-        (function () {
-            const slug = "{{ event['slug'] if event else 'global' }}";
-            const storageKey = `theme-config-${slug}`;
-
-            const defaults = {
-                accent: "{{ event['theme_color'] if event and event.get('theme_color') else '#4f46e5' }}",
-                headerBg: "{{ event['header_bg_color'] if event and event.get('header_bg_color') else '#0a0b16' }}",
-                headerText: "{{ event['header_text_color'] if event and event.get('header_text_color') else '#cbd5e1' }}",
-                bodyBg: "{{ event['body_bg_color'] if event and event.get('body_bg_color') else '#050511' }}",
-                bodyText: "{{ event['body_text_color'] if event and event.get('body_text_color') else '#cbd5e1' }}"
-            };
-
-            const root = document.documentElement;
-
-            const pickers = {
-                accent: document.getElementById('picker-accent'),
-                headerBg: document.getElementById('picker-header-bg'),
-                headerText: document.getElementById('picker-header-text'),
-                bodyBg: document.getElementById('picker-body-bg'),
-                bodyText: document.getElementById('picker-body-text')
-            };
-
-            const resetBtn = document.getElementById('btn-reset');
-
-            function applyTheme(config) {
-                if (config.accent) root.style.setProperty('--dynamic-accent', config.accent);
-                if (config.headerBg) root.style.setProperty('--header-bg', config.headerBg);
-                if (config.headerText) root.style.setProperty('--header-text', config.headerText);
-                if (config.bodyBg) root.style.setProperty('--body-bg', config.bodyBg);
-                if (config.bodyText) root.style.setProperty('--body-text', config.bodyText);
-            }
-
-            function loadTheme() {
-                const stored = localStorage.getItem(storageKey);
-                const config = stored ? JSON.parse(stored) : defaults;
-
-                // Merge with defaults in case of partial stored data (rare)
-                const finalConfig = { ...defaults, ...config };
-
-                applyTheme(finalConfig);
-
-                // Update pickers
-                if (pickers.accent) pickers.accent.value = finalConfig.accent;
-                if (pickers.headerBg) pickers.headerBg.value = finalConfig.headerBg;
-                if (pickers.headerText) pickers.headerText.value = finalConfig.headerText;
-                if (pickers.bodyBg) pickers.bodyBg.value = finalConfig.bodyBg;
-                if (pickers.bodyText) pickers.bodyText.value = finalConfig.bodyText;
-            }
-
-            function saveTheme() {
-                const config = {
-                    accent: pickers.accent.value,
-                    headerBg: pickers.headerBg.value,
-                    headerText: pickers.headerText.value,
-                    bodyBg: pickers.bodyBg.value,
-                    bodyText: pickers.bodyText.value
-                };
-                localStorage.setItem(storageKey, JSON.stringify(config));
-                applyTheme(config);
-            }
-
-            // Listeners
-            Object.values(pickers).forEach(picker => {
-                if (picker) picker.addEventListener('input', saveTheme);
-            });
-
-            if (resetBtn) {
-                resetBtn.addEventListener('click', () => {
-                    localStorage.removeItem(storageKey);
-                    applyTheme(defaults);
-
-                    if (pickers.accent) pickers.accent.value = defaults.accent;
-                    if (pickers.headerBg) pickers.headerBg.value = defaults.headerBg;
-                    if (pickers.headerText) pickers.headerText.value = defaults.headerText;
-                    if (pickers.bodyBg) pickers.bodyBg.value = defaults.bodyBg;
-                    if (pickers.bodyText) pickers.bodyText.value = defaults.bodyText;
-                });
-            }
-
-            // Init
-            loadTheme();
-        })();
     </script>
 </body>
 

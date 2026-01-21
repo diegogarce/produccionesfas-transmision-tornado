@@ -24,13 +24,13 @@ class WatchHandler(BaseHandler):
                 self.render("error.html", message="Evento no encontrado")
             return
 
+        event_id = event["id"]
+
         # Check if event is active (allow staff even if paused?)
-        # Let's say Visors cannot enter if paused, but staff can.
-        if not event["is_active"] and not self.is_moderator():
+        # Let's say Viewers cannot enter if paused, but staff can.
+        if not event["is_active"] and not self.is_moderator_for_event(event_id):
             self.render("error.html", message="Esta transmisión ha finalizado.")
             return
-
-        event_id = event["id"]
 
         # Mark viewer as active even if WebSocket can't connect (fallback).
         user_id = self.get_current_user()

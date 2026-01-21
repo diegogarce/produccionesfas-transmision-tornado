@@ -88,12 +88,14 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
     </style>
+    {% include "includes/theme.html" %}
 </head>
 
 <body class="text-slate-300 min-h-screen antialiased">
 
     <!-- Top Navigation Bar (Matching Identity) -->
-    <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
+    <nav class="event-header border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40"
+        style="{% if event and event.get('header_bg_color') %}--event-header-bg: {{ event.get('header_bg_color') }};{% end %}{% if event and event.get('header_text_color') %}--event-header-text: {{ event.get('header_text_color') }};{% end %}">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
@@ -110,6 +112,7 @@
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-6">
+                {% include "includes/theme_switcher.html" %}
                 <!-- Link a Moderador -->
                 <a href="/e/{{ event['slug'] }}/mod" target="_blank"
                     class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"

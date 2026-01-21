@@ -8,10 +8,6 @@ from app.services import analytics_service, chat_service, questions_service
 class ModeratorHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self, slug=None):
-        if not self.is_moderator():
-            self.redirect("/watch")
-            return
-        
         from app.services import events_service
         event = None
         if slug:
@@ -25,6 +21,10 @@ class ModeratorHandler(BaseHandler):
             return
 
         event_id = event["id"]
+
+        if not self.is_moderator_for_event(event_id):
+            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            return
         
         # Fetch initial data for SSR
         pending = questions_service.list_questions(status="pending", event_id=event_id)
@@ -98,7 +98,7 @@ class APIUserStatusHandler(BaseHandler):
 
     @tornado.web.authenticated
     def post(self):
-        if not self.is_moderator():
+        if not self.is_moderator_for_event():
             self.set_status(403)
             return
 

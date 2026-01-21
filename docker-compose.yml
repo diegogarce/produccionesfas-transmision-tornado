@@ -3,9 +3,9 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: transmisionesfast-tornado
+    container_name: transmisionesfast-tornado-dev
     ports:
-      - "8888:8888"
+      - "8081:8888"
     environment:
       # Credenciales para tu base de datos remota
       - DB_HOST=${DB_HOST}
@@ -25,7 +25,7 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: transmisionesfast-redis
+    container_name: transmisionesfast-redis-dev
     ports:
-      - "6380:6379"
+      - "6381:6379"
     restart: always

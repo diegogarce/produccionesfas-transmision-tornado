@@ -102,6 +102,286 @@
         border-color: #e2e8f0 !important;
     }
 
+    /* Project-specific utilities (navy/slate + arbitrary dark bg classes) */
+    [data-theme="light"] .bg-navy-950 {
+        background-color: #f8fafc !important;
+    }
+
+    [data-theme="light"] .bg-navy-900 {
+        background-color: #ffffff !important;
+    }
+
+    [data-theme="light"] .bg-navy-800 {
+        background-color: #f1f5f9 !important;
+    }
+
+    [data-theme="light"] .bg-navy-700 {
+        background-color: #e2e8f0 !important;
+    }
+
+    /* Navy classes with ALL opacity variants (Tailwind arbitrary) */
+    [data-theme="light"] .bg-navy-900\/5,
+    [data-theme="light"] .bg-navy-900\/10,
+    [data-theme="light"] .bg-navy-900\/20,
+    [data-theme="light"] .bg-navy-900\/30,
+    [data-theme="light"] .bg-navy-900\/40,
+    [data-theme="light"] .bg-navy-900\/50 {
+        background-color: rgba(248, 250, 252, 0.85) !important;
+    }
+
+    [data-theme="light"] .bg-navy-800\/5,
+    [data-theme="light"] .bg-navy-800\/10,
+    [data-theme="light"] .bg-navy-800\/20,
+    [data-theme="light"] .bg-navy-800\/30,
+    [data-theme="light"] .bg-navy-800\/40,
+    [data-theme="light"] .bg-navy-800\/50 {
+        background-color: rgba(241, 245, 249, 0.9) !important;
+    }
+
+    [data-theme="light"] .text-slate-100,
+    [data-theme="light"] .text-slate-200,
+    [data-theme="light"] .text-slate-300,
+    [data-theme="light"] .text-white {
+        color: #0f172a !important;
+    }
+
+    [data-theme="light"] .text-slate-400 {
+        color: #334155 !important;
+    }
+
+    [data-theme="light"] .text-slate-500 {
+        color: #475569 !important;
+    }
+
+    [data-theme="light"] .text-slate-600 {
+        color: #64748b !important;
+    }
+
+    [data-theme="light"] .border-white\/5,
+    [data-theme="light"] .border-white\/10,
+    [data-theme="light"] .border-white\/20 {
+        border-color: rgba(15, 23, 42, 0.12) !important;
+    }
+
+    [data-theme="light"] .bg-white\/5,
+    [data-theme="light"] .bg-white\/10 {
+        background-color: rgba(15, 23, 42, 0.04) !important;
+    }
+
+    /* Arbitrary hex backgrounds */
+    [data-theme="light"] .bg-\[\#050511\],
+    [data-theme="light"] .bg-\[\#020617\],
+    [data-theme="light"] .bg-\[\#0a0b16\] {
+        background-color: #f8fafc !important;
+    }
+
+    [data-theme="light"] .bg-\[\#050511\]\/90,
+    [data-theme="light"] .bg-\[\#020617\]\/90 {
+        background-color: rgba(248, 250, 252, 0.95) !important;
+    }
+
+    [data-theme="light"] .bg-\[\#0f172a\],
+    [data-theme="light"] .bg-\[\#1e293b\] {
+        background-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .bg-\[\#0f172a\]\/80 {
+        background-color: rgba(241, 245, 249, 0.92) !important;
+    }
+
+    /* Black backgrounds - keep video area dark */
+    [data-theme="light"] .bg-black {
+        background-color: #0f172a !important;
+    }
+
+    [data-theme="light"] .bg-black\/40 {
+        background-color: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    /* Common custom glass surfaces */
+    [data-theme="light"] .glass,
+    [data-theme="light"] .glass-card,
+    [data-theme="light"] .glass-panel {
+        background: rgba(255, 255, 255, 0.85) !important;
+        border-color: rgba(15, 23, 42, 0.12) !important;
+    }
+
+    /* Body background override - critical for light mode */
+    [data-theme="light"] body {
+        background-color: #f1f5f9 !important;
+    }
+
+    /* Navy classes with opacity modifiers */
+    [data-theme="light"] .bg-navy-900\/30,
+    [data-theme="light"] [class*="bg-navy-900/"] {
+        background-color: rgba(241, 245, 249, 0.8) !important;
+    }
+
+    [data-theme="light"] .bg-navy-800\/20,
+    [data-theme="light"] .bg-navy-800\/30,
+    [data-theme="light"] .bg-navy-800\/50,
+    [data-theme="light"] [class*="bg-navy-800/"] {
+        background-color: rgba(226, 232, 240, 0.6) !important;
+    }
+
+    /* Arbitrary hex background classes */
+    [data-theme="light"] .bg-\[\#0a0b16\] {
+        background-color: #ffffff !important;
+    }
+
+    [data-theme="light"] .bg-\[\#0f172a\] {
+        background-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .bg-\[\#1e293b\] {
+        background-color: #f1f5f9 !important;
+    }
+
+    /* Arbitrary bg-white with opacity brackets like bg-white/[0.03] */
+    [data-theme="light"] .bg-white\/\[0\.02\],
+    [data-theme="light"] .bg-white\/\[0\.03\],
+    [data-theme="light"] .bg-white\/\[0\.05\] {
+        background-color: rgba(15, 23, 42, 0.03) !important;
+    }
+
+    /* Indigo opacity backgrounds */
+    [data-theme="light"] .bg-indigo-500\/10,
+    [data-theme="light"] .bg-indigo-500\/20 {
+        background-color: rgba(99, 102, 241, 0.15) !important;
+    }
+
+    [data-theme="light"] .border-indigo-500\/20 {
+        border-color: rgba(99, 102, 241, 0.25) !important;
+    }
+
+    /* Hide decorative blur gradients in light mode - they look too prominent */
+    [data-theme="light"] [class*="blur-"][class*="bg-indigo"],
+    [data-theme="light"] [class*="blur-"][class*="bg-purple"],
+    [data-theme="light"] [class*="blur-"][class*="bg-blue"] {
+        opacity: 0 !important;
+    }
+
+    /* Also target the absolute positioned decorative blurs */
+    [data-theme="light"] .absolute[class*="blur-"] {
+        opacity: 0.15 !important;
+    }
+
+    /* Tab active state for light mode */
+    [data-theme="light"] .tab-active {
+        color: #0f172a !important;
+        background: rgba(79, 70, 229, 0.15) !important;
+    }
+
+    /* Input fields */
+    [data-theme="light"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+    [data-theme="light"] textarea {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+
+    [data-theme="light"] input::placeholder,
+    [data-theme="light"] textarea::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    /* Buttons - keep accent colors visible */
+    [data-theme="light"] .bg-indigo-600 {
+        background-color: #4f46e5 !important;
+    }
+
+    [data-theme="light"] .bg-indigo-600 .text-white,
+    [data-theme="light"] .bg-indigo-500 .text-white,
+    [data-theme="light"] .bg-indigo-600.text-white,
+    [data-theme="light"] .bg-indigo-500.text-white,
+    [data-theme="light"] button.bg-indigo-600,
+    [data-theme="light"] button.bg-indigo-500 {
+        color: #ffffff !important;
+    }
+
+    /* Preserve colored badges (red/green/amber/indigo) */
+    [data-theme="light"] .text-red-500,
+    [data-theme="light"] .text-red-400 {
+        color: #ef4444 !important;
+    }
+
+    [data-theme="light"] .text-emerald-500,
+    [data-theme="light"] .text-emerald-400,
+    [data-theme="light"] .text-green-500,
+    [data-theme="light"] .text-green-400 {
+        color: #10b981 !important;
+    }
+
+    [data-theme="light"] .text-amber-400,
+    [data-theme="light"] .text-amber-500 {
+        color: #f59e0b !important;
+    }
+
+    [data-theme="light"] .text-indigo-400,
+    [data-theme="light"] .text-indigo-500 {
+        color: #6366f1 !important;
+    }
+
+    /* Preserve bg colors on badges */
+    [data-theme="light"] .bg-red-500,
+    [data-theme="light"] .bg-red-600 {
+        background-color: #ef4444 !important;
+    }
+
+    [data-theme="light"] .bg-red-500\/10,
+    [data-theme="light"] .bg-red-600\/10 {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+
+    /* Border adjustments for cards */
+    [data-theme="light"] .border-r,
+    [data-theme="light"] .border-b,
+    [data-theme="light"] .border-t,
+    [data-theme="light"] .border-l {
+        border-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] [class*="border-white\\/"] {
+        border-color: rgba(15, 23, 42, 0.1) !important;
+    }
+
+    /* Shadow adjustments */
+    [data-theme="light"] [class*="shadow-"] {
+        --tw-shadow-color: rgba(15, 23, 42, 0.08) !important;
+    }
+
+    /* Moderator/Watch specific panels */
+    [data-theme="light"] main {
+        background-color: #f8fafc !important;
+    }
+
+    /* AG Grid (reports): keep using alpine-dark but switch palette in light mode */
+    [data-theme="light"] .ag-theme-alpine-dark {
+        --ag-background-color: #ffffff;
+        --ag-foreground-color: #0f172a;
+        --ag-header-background-color: #f1f5f9;
+        --ag-header-foreground-color: #0f172a;
+        --ag-border-color: rgba(15, 23, 42, 0.12);
+        --ag-row-hover-color: rgba(59, 130, 246, 0.08);
+        --ag-selected-row-background-color: rgba(59, 130, 246, 0.12);
+        --ag-alpine-active-color: #2563eb;
+        --ag-header-column-separator-color: rgba(15, 23, 42, 0.12);
+    }
+
+    /* Per-event header customization (set CSS vars inline on the header element) */
+    .event-header[style*="--event-header-bg"] {
+        background: var(--event-header-bg) !important;
+    }
+
+    .event-header[style*="--event-header-text"] {
+        color: var(--event-header-text) !important;
+    }
+
+    .event-header[style*="--event-header-text"] .text-white,
+    .event-header[style*="--event-header-text"] [class*='text-slate-'] {
+        color: var(--event-header-text) !important;
+    }
+
     /* Scrollbars (watch/moderator) */
     .chat-scroll::-webkit-scrollbar-track,
     .scroll-area::-webkit-scrollbar-track {

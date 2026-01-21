@@ -1,6 +1,15 @@
-from datetime import datetime
+from app.db import _normalize_timestamps, create_db_connection, now_hhmm_in_timezone
 
-from app.db import _normalize_timestamps, create_db_connection
+
+def _fetch_event_timezone(cursor, event_id: int | None) -> str | None:
+    if not event_id:
+        return None
+    try:
+        cursor.execute("SELECT timezone FROM events WHERE id=%s", (event_id,))
+        row = cursor.fetchone() or {}
+        return row.get("timezone")
+    except Exception:
+        return None
 
 
 def list_questions(status=None, limit=30, event_id=None):
@@ -92,11 +101,12 @@ def add_question(user_id: int, question_text: str, event_id: int = None, manual_
             )
             row = cursor.fetchone() or {}
             display_name = row.get("user_name") or "Visitante"
+            event_tz = _fetch_event_timezone(cursor, event_id)
     return {
         "id": question_id,
         "user": display_name,
         "question": question_text,
-        "timestamp": datetime.now().strftime("%H:%M"),
+        "timestamp": now_hhmm_in_timezone(event_tz),
     }
 
 
@@ -105,8 +115,11 @@ def approve_question(question_id: int):
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='approved' WHERE id=%s", (question_id,))
             cursor.execute(
-                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text "
-                "FROM questions q JOIN users u ON u.id=q.user_id WHERE q.id=%s",
+                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text, e.timezone "
+                "FROM questions q "
+                "JOIN users u ON u.id=q.user_id "
+                "LEFT JOIN events e ON e.id=q.event_id "
+                "WHERE q.id=%s",
                 (question_id,),
             )
             row = cursor.fetchone()
@@ -116,7 +129,7 @@ def approve_question(question_id: int):
         "id": question_id,
         "user": row["user_name"],
         "question": row["question_text"],
-        "timestamp": datetime.now().strftime("%H:%M"),
+        "timestamp": now_hhmm_in_timezone(row.get("timezone")),
     }
 
 
@@ -134,8 +147,11 @@ def return_question_to_pending(question_id: int):
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='pending' WHERE id=%s", (question_id,))
             cursor.execute(
-                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text "
-                "FROM questions q JOIN users u ON u.id=q.user_id WHERE q.id=%s",
+                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text, e.timezone "
+                "FROM questions q "
+                "JOIN users u ON u.id=q.user_id "
+                "LEFT JOIN events e ON e.id=q.event_id "
+                "WHERE q.id=%s",
                 (question_id,),
             )
             row = cursor.fetchone()
@@ -145,7 +161,7 @@ def return_question_to_pending(question_id: int):
         "id": question_id,
         "user": row["user_name"],
         "question": row["question_text"],
-        "timestamp": datetime.now().strftime("%H:%M"),
+        "timestamp": now_hhmm_in_timezone(row.get("timezone")),
     }
 
 
@@ -155,8 +171,11 @@ def mark_question_as_read(question_id: int):
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='read' WHERE id=%s", (question_id,))
             cursor.execute(
-                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text "
-                "FROM questions q JOIN users u ON u.id=q.user_id WHERE q.id=%s",
+                "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text, e.timezone "
+                "FROM questions q "
+                "JOIN users u ON u.id=q.user_id "
+                "LEFT JOIN events e ON e.id=q.event_id "
+                "WHERE q.id=%s",
                 (question_id,),
             )
             row = cursor.fetchone()
@@ -166,5 +185,5 @@ def mark_question_as_read(question_id: int):
         "id": question_id,
         "user": row["user_name"],
         "question": row["question_text"],
-        "timestamp": datetime.now().strftime("%H:%M"),
+        "timestamp": now_hhmm_in_timezone(row.get("timezone")),
     }

@@ -5,6 +5,7 @@ from app.services import session_service
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.session = None
+        self._staff_role_cache = {}
 
     def get_current_user(self):
         if self.session is None:
@@ -69,7 +70,35 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def current_user_role(self):
         if self.session is None: self._load_session()
-        return self.session.get("user_role") if self.session else "visor"
+        return self.session.get("user_role") if self.session else "viewer"
+
+    def is_superadmin(self):
+        return self.current_user_role() == "superadmin"
+
+    def event_staff_role(self, event_id=None):
+        user_id = self.get_current_user()
+        if not user_id:
+            return None
+
+        if event_id is None:
+            event_id = self.current_event_id()
+        if not event_id:
+            return None
+
+        try:
+            event_id = int(event_id)
+        except (TypeError, ValueError):
+            return None
+
+        cached = self._staff_role_cache.get(event_id)
+        if cached is not None:
+            return cached
+
+        from app.services import staff_service
+        role = staff_service.get_event_role(int(user_id), int(event_id))
+        # Cache even None to avoid repeated DB hits.
+        self._staff_role_cache[event_id] = role
+        return role
 
     def is_chat_blocked(self):
         user_id = self.get_current_user()
@@ -84,13 +113,47 @@ class BaseHandler(tornado.web.RequestHandler):
         return users_service.is_qa_blocked(user_id)
 
     def is_admin(self):
-        return self.current_user_role() == "administrador"
+        if self.is_superadmin():
+            return True
+        return self.current_user_role() == "admin" or self.is_admin_for_event()
+
+    def is_admin_for_event(self, event_id=None):
+        if self.is_superadmin():
+            return True
+        return self.event_staff_role(event_id) == "admin"
 
     def is_speaker(self):
-        return self.current_user_role() in ["speaker", "administrador"]
+        return self.is_speaker_for_event()
+
+    def is_speaker_for_event(self, event_id=None):
+        if self.is_superadmin():
+            return True
+        staff_role = self.event_staff_role(event_id)
+        if staff_role in ["admin", "speaker"]:
+            return True
+
+        # Per-event viewer that was promoted via users.role
+        if self.current_user_role() == "speaker":
+            target_eid = event_id or self.current_event_id()
+            return str(target_eid) == str(self.session.get("current_event_id")) if self.session else False
+        return False
 
     def is_moderator(self):
-        return self.current_user_role() in ["moderador", "administrador"]
+        return self.is_moderator_for_event()
+
+    def is_moderator_for_event(self, event_id=None):
+        if self.is_superadmin():
+            return True
+        staff_role = self.event_staff_role(event_id)
+        if staff_role in ["admin", "moderator"]:
+            return True
+
+        # Per-event viewer that was promoted via users.role
+        if self.current_user_role() in ["moderator", "moderador"]:
+            # Check if this user belongs to this event
+            target_eid = event_id or self.current_event_id()
+            return str(target_eid) == str(self.session.get("current_event_id")) if self.session else False
+        return False
 
     def get_ws_scheme(self):
         # Detect if we are in HTTPS via direct protocol or proxy header

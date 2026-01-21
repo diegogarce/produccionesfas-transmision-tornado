@@ -8,7 +8,10 @@ from app.services import analytics_service, session_service
 class RegistrationHandler(BaseHandler):
     def get(self, slug=None):
         if self.current_user:
-            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            if self.is_admin():
+                self.redirect("/admin/events")
+            else:
+                self.redirect(f"/e/{slug}/watch" if slug else "/watch")
             return
         
         from app.services import events_service
@@ -61,13 +64,13 @@ class RegistrationHandler(BaseHandler):
                     self.redirect(f"{login_url}?email={tornado.escape.url_escape(email)}")
                     return
                 else:
-                    # Default role is 'visor', default password in DB is 'produccionesfast2050'
+                    # Default role is 'viewer', default password in DB is 'produccionesfast2050'
                     cursor.execute(
                         "INSERT INTO users (name, email, phone, role, event_id) VALUES (%s, %s, %s, %s, %s)",
-                        (name, email, phone, "visor", event_id),
+                        (name, email, phone, "viewer", event_id),
                     )
                     user_id = cursor.lastrowid
-                    user_role = "visor"
+                    user_role = "viewer"
         
         # Create Session in Redis
         session_data = {
@@ -95,7 +98,10 @@ class RegistrationHandler(BaseHandler):
 class LoginHandler(BaseHandler):
     def get(self, slug=None):
         if self.current_user:
-            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            if self.is_admin():
+                self.redirect("/admin/events")
+            else:
+                self.redirect(f"/e/{slug}/watch" if slug else "/watch")
             return
         
         from app.services import events_service
@@ -121,9 +127,13 @@ class LoginHandler(BaseHandler):
         event_id = None
         if event:
             event_id = event["id"]
+        elif slug:
+            # Slug was provided but no event found (should have been caught in GET, but safety first)
+            event_id = None
         else:
-            # If no slug, try cookie context. If still missing, login may be ambiguous.
-            event_id = self.current_event_id()
+            # Context-less login (/login). We do NOT use current_event_id() cookie here
+            # to avoid filtering global staff accounts based on old navigation context.
+            event_id = None
         
         if not email:
             self.render("login.html", event=event, prefill_email=email, error="El correo es obligatorio.")
@@ -148,27 +158,45 @@ class LoginHandler(BaseHandler):
                     )
                     user = cursor.fetchone()
 
-                    # Allow a global admin (event_id IS NULL) to log in from an event-scoped URL.
+                    # Allow global staff accounts (event_id IS NULL) to log in from an event-scoped URL.
+                    # Superadmin always allowed; other global users must be assigned via event_staff.
                     if not user:
                         cursor.execute(
                             "SELECT id, name, password, role, event_id FROM users WHERE email=%s AND event_id IS NULL ORDER BY created_at DESC",
                             (email,),
                         )
                         candidate = cursor.fetchone()
-                        if candidate and (candidate.get("role") == "administrador"):
-                            user = candidate
+                        if candidate:
+                            global_role = candidate.get("role")
+                            if global_role in ["superadmin", "admin"]:
+                                user = candidate
+                            else:
+                                # Check event_staff assignment
+                                cursor.execute(
+                                    "SELECT role FROM event_staff WHERE user_id=%s AND event_id=%s",
+                                    (candidate["id"], event_id),
+                                )
+                                staff = cursor.fetchone()
+                                if staff:
+                                    user = candidate
                 else:
-                    # No event context: if there are multiple event-scoped users with the same email,
-                    # force using the event-specific login URL (/e/{slug}/login).
+                    # No event context: prioritize global staff accounts (event_id IS NULL)
                     cursor.execute(
-                        "SELECT id, name, password, role, event_id FROM users WHERE email=%s ORDER BY created_at DESC",
+                        "SELECT id, name, password, role, event_id FROM users WHERE email=%s ORDER BY (event_id IS NULL) DESC, created_at DESC",
                         (email,),
                     )
                     users = cursor.fetchall() or []
-                    if len(users) == 1:
+                    if not users:
+                        user = None
+                    elif len(users) == 1:
                         user = users[0]
                     else:
-                        user = None
+                        # Multiple users: if the first one is global, prioritize it
+                        if users[0]["event_id"] is None:
+                            user = users[0]
+                        else:
+                            # Force slug-specific login if all are event-scoped
+                            user = None
 
         if not user:
             self.render(
@@ -195,8 +223,17 @@ class LoginHandler(BaseHandler):
 
         user_id = user["id"]
         user_name = user.get("name") or "Visitante"
-        user_role = user.get("role") or "visor"
+        user_role = user.get("role") or "viewer"
         selected_event_id = user.get("event_id") or event_id
+
+        # Resolve per-event staff role (if any) to decide redirects later.
+        staff_role = None
+        if selected_event_id:
+            try:
+                from app.services import staff_service
+                staff_role = staff_service.get_event_role(int(user_id), int(selected_event_id))
+            except Exception:
+                staff_role = None
 
         # Create Session
         session_data = {
@@ -219,14 +256,33 @@ class LoginHandler(BaseHandler):
             self.set_secure_cookie("current_event_id", str(selected_event_id), httponly=True, secure=is_https, samesite="Lax")
         
         # Smart redirect based on role
-        if user_role == "administrador":
+        if user_role in ["superadmin", "admin"]:
             self.redirect("/admin/events")
-        elif user_role == "speaker":
+            return
+
+        # Staff assignment takes priority
+        if staff_role == "admin":
+            self.redirect("/admin/events")
+            return
+        if staff_role == "speaker":
             self.redirect(f"/e/{slug}/speaker" if slug else "/speaker")
-        elif user_role == "moderador":
+            return
+        if staff_role == "moderator":
             self.redirect(f"/e/{slug}/mod" if slug else "/mod")
-        else:
-            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            return
+
+        # Fallback to users.role (per-event accounts)
+        if user_role == "admin":
+            self.redirect("/admin/events")
+            return
+        if user_role == "speaker":
+            self.redirect(f"/e/{slug}/speaker" if slug else "/speaker")
+            return
+        if user_role in ["moderator", "moderador"]:
+            self.redirect(f"/e/{slug}/mod" if slug else "/mod")
+            return
+
+        self.redirect(f"/e/{slug}/watch" if slug else "/watch")
 
 
 class LogoutHandler(BaseHandler):
