@@ -239,6 +239,18 @@
             </div>
         </div>
 
+        <!-- View Toggle -->
+        <div class="flex gap-4 mb-6 border-b border-white/5">
+            <button id="btn-attendance" onclick="switchView('attendance')"
+                class="pb-3 border-b-2 border-indigo-500 text-white text-xs font-bold uppercase tracking-widest transition-colors">
+                Asistencia en Vivo
+            </button>
+            <button id="btn-registration" onclick="switchView('registration')"
+                class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">
+                Lista de Registros
+            </button>
+        </div>
+
         <!-- AG Grid Container -->
         <div class="animate-fade-in" style="animation-delay: 0.1s;">
             <div id="myGrid" class="ag-theme-alpine-dark w-full h-[600px]"></div>
@@ -249,33 +261,37 @@
         const statusEl = document.querySelector("#connection-status span:last-child");
         const statusContainer = document.getElementById("connection-status");
 
+        // Data from server
+        const activeSessionsData = {% raw json_encode(active_sessions) %};
+        const registeredUsersData = {% raw json_encode(registered_users) %};
+
         let gridApi;
+        let currentView = 'attendance';
+
+        // Column Configs
+        const attendanceCols = [
+            { field: "user_name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
+            { field: "start_time", headerName: "Hora Inicio", width: 180, sortable: true },
+            { field: "last_ping", headerName: "Último Activo", width: 180, sortable: true, cellRenderer: p => `<span class="font-mono text-xs text-slate-400">${p.value}</span>` },
+            { field: "session_minutes", headerName: "Duración", width: 120, sortable: true, cellRenderer: p => `<span class="font-bold text-indigo-400">${p.value} min</span>` }
+        ];
+
+        const registrationCols = [
+            { field: "name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
+            { field: "email", headerName: "Email", width: 250, sortable: true, filter: true },
+            { field: "phone", headerName: "Teléfono", width: 150, sortable: true },
+            { field: "created_at", headerName: "Fecha Registro", width: 180, sortable: true }
+        ];
 
         // Grid Options
         const gridOptions = {
-            columnDefs: [
-                { field: "user_name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
-                { field: "start_time", headerName: "Hora Inicio", width: 180, sortable: true },
-                {
-                    field: "last_ping", headerName: "Último Ping", width: 180, sortable: true, cellRenderer: params => {
-                        // Highlight if recent
-                        return `<span class="font-mono text-xs text-slate-400">${params.value}</span>`;
-                    }
-                },
-                {
-                    field: "session_minutes", headerName: "Duración", width: 120, sortable: true, cellRenderer: params => {
-                        return `<span class="font-bold text-indigo-400">${params.value} min</span>`;
-                    }
-                }
-            ],
-            defaultColDef: {
-                resizable: true,
-            },
-            rowData: {% raw json_encode(active_sessions) %}, // Initial data from server
-        animateRows: true,
+            columnDefs: attendanceCols,
+            defaultColDef: { resizable: true },
+            rowData: activeSessionsData,
+            animateRows: true,
             pagination: true,
-                paginationPageSize: 20,
-                    overlayNoRowsTemplate: '<span class="text-slate-500">Esperando datos de conexión...</span>',
+            paginationPageSize: 20,
+            overlayNoRowsTemplate: '<span class="text-slate-500">Sin datos disponibles</span>',
         };
 
         // Initialize Grid
@@ -284,7 +300,37 @@
             gridApi = agGrid.createGrid(gridDiv, gridOptions);
         });
 
-        // WebSocket Logic
+        function switchView(view) {
+            currentView = view;
+            const btnAtt = document.getElementById('btn-attendance');
+            const btnReg = document.getElementById('btn-registration');
+
+            if (view === 'attendance') {
+                if (btnAtt && btnReg) {
+                    btnAtt.classList.replace('text-slate-500', 'text-white');
+                    btnAtt.classList.replace('border-transparent', 'border-indigo-500');
+                    btnReg.classList.replace('text-white', 'text-slate-500');
+                    btnReg.classList.replace('border-indigo-500', 'border-transparent');
+                }
+                if (gridApi) {
+                    gridApi.setGridOption('columnDefs', attendanceCols);
+                    gridApi.setGridOption('rowData', activeSessionsData);
+                }
+            } else {
+                if (btnAtt && btnReg) {
+                    btnReg.classList.replace('text-slate-500', 'text-white');
+                    btnReg.classList.replace('border-transparent', 'border-indigo-500');
+                    btnAtt.classList.replace('text-white', 'text-slate-500');
+                    btnAtt.classList.replace('border-indigo-500', 'border-transparent');
+                }
+                if (gridApi) {
+                    gridApi.setGridOption('columnDefs', registrationCols);
+                    gridApi.setGridOption('rowData', registeredUsersData);
+                }
+            }
+        }
+
+        // WebSocket Logic for Live Updates (Attendance Only)
         // Dynamically determine protocol (ws or wss) based on page loading environment
         const baseWsUrl = "{% raw ws_url %}";
         const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
@@ -292,23 +338,28 @@
         const ws = new WebSocket(finalWsUrl);
 
         ws.addEventListener("open", () => {
-            statusEl.textContent = 'Conectado';
-            statusContainer.querySelector('svg').classList.add('text-emerald-400');
-            statusContainer.querySelector('svg').classList.remove('text-slate-500', 'text-red-500');
+            if (statusEl) statusEl.textContent = 'Conectado';
+            if (statusContainer) {
+                statusContainer.querySelector('svg').classList.add('text-emerald-400');
+                statusContainer.querySelector('svg').classList.remove('text-slate-500', 'text-red-500');
+            }
         });
 
         ws.addEventListener("close", () => {
-            statusEl.textContent = 'Desconectado';
-            statusContainer.querySelector('svg').classList.add('text-red-500');
-            statusContainer.querySelector('svg').classList.remove('text-slate-500', 'text-emerald-400');
+            if (statusEl) statusEl.textContent = 'Desconectado';
+            if (statusContainer) {
+                statusContainer.querySelector('svg').classList.add('text-red-500');
+                statusContainer.querySelector('svg').classList.remove('text-slate-500', 'text-emerald-400');
+            }
         });
 
         ws.addEventListener("message", (event) => {
             try {
                 const payload = JSON.parse(event.data);
                 if (payload.type === "active_sessions") {
-                    // Update grid data
-                    if (gridApi) {
+                    // Update global var for attendance
+                    // Only update grid if we are in attendance view
+                    if (currentView === 'attendance' && gridApi) {
                         gridApi.setGridOption('rowData', payload.sessions);
                     }
                 }

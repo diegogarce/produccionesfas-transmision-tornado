@@ -108,9 +108,15 @@ def list_active_sessions_for_report(active_within_seconds: int = DEFAULT_ACTIVE_
         f"WHERE sa.last_ping >= DATE_SUB(NOW(), INTERVAL {active_within_seconds} SECOND) "
     )
     
+    # Exclude global staff roles
+    query += " AND u.role = 'viewer' "
+
     params = []
     if event_id:
         query += " AND sa.event_id = %s "
+        # Exclude event-specific staff (redundant if global role is set correctly, but safe)
+        query += " AND u.id NOT IN (SELECT user_id FROM event_staff WHERE event_id = %s) "
+        params.append(event_id)
         params.append(event_id)
         
     query += "ORDER BY sa.last_ping DESC"
@@ -143,9 +149,15 @@ def list_all_participants_for_report(event_id: int = None):
         "LEFT JOIN events e ON e.id = sa.event_id "
     )
     
+    # Exclude global staff roles
+    query += " WHERE u.role = 'viewer' "
+    
     params = []
     if event_id:
-        query += " WHERE sa.event_id = %s "
+        query += " AND sa.event_id = %s "
+        # Exclude event-specific staff
+        query += " AND u.id NOT IN (SELECT user_id FROM event_staff WHERE event_id = %s) "
+        params.append(event_id)
         params.append(event_id)
         
     query += "ORDER BY sa.last_ping DESC"
@@ -153,6 +165,27 @@ def list_all_participants_for_report(event_id: int = None):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(query, params)
+            rows = cursor.fetchall()
+
+    return [_normalize_timestamps(row) for row in rows]
+
+
+def list_registered_users(event_id: int):
+    """Lists all users registered for an event (role='viewer'), regardless of activity."""
+    if not event_id:
+        return []
+
+    query = (
+        "SELECT id, name, email, phone, created_at, role "
+        "FROM users "
+        "WHERE event_id=%s AND role='viewer' "
+        "AND id NOT IN (SELECT user_id FROM event_staff WHERE event_id=%s) "
+        "ORDER BY created_at DESC"
+    )
+
+    with create_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, (event_id, event_id))
             rows = cursor.fetchall()
 
     return [_normalize_timestamps(row) for row in rows]

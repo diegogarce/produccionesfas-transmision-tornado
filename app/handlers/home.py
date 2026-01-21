@@ -23,14 +23,5 @@ class HomeHandler(BaseHandler):
             self.redirect("/watch")
             return
 
-        from app.services import events_service
-
-        events = events_service.list_events() or []
-        active_events = [e for e in events if e.get("is_active")]
-
-        # If there's exactly one active event, go straight to its registration.
-        if len(active_events) == 1:
-            self.redirect(f"/e/{active_events[0]['slug']}/")
-            return
-
-        self.render("events.html", events=active_events)
+        # Redirect directly to login, skipping the event list page.
+        self.redirect("/login")

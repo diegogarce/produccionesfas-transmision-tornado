@@ -44,17 +44,21 @@ class ReportsHandler(BaseHandler):
 
         event_id = event["id"]
 
-        if not self.is_admin_for_event(event_id):
+        if not self.is_moderator_for_event(event_id):
             self.redirect(f"/e/{slug}/watch" if slug else "/watch")
             return
         # Ensure exports (which rely on current_event_id) are scoped to this event.
         self.set_secure_cookie("current_event_id", str(event_id))
         # Show all participants (historical list)
+        # Show all participants (historical list)
         active_sessions = analytics_service.list_all_participants_for_report(event_id=event_id)
+        registered_users = analytics_service.list_registered_users(event_id=event_id)
+        
         self.render(
             "reports.html",
             event=event,
             active_sessions=active_sessions,
+            registered_users=registered_users,
             ws_url=f"{self.get_ws_scheme()}://{self.request.host}/ws?role=reports&event_id={event_id}",
         )
 
@@ -72,6 +76,11 @@ class ReportsExportHandler(BaseHandler):
                 event_id = int(self.get_query_argument("event_id"))
             except (TypeError, ValueError, tornado.web.MissingArgumentError):
                 event_id = None
+        
+        if not event_id or not self.is_moderator_for_event(event_id):
+             self.set_status(403)
+             self.finish({"error": "Acceso denegado"})
+             return
 
         if kind != "active_sessions":
             self.set_status(400)

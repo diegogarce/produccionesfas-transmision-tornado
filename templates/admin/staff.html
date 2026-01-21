@@ -83,6 +83,7 @@
                     <tr>
                         <th class="px-6 py-4 font-semibold text-slate-400">Usuario</th>
                         <th class="px-6 py-4 font-semibold text-slate-400">Rol Global</th>
+                        <th class="px-6 py-4 font-semibold text-slate-400">Contraseña</th>
                         <th class="px-6 py-4 font-semibold text-slate-400">Eventos Activos</th>
                         <th class="px-6 py-4 font-semibold text-slate-400 text-right">Acciones</th>
                     </tr>
@@ -112,6 +113,14 @@
                                 class="px-2 py-1 rounded-md bg-white/5 text-slate-500 text-[10px] font-bold uppercase">{{
                                 person['global_role'] }}</span>
                             {% end %}
+                        </td>
+                        <td class="px-6 py-4 group cursor-pointer"
+                            onclick="navigator.clipboard.writeText(this.innerText).then(() => showToast('Contraseña copiada', 'success'))"
+                            title="Click para copiar">
+                            <div
+                                class="font-mono text-xs text-white bg-white/5 px-2 py-1 rounded inline-block blur-sm hover:blur-none transition-all duration-300 select-all">
+                                {{ person['password'] or '••••••••' }}
+                            </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-white font-medium">{{ person['event_count'] }}</div>

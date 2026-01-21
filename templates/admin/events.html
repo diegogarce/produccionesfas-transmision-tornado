@@ -228,7 +228,16 @@
                         <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Offline</span>
                         {% end %}
                     </div>
-                    <div class="text-[10px] font-mono text-slate-600">ID: {{ event['id'] }}</div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-[10px] font-mono text-slate-600">ID: {{ event['id'] }}</div>
+                        <button data-event='{{ json_encode(event) }}' onclick="openInfoModal(this)"
+                            class="text-slate-500 hover:text-indigo-400 transition-colors" title="Ver detalles">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="p-6">
@@ -577,27 +586,29 @@
                         <form id="staff-form" class="space-y-4">
                             <div>
                                 <label
-                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Email</label>
+                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Rol
+                                    Requerido</label>
+                                <select id="staff-role"
+                                    class="w-full bg-navy-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/30 mb-1">
+                                    <option value="admin">Admin (Multievento)</option>
+                                    <option value="moderator">Moderator (Exclusivo)</option>
+                                    <option value="speaker">Speaker (Exclusivo)</option>
+                                </select>
+                                <p class="text-[9px] text-slate-500">Selecciona primero el rol para filtrar usuarios
+                                    disponibles.</p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Usuario
+                                    Disponible</label>
                                 <select id="staff-email" class="w-full bg-navy-900 border border-white/10 rounded-xl"
                                     style="width: 100%;">
                                     <option value=""></option>
                                 </select>
                             </div>
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Rol</label>
-                                <select id="staff-role"
-                                    class="w-full bg-navy-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/30">
-                                    <option value="admin">Admin</option>
-                                    <option value="moderator">Moderator</option>
-                                    <option value="speaker">Speaker</option>
-                                </select>
-                                <p class="text-xs text-slate-500 mt-2">Si el usuario ya existe, se actualiza su rol en
-                                    este evento.</p>
-                            </div>
                             <button id="staff-submit" type="submit"
                                 class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-xs uppercase tracking-widest">
-                                Guardar Staff
+                                Asignar al Evento
                             </button>
                         </form>
                     </div>
@@ -900,11 +911,18 @@
             staffModalTitle.textContent = `Staff del Evento: ${data.title}`;
 
             // Initialize Select2 with AJAX if not done
+            // Initialize Select2 with AJAX if not done
             const $emailSelect = $('#staff-email');
+            const $roleSelect = $('#staff-role');
+
             if (!$emailSelect.hasClass("select2-hidden-accessible")) {
+                // When role changes, clear data
+                $roleSelect.on('change', function () {
+                    $emailSelect.val(null).trigger('change');
+                });
+
                 $emailSelect.select2({
-                    tags: true,
-                    placeholder: "Teclea o busca un correo...",
+                    placeholder: "Buscar usuario disponible...",
                     allowClear: true,
                     dropdownParent: $('#staff-modal'),
                     ajax: {
@@ -914,7 +932,8 @@
                         data: function (params) {
                             return {
                                 mode: 'users',
-                                q: params.term
+                                q: params.term,
+                                role: $roleSelect.val() // Pass dynamic role
                             };
                         },
                         processResults: function (data) {
@@ -1135,6 +1154,66 @@
                 })
                 .catch(() => { });
         }, 60000);
+    </script>
+    <!-- Modal Info Detalles -->
+    <div id="info-modal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-navy-900 border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl p-6 relative">
+            <button onclick="document.getElementById('info-modal').classList.add('hidden')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h2 class="text-xl font-bold text-white mb-1" id="info-modal-title">Detalles del Evento</h2>
+            <p class="text-slate-500 text-xs mb-6" id="info-modal-slug"></p>
+
+            <div class="space-y-4">
+                <div class="bg-navy-950/50 p-4 rounded-xl border border-white/5">
+                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Registros
+                        Totales</span>
+                    <span class="text-2xl font-bold text-white" id="info-registros">0</span>
+                    <span class="text-xs text-slate-500 ml-1">usuarios</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="p-3 rounded-lg border border-white/5 bg-white/5">
+                        <span
+                            class="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Moderador</span>
+                        <span class="text-sm font-medium text-white block truncate" id="info-moderator">Sin
+                            asignar</span>
+                    </div>
+                    <div class="p-3 rounded-lg border border-white/5 bg-white/5">
+                        <span
+                            class="block text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1">Speaker</span>
+                        <span class="text-sm font-medium text-white block truncate" id="info-speaker">Sin asignar</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-white/5 text-center">
+                <button onclick="document.getElementById('info-modal').classList.add('hidden')"
+                    class="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openInfoModal(btn) {
+            const event = JSON.parse(btn.getAttribute('data-event'));
+
+            document.getElementById('info-modal-title').textContent = event.title;
+            document.getElementById('info-modal-slug').textContent = '/e/' + event.slug;
+
+            document.getElementById('info-registros').textContent = event.registration_count || 0;
+            document.getElementById('info-moderator').textContent = event.moderator_name || 'Sin asignar';
+            document.getElementById('info-speaker').textContent = event.speaker_name || 'Sin asignar';
+
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
     </script>
 </body>
 

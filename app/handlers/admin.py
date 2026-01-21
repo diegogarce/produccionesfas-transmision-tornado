@@ -28,6 +28,32 @@ class EventsAdminHandler(BaseHandler):
         # Admin console: superadmin sees all events; event-admin sees only assigned events.
         if self.is_superadmin():
             events = events_service.list_events()
+
+            # Enrich events with staff info and registration counts
+            if events:
+                with create_db_connection() as conn:
+                    with conn.cursor() as cursor:
+                        for evt in events:
+                            eid = evt["id"]
+                            # Get Staff Names
+                            cursor.execute(
+                                "SELECT u.name, es.role FROM event_staff es "
+                                "JOIN users u ON u.id = es.user_id "
+                                "WHERE es.event_id=%s AND es.role IN ('moderator', 'speaker')",
+                                (eid,)
+                            )
+                            staff_rows = cursor.fetchall()
+                            evt["moderator_name"] = next((r["name"] for r in staff_rows if r["role"] == "moderator"), None)
+                            evt["speaker_name"] = next((r["name"] for r in staff_rows if r["role"] == "speaker"), None)
+                            
+                            # Get Registry Count (Viewers registered for this event)
+                            cursor.execute(
+                                "SELECT COUNT(*) as cnt FROM users WHERE event_id=%s AND role='viewer'",
+                                (eid,)
+                            )
+                            count_res = cursor.fetchone()
+                            evt["registration_count"] = count_res["cnt"] if count_res else 0
+
             self.render("admin/events.html", events=events, is_superadmin=True)
             return
 
@@ -46,6 +72,31 @@ class EventsAdminHandler(BaseHandler):
             return
 
         events = events_service.list_events(event_ids=allowed_event_ids) if allowed_event_ids else []
+        
+        # Enrich events with staff info and registration counts
+        if events:
+            with create_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    for evt in events:
+                        eid = evt["id"]
+                        # Get Staff Names
+                        cursor.execute(
+                            "SELECT u.name, es.role FROM event_staff es "
+                            "JOIN users u ON u.id = es.user_id "
+                            "WHERE es.event_id=%s AND es.role IN ('moderator', 'speaker')",
+                            (eid,)
+                        )
+                        staff_rows = cursor.fetchall()
+                        evt["moderator_name"] = next((r["name"] for r in staff_rows if r["role"] == "moderator"), None)
+                        evt["speaker_name"] = next((r["name"] for r in staff_rows if r["role"] == "speaker"), None)
+                        
+                        # Get Registry Count (Viewers registered for this event)
+                        cursor.execute(
+                            "SELECT COUNT(*) as cnt FROM users WHERE event_id=%s AND role='viewer'",
+                            (eid,)
+                        )
+                        count_res = cursor.fetchone()
+                        evt["registration_count"] = count_res["cnt"] if count_res else 0
         self.render("admin/events.html", events=events, is_superadmin=False)
 
 class APIEventsHandler(BaseHandler):
@@ -124,34 +175,45 @@ class APIEventStaffHandler(BaseHandler):
 
         mode = self.get_query_argument("mode", "list")
         if mode == "users":
-            # Return list of all users to populate the autocomplete
+            # Return list of users filtered by role and availability
             search_query = self.get_query_argument("q", "").strip().lower()
+            target_role = self.get_query_argument("role", "admin").lower()
+
             with create_db_connection() as conn:
                 with conn.cursor() as cursor:
-                    if search_query:
-                        cursor.execute(
-                            "SELECT email, MAX(name) as name FROM users "
-                            "WHERE (email LIKE %s OR name LIKE %s) "
-                            "AND role IN ('admin', 'moderator', 'speaker') "
-                            "GROUP BY email ORDER BY name ASC LIMIT 20",
-                            (f"%{search_query}%", f"%{search_query}%")
-                        )
-                    else:
-                        cursor.execute(
-                            "SELECT email, MAX(name) as name FROM users "
-                            "WHERE role IN ('admin', 'moderator', 'speaker') "
-                            "GROUP BY email ORDER BY name ASC LIMIT 20"
-                        )
+                    # Base query parts
+                    query = "SELECT u.id, u.email, u.name FROM users u "
+                    params = []
                     
+                    # 1. Filter by Global Role
+                    where_clauses = ["u.role = %s"]
+                    params.append(target_role)
+
+                    # 2. Search filter (name/email)
+                    if search_query:
+                        where_clauses.append("(u.email LIKE %s OR u.name LIKE %s)")
+                        params.append(f"%{search_query}%")
+                        params.append(f"%{search_query}%")
+
+                    # 3. Availability Check (Exclusive for Moderator/Speaker)
+                    # Admins can be in multiple events, but Mods/Speakers must be free.
+                    if target_role in ["moderator", "speaker"]:
+                        where_clauses.append("u.id NOT IN (SELECT user_id FROM event_staff)")
+
+                    # Construct final query
+                    sql = f"{query} WHERE {' AND '.join(where_clauses)} ORDER BY u.name ASC LIMIT 20"
+                    
+                    cursor.execute(sql, tuple(params))
                     users = cursor.fetchall() or []
+                    
                     # Map to Select2 format
                     results = []
                     for u in users:
                         email = u["email"]
                         name = u["name"] or ""
                         results.append({
-                            "id": email,
-                            "text": f"{email} ({name})" if name else email
+                            "id": email, # We still use email as ID for the frontend logic
+                            "text": f"{name} ({email})" if name else email
                         })
                     self.write({"status": "success", "results": results})
             return

@@ -226,6 +226,19 @@ class LoginHandler(BaseHandler):
         user_role = user.get("role") or "viewer"
         selected_event_id = user.get("event_id") or event_id
 
+        # If no explicit event context, try to find one from staff assignments
+        # This is critical for Global Moderators/Speakers who log in from /login
+        if not selected_event_id:
+            with create_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT event_id FROM event_staff WHERE user_id=%s LIMIT 1",
+                        (user_id,)
+                    )
+                    assignment = cursor.fetchone()
+                    if assignment:
+                        selected_event_id = assignment["event_id"]
+
         # Resolve per-event staff role (if any) to decide redirects later.
         staff_role = None
         if selected_event_id:
@@ -254,6 +267,16 @@ class LoginHandler(BaseHandler):
         # Keep event context consistent for the session.
         if selected_event_id:
             self.set_secure_cookie("current_event_id", str(selected_event_id), httponly=True, secure=is_https, samesite="Lax")
+            
+            # If we didn't have a slug (global login) but found an event, fetch its slug for nicer redirects
+            if not slug:
+                try:
+                     from app.services import events_service
+                     evt = events_service.get_event_by_id(selected_event_id)
+                     if evt:
+                         slug = evt.get("slug")
+                except Exception:
+                    pass
         
         # Smart redirect based on role
         if user_role in ["superadmin", "admin"]:
@@ -292,6 +315,11 @@ class LogoutHandler(BaseHandler):
         if user_id:
             analytics_service.mark_session_inactive(user_id)
         
+        # Determine smart redirect before clearing session
+        redirect_url = "/"
+        user_role = self.current_user_role()
+        event_id = self.current_event_id()
+        
         # Invalidate session in Redis
         s_cookie = self.get_secure_cookie("session_id")
         if s_cookie:
@@ -301,4 +329,16 @@ class LogoutHandler(BaseHandler):
         self.clear_cookie("user_id")
         self.clear_cookie("user_name")
         self.clear_cookie("user_role")
-        self.redirect("/")
+        
+        # Staff (Global or Event-Level) -> Global Login
+        # Viewers -> Event Login (if event context exists)
+        if user_role == "viewer" and event_id:
+            try:
+                from app.services import events_service
+                evt = events_service.get_event_by_id(event_id)
+                if evt and evt.get("slug"):
+                    redirect_url = f"/e/{evt['slug']}/login"
+            except Exception:
+                pass
+        
+        self.redirect(redirect_url)

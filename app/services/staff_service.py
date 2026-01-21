@@ -135,12 +135,12 @@ def list_all_staff_global() -> list[dict]:
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT u.id, u.name, u.email, u.role as global_role, "
+                "SELECT u.id, u.name, u.email, u.password, u.role as global_role, "
                 "(SELECT COUNT(*) FROM event_staff WHERE user_id = u.id) as event_count "
                 "FROM users u "
                 "LEFT JOIN event_staff es ON u.id = es.user_id "
                 "WHERE u.role IN ('superadmin', 'admin', 'moderator', 'speaker') OR es.role IS NOT NULL "
-                "GROUP BY u.id, u.name, u.email, u.role "
+                "GROUP BY u.id, u.name, u.email, u.password, u.role "
                 "ORDER BY FIELD(u.role, 'superadmin', 'admin', 'moderator', 'speaker', 'viewer'), u.name ASC"
             )
             return cursor.fetchall() or []
