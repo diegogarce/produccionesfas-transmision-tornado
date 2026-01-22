@@ -160,3 +160,17 @@ class BaseHandler(tornado.web.RequestHandler):
         if self.request.protocol == "https" or self.request.headers.get("X-Forwarded-Proto") == "https":
             return "wss"
         return "ws"
+
+    def write_error(self, status_code, **kwargs):
+        """Override to implement custom error pages."""
+        if status_code == 404:
+            self.render("404.html")
+        else:
+            # Fallback to default Tornado behavior for other errors
+            super().write_error(status_code, **kwargs)
+
+
+class NotFoundHandler(BaseHandler):
+    """Handler to catch-all unmatched requests and render the custom 404 page."""
+    def prepare(self):
+        raise tornado.web.HTTPError(404)

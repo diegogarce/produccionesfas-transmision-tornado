@@ -49,10 +49,15 @@ class ReportsHandler(BaseHandler):
             return
         # Ensure exports (which rely on current_event_id) are scoped to this event.
         self.set_secure_cookie("current_event_id", str(event_id))
-        # Show all participants (historical list)
-        # Show all participants (historical list)
-        active_sessions = analytics_service.list_all_participants_for_report(event_id=event_id)
+        # Live attendees (based on last ping window)
+        active_sessions = analytics_service.list_active_sessions_for_report(event_id=event_id)
+        # All participants (historical list) for totals
+        all_participants = analytics_service.list_all_participants_for_report(event_id=event_id)
         registered_users = analytics_service.list_registered_users(event_id=event_id)
+
+        total_registered_users = len(registered_users or [])
+        live_watchers_count = len(active_sessions or [])
+        total_minutes_consumed = sum(_safe_int(row.get("session_minutes")) for row in (all_participants or []))
         
         self.render(
             "reports.html",
@@ -60,6 +65,9 @@ class ReportsHandler(BaseHandler):
             active_sessions=active_sessions,
             registered_users=registered_users,
             ws_url=f"{self.get_ws_scheme()}://{self.request.host}/ws?role=reports&event_id={event_id}",
+            total_registered_users=total_registered_users,
+            live_watchers_count=live_watchers_count,
+            total_minutes_consumed=total_minutes_consumed,
         )
 
 

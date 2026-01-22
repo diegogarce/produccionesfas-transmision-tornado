@@ -402,6 +402,13 @@
                         </div>
 
                         <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Descripción /
+                                Transcripción</label>
+                            <textarea id="description" placeholder="Detalles o descripción del evento..." rows="3"
+                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium resize-none text-sm font-sans"></textarea>
+                        </div>
+
+                        <div class="space-y-1.5">
                             <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug
                                 URL</label>
                             <div class="flex">
@@ -755,6 +762,7 @@
             document.getElementById('modal-title').textContent = "Editar Evento";
             document.getElementById('event-id').value = event.id;
             document.getElementById('title').value = event.title;
+            document.getElementById('description').value = event.description || '';
             document.getElementById('slug').value = event.slug;
             document.getElementById('slug').disabled = true;
             document.getElementById('video_url').value = event.video_url;
@@ -1075,6 +1083,7 @@
                 title: title,
                 slug: slug,
                 video_url: document.getElementById('video_url').value,
+                description: document.getElementById('description').value,
                 logo_url: document.getElementById('logo_url').value,
                 header_bg_color: normalizeHexColor(headerBgColorText.value) || headerBgColor.value,
                 header_text_color: normalizeHexColor(headerTextColorText.value) || headerTextColor.value,
@@ -1142,6 +1151,29 @@
                 showToast('Enlace copiado con éxito', 'success');
             }).catch(err => {
                 showToast('Error al copiar', 'error');
+            });
+        }
+    </script>
+    <script>
+        // Auto-Slugify for Slug Input
+        const slugInput = document.getElementById('slug');
+        if (slugInput) {
+            slugInput.addEventListener('input', function (e) {
+                let val = this.value;
+                // 1. Normalize unicode (accents)
+                val = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                // 2. Lowercase
+                val = val.toLowerCase();
+                // 3. Replace non-alphanumeric chars (except - and space) with hyphen
+                val = val.replace(/[^a-z0-9\s-]/g, '-');
+                // 4. Replace whitespace with hyphen
+                val = val.replace(/\s+/g, '-');
+                // 5. Replace underscores with hyphen
+                val = val.replace(/_+/g, '-');
+                // 6. Multiple hyphens to single hyphen
+                val = val.replace(/-+/g, '-');
+
+                this.value = val;
             });
         }
     </script>

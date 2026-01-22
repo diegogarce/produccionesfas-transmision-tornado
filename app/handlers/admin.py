@@ -1,5 +1,6 @@
 import json
 import re
+import unicodedata
 import tornado.web
 from app.db import create_db_connection
 from app.handlers.base import BaseHandler
@@ -19,8 +20,28 @@ def _sanitize_hex_color(value):
         return None
     # Normalize short hex to 6-char
     if len(s) == 4:
-        return f"#{s[1]*2}{s[2]*2}{s[3]*2}".lower()
+        return f"#{s[1]}{s[1]}{s[2]}{s[2]}{s[3]}{s[3]}"
     return s.lower()
+
+def _slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    value = str(value)
+    # Normalize unicode to ascii (e.g. á -> a)
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    # Replace non-word chars (but keep hyphens/underscores initially to convert them later if needed)
+    # Actually, user wants 'pollito_feliz' -> 'pollito-feliz', so let's treat underscore as delimiter or replaceable
+    # Replace anything that is NOT a letter, number, or underscore with a hyphen (space included)
+    value = re.sub(r'[^\w\s-]', '-', value)
+    value = re.sub(r'[_\s]+', '-', value)
+    # Remove duplicates
+    value = re.sub(r'[-\s]+', '-', value)
+    return value.strip('-').lower()
+
+
+
 
 class EventsAdminHandler(BaseHandler):
     @tornado.web.authenticated
@@ -109,10 +130,14 @@ class APIEventsHandler(BaseHandler):
 
         try:
             data = json.loads(self.request.body)
-            slug = data.get("slug")
+            # Apply strict slugify
+            raw_slug = data.get("slug")
+            slug = _slugify(raw_slug) if raw_slug else None
+            
             title = data.get("title")
             logo_url = data.get("logo_url")
             video_url = data.get("video_url")
+            description = data.get("description")
             header_bg_color = _sanitize_hex_color(data.get("header_bg_color"))
             header_text_color = _sanitize_hex_color(data.get("header_text_color"))
             timezone = data.get("timezone", "America/Mexico_City")
@@ -122,7 +147,14 @@ class APIEventsHandler(BaseHandler):
                 self.write({"status": "error", "message": "Slug and Title are required"})
                 return
 
-            event_id = events_service.create_event(slug, title, logo_url, video_url, header_bg_color, header_text_color, timezone)
+            # Uniqueness Check
+            existing = events_service.get_event_by_slug(slug)
+            if existing:
+                self.set_status(409) # Conflict
+                self.write({"status": "error", "message": f"El slug '{slug}' ya está en uso. Elige otro."})
+                return
+
+            event_id = events_service.create_event(slug, title, logo_url, video_url, description, header_bg_color, header_text_color, timezone)
             self.write({"status": "success", "event_id": event_id})
         except Exception as e:
             self.set_status(500)
@@ -146,12 +178,15 @@ class APIEventsHandler(BaseHandler):
             title = data.get("title")
             logo_url = data.get("logo_url")
             video_url = data.get("video_url")
+            description = data.get("description")
             is_active = data.get("is_active")
             header_bg_color = _sanitize_hex_color(data.get("header_bg_color"))
             header_text_color = _sanitize_hex_color(data.get("header_text_color"))
             timezone = data.get("timezone", "America/Mexico_City")
 
-            events_service.update_event(event_id, title, logo_url, video_url, is_active, header_bg_color, header_text_color, timezone)
+            events_service.update_event(
+                event_id, title, logo_url, video_url, is_active, description, header_bg_color, header_text_color, timezone
+            )
 
             # If the event was closed, kick all users
             if not is_active:

@@ -13,6 +13,13 @@ from app.services import events_service
 WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set(), "reports": set()}
 
 
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def push_reports_snapshot(event_id=None):
     try:
         # If no event_id is provided (e.g., periodic refresh), broadcast a scoped snapshot
@@ -29,13 +36,30 @@ def push_reports_snapshot(event_id=None):
                 push_reports_snapshot(event_id=eid)
             return
 
-        # 1. Historical data (all registered/seen participants) for the Reports view
-        all_participants = analytics_service.list_all_participants_for_report(event_id=event_id)
-        broadcast({"type": "active_sessions", "sessions": all_participants}, roles={"reports"}, event_id=event_id)
+        # 1. Reports view: active sessions for live attendance
+        active_viewers = analytics_service.list_active_sessions_for_report(event_id=event_id)
+        broadcast({"type": "active_sessions", "sessions": active_viewers}, roles={"reports"}, event_id=event_id)
         
         # 2. Truly active sessions (live viewers) for the Moderator view
-        active_viewers = analytics_service.list_active_sessions_for_report(event_id=event_id)
         broadcast({"type": "active_sessions", "sessions": active_viewers}, roles={"moderator"}, event_id=event_id)
+
+        # 3. Reports metrics snapshot
+        all_participants = analytics_service.list_all_participants_for_report(event_id=event_id)
+        registered_users = analytics_service.list_registered_users(event_id=event_id)
+        total_registered_users = len(registered_users or [])
+        live_watchers_count = len(active_viewers or [])
+        total_minutes_consumed = sum(_safe_int(row.get("session_minutes")) for row in (all_participants or []))
+
+        broadcast(
+            {
+                "type": "reports_metrics",
+                "total_registered_users": total_registered_users,
+                "live_watchers_count": live_watchers_count,
+                "total_minutes_consumed": total_minutes_consumed,
+            },
+            roles={"reports"},
+            event_id=event_id,
+        )
 
         print(f"[WS] snapshot event_id={event_id} active={len(active_viewers)} total={len(all_participants)}")
         

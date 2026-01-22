@@ -22,6 +22,8 @@ def make_app():
 	from app.handlers.watch import WatchHandler, APIPingHandler
 	from app.handlers.ws import LiveWebSocket
 
+	from app.handlers.base import NotFoundHandler
+
 	base_dir = os.path.dirname(os.path.dirname(__file__))
 	template_path = os.path.join(base_dir, "templates")
 
@@ -61,4 +63,5 @@ def make_app():
 		static_path=os.path.join(base_dir, "static"),
 		xsrf_cookies=False,
 		debug=True,
+		default_handler_class=NotFoundHandler,
 	)

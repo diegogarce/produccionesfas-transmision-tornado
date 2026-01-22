@@ -251,6 +251,52 @@
             </button>
         </div>
 
+        <!-- Resumen estadístico -->
+        <div class="grid gap-4 mb-6 sm:grid-cols-3 animate-fade-in justify-center max-w-5xl mx-auto"
+            style="animation-delay: 0.1s;">
+            <div class="bg-gradient-to-br from-white/5 to-white/0 border border-white/20 rounded-2xl p-5 shadow-xl">
+                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+                        <path d="M5.5 17.5a5.5 5.5 0 0111 0" />
+                        <circle cx="12" cy="9" r="3" />
+                    </svg>
+                    Usuarios registrados
+                </p>
+                <p class="text-3xl font-bold text-white mt-3"><span id="metric-registered">{{ total_registered_users
+                        }}</span></p>
+                <p class="text-xs text-slate-500 mt-1">Registrados en este evento</p>
+            </div>
+            <div
+                class="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-white/20 rounded-2xl p-5 shadow-xl">
+                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+                        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Usuarios en vivo
+                </p>
+                <p class="text-3xl font-bold text-white mt-3"><span id="metric-live">{{ live_watchers_count }}</span>
+                </p>
+                <p class="text-xs text-slate-500 mt-1">Conectados viendo Watch</p>
+            </div>
+            <div
+                class="bg-gradient-to-br from-indigo-500/20 to-blue-500/10 border border-white/30 rounded-2xl p-5 shadow-xl">
+                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-200">
+                    <svg class="w-4 h-4 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+                        <circle cx="12" cy="12" r="7" />
+                        <path d="M12 8v4l3 2" />
+                    </svg>
+                    Minutos consumidos
+                </p>
+                <p class="text-3xl font-bold text-white mt-3"><span id="metric-minutes">{{ total_minutes_consumed
+                        }}</span> min</p>
+                <p class="text-xs text-slate-200/70 mt-1">Total acumulado en sesiones activas</p>
+            </div>
+        </div>
+
         <!-- AG Grid Container -->
         <div class="animate-fade-in" style="animation-delay: 0.1s;">
             <div id="myGrid" class="ag-theme-alpine-dark w-full h-[600px]"></div>
@@ -260,9 +306,12 @@
     <script>
         const statusEl = document.querySelector("#connection-status span:last-child");
         const statusContainer = document.getElementById("connection-status");
+        const metricRegisteredEl = document.getElementById("metric-registered");
+        const metricLiveEl = document.getElementById("metric-live");
+        const metricMinutesEl = document.getElementById("metric-minutes");
 
         // Data from server
-        const activeSessionsData = {% raw json_encode(active_sessions) %};
+        let activeSessionsData = {% raw json_encode(active_sessions) %};
         const registeredUsersData = {% raw json_encode(registered_users) %};
 
         let gridApi;
@@ -359,8 +408,20 @@
                 if (payload.type === "active_sessions") {
                     // Update global var for attendance
                     // Only update grid if we are in attendance view
+                    activeSessionsData = payload.sessions || [];
                     if (currentView === 'attendance' && gridApi) {
-                        gridApi.setGridOption('rowData', payload.sessions);
+                        gridApi.setGridOption('rowData', activeSessionsData);
+                    }
+                }
+                if (payload.type === "reports_metrics") {
+                    if (metricRegisteredEl && payload.total_registered_users !== undefined) {
+                        metricRegisteredEl.textContent = payload.total_registered_users;
+                    }
+                    if (metricLiveEl && payload.live_watchers_count !== undefined) {
+                        metricLiveEl.textContent = payload.live_watchers_count;
+                    }
+                    if (metricMinutesEl && payload.total_minutes_consumed !== undefined) {
+                        metricMinutesEl.textContent = payload.total_minutes_consumed;
                     }
                 }
             } catch (e) {
