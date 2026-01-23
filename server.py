@@ -1,10 +1,11 @@
 import tornado.ioloop
-
 from tornado.ioloop import PeriodicCallback
 import os
 
 from app import make_app
 from app.handlers.ws import push_reports_snapshot
+from app.services.telemetry_service import capture_snapshot, create_telemetry_table
+import app.metrics
 
 
 if __name__ == "__main__":
@@ -16,6 +17,23 @@ if __name__ == "__main__":
     server.listen(port)
     print(f"Tornado live platform running on http://localhost:{port}")
 
+    # Ensure telemetry table and take initial snapshot
+    create_telemetry_table()
+    capture_snapshot()
+
     # Keep reports refreshed even if pings are sparse.
     PeriodicCallback(push_reports_snapshot, 5000).start()
+    
+    # Telemetry snapshots every 10 seconds for debugging
+    PeriodicCallback(capture_snapshot, 10000).start()
+    
+    # Monitor IOLoop latency
+    def monitor_ioloop_latency():
+        from app import metrics
+        start = tornado.ioloop.IOLoop.current().time()
+        tornado.ioloop.IOLoop.current().add_callback(
+            lambda: metrics.tornado_ioloop_latency_ms.observe((tornado.ioloop.IOLoop.current().time() - start) * 1000)
+        )
+    PeriodicCallback(monitor_ioloop_latency, 1000).start()
+    
     tornado.ioloop.IOLoop.current().start()

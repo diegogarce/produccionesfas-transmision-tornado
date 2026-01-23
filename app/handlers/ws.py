@@ -8,6 +8,7 @@ from app.db import now_hhmm_in_timezone
 from app.services import analytics_service, chat_service, questions_service, users_service
 from app.services import session_service
 from app.services import events_service
+from app import metrics
 
 # Keep per-role client pools. Reports is a first-class role.
 WEBSOCKET_CLIENTS = {"viewer": set(), "moderator": set(), "speaker": set(), "reports": set()}
@@ -104,6 +105,16 @@ def broadcast(payload, roles=None, event_id=None):
                 WEBSOCKET_CLIENTS[role].discard(client)
     
     print(f"[WS] OK: Enviado a {sent_count} clientes")
+    
+    # Telemetry
+    try:
+        metrics.ws_messages_out.labels(
+            event_id=str(event_id) if event_id else "global",
+            role="broadcast",
+            type=payload.get("type", "unknown")
+        ).inc(sent_count)
+    except:
+        pass
 
 
 class LiveWebSocket(tornado.websocket.WebSocketHandler):
@@ -230,12 +241,36 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
         
         print(f"[WS] OK: Conectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
 
+        # Telemetry
+        try:
+            metrics.ws_connections_active.labels(event_id=str(self.event_id) or "global", role=self.role).inc()
+            metrics.ws_connections.labels(event_id=str(self.event_id) or "global", role=self.role).inc()
+        except:
+            pass
+
     def on_close(self):
-        WEBSOCKET_CLIENTS.get(self.role, set()).discard(self)
-        if getattr(self, "role", None) == "viewer" and getattr(self, "user_id", None) is not None:
+        # Safety check: if connection failed early, role might not be set
+        safe_role = getattr(self, "role", None)
+        if safe_role:
+            WEBSOCKET_CLIENTS.get(safe_role, set()).discard(self)
+        
+        if safe_role == "viewer" and getattr(self, "user_id", None) is not None:
             analytics_service.mark_session_inactive(self.user_id)
-            push_reports_snapshot(event_id=self.event_id)
-        print(f"[WS] OUT: Desconectado: {self.role} | user_id={self.user_id} | event_id={self.event_id}")
+            push_reports_snapshot(event_id=getattr(self, "event_id", None))
+        
+        print(f"[WS] OUT: Desconectado: {safe_role or 'unknown'} | user_id={getattr(self, 'user_id', '?')} | event_id={getattr(self, 'event_id', '?')}")
+        
+        # Telemetry
+        try:
+            eid = str(getattr(self, "event_id", "global"))
+            role = getattr(self, "role", "unknown")
+            # Safeguard: only decrement if > 0
+            if metrics.ws_connections_active.labels(event_id=eid, role=role)._value.get() > 0:
+                metrics.ws_connections_active.labels(event_id=eid, role=role).dec()
+            
+            metrics.ws_disconnects.labels(event_id=eid, role=role, reason="normal").inc()
+        except:
+            pass
 
     def on_message(self, message):
         try:
@@ -255,6 +290,16 @@ class LiveWebSocket(tornado.websocket.WebSocketHandler):
 
             msg_type = payload.get("type")
             print(f"[WS] {self.role} | Mensaje: {msg_type} | Payload: {payload}")
+
+            # Telemetry
+            try:
+                metrics.ws_messages_in.labels(
+                    event_id=str(self.event_id) or "global",
+                    role=self.role,
+                    type=msg_type or "unknown"
+                ).inc()
+            except:
+                pass
 
             if msg_type == "chat":
                 if users_service.is_chat_blocked(self.user_id):

@@ -17,6 +17,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
+      # Mapeamos código local para desarrollo rápido (Hot Reload/Quick Restart)
+      - .:/app
       # Si necesitas persistir logs u otros archivos en tu volumen extra
       - /mnt/tornado/logs:/app/logs
     restart: always

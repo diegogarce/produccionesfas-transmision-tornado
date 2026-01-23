@@ -1,4 +1,5 @@
 from app.db import _normalize_timestamps, create_db_connection
+from app import metrics
 
 
 def list_recent_chats(limit=25, event_id=None):
@@ -35,6 +36,12 @@ def add_chat_message(user_id: int, text: str, event_id: int = None):
             cursor.execute("SELECT name FROM users WHERE id=%s", (user_id,))
             user = cursor.fetchone() or {}
             user_name = user.get("name") or "Visitante"
+            
+            # Telemetry
+            try:
+                metrics.chat_messages.labels(event_id=str(event_id) or "global").inc()
+            except:
+                pass
     # Return a simple payload for broadcast
     return {
         "user_id": user_id,

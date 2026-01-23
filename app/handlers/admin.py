@@ -4,7 +4,7 @@ import unicodedata
 import tornado.web
 from app.db import create_db_connection
 from app.handlers.base import BaseHandler
-from app.services import events_service, staff_service
+from app.services import events_service, staff_service, telemetry_service
 
 
 _HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
@@ -364,4 +364,96 @@ class APIStaffHandler(BaseHandler):
         except Exception as e:
             self.set_status(500)
             self.write({"status": "error", "message": str(e)})
+
+
+class TelemetryAdminHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        if not self.is_superadmin():
+            self.redirect("/watch")
+            return
+
+        # Get historical data (last 6 hours for the dashboard charts)
+        history = telemetry_service.get_recent_history(hours=6)
+        
+        # Process history for the frontend
+        # Convert timestamps from UTC (DB) to Mexico City time
+        from zoneinfo import ZoneInfo
+        mx_tz = ZoneInfo('America/Mexico_City')
+        processed_history = []
+        for h in history:
+            # Parse metrics_json if it's a string (from MySQL JSON column)
+            metrics_data = h["metrics_json"]
+            if isinstance(metrics_data, str):
+                metrics_data = json.loads(metrics_data)
+            # Convert timestamp (assumed UTC) to MX time
+            ts_local = h["timestamp"].astimezone(mx_tz)
+            processed_history.append({
+                "timestamp": ts_local.isoformat(),
+                "metrics": metrics_data
+            })
+
+        errors = telemetry_service.get_recent_errors(limit=50)
+        processed_errors = []
+        for e in errors:
+            ts_local = e["timestamp"].astimezone(mx_tz) if e.get("timestamp") else None
+            processed_errors.append({
+                "timestamp": ts_local.isoformat() if ts_local else None,
+                "handler": e.get("handler"),
+                "method": e.get("method"),
+                "status": e.get("status"),
+                "exception_type": e.get("exception_type"),
+                "message": e.get("message"),
+                "path": e.get("path")
+            })
+
+        self.render(
+            "admin/telemetry.html",
+            history_json=json.dumps(processed_history),
+            errors_json=json.dumps(processed_errors),
+            is_superadmin=True
+        )
+
+
+class TelemetryAdminDataHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        if not self.is_superadmin():
+            self.set_status(403)
+            self.write({"status": "forbidden"})
+            return
+
+        history = telemetry_service.get_recent_history(hours=6)
+
+        from zoneinfo import ZoneInfo
+        mx_tz = ZoneInfo('America/Mexico_City')
+        processed_history = []
+        for h in history:
+            metrics_data = h["metrics_json"]
+            if isinstance(metrics_data, str):
+                metrics_data = json.loads(metrics_data)
+            ts_local = h["timestamp"].astimezone(mx_tz)
+            processed_history.append({
+                "timestamp": ts_local.isoformat(),
+                "metrics": metrics_data
+            })
+
+        errors = telemetry_service.get_recent_errors(limit=50)
+        processed_errors = []
+        for e in errors:
+            ts_local = e["timestamp"].astimezone(mx_tz) if e.get("timestamp") else None
+            processed_errors.append({
+                "timestamp": ts_local.isoformat() if ts_local else None,
+                "handler": e.get("handler"),
+                "method": e.get("method"),
+                "status": e.get("status"),
+                "exception_type": e.get("exception_type"),
+                "message": e.get("message"),
+                "path": e.get("path")
+            })
+
+        self.write({
+            "history": processed_history,
+            "errors": processed_errors
+        })
 
