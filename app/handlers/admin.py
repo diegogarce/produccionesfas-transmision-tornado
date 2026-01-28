@@ -141,6 +141,29 @@ class APIEventsHandler(BaseHandler):
             header_bg_color = _sanitize_hex_color(data.get("header_bg_color"))
             header_text_color = _sanitize_hex_color(data.get("header_text_color"))
             timezone = data.get("timezone", "America/Mexico_City")
+            status = data.get("status")
+            registration_mode = data.get("registration_mode")
+            registration_restricted_type = data.get("registration_restricted_type")
+            allowed_domain = data.get("allowed_domain")
+            registration_open_at = data.get("registration_open_at")
+            access_open_at = data.get("access_open_at")
+            capacity = data.get("capacity")
+            registration_schema = data.get("registration_schema")
+            # Ensure registration_schema is a valid JSON string or None
+            if registration_schema:
+                try:
+                    if isinstance(registration_schema, str):
+                        # Validate it's proper JSON
+                        parsed = json.loads(registration_schema)
+                        registration_schema = json.dumps(parsed, ensure_ascii=False)
+                    else:
+                        registration_schema = json.dumps(registration_schema, ensure_ascii=False)
+                except Exception:
+                    registration_schema = None
+            else:
+                registration_schema = None
+            
+            is_deleted = data.get("is_deleted")
 
             if not slug or not title:
                 self.set_status(400)
@@ -154,7 +177,25 @@ class APIEventsHandler(BaseHandler):
                 self.write({"status": "error", "message": f"El slug '{slug}' ya está en uso. Elige otro."})
                 return
 
-            event_id = events_service.create_event(slug, title, logo_url, video_url, description, header_bg_color, header_text_color, timezone)
+            event_id = events_service.create_event(
+                slug,
+                title,
+                logo_url,
+                video_url,
+                description,
+                header_bg_color,
+                header_text_color,
+                timezone,
+                status,
+                registration_mode,
+                registration_restricted_type,
+                allowed_domain,
+                registration_open_at,
+                access_open_at,
+                capacity,
+                registration_schema,
+                is_deleted,
+            )
             self.write({"status": "success", "event_id": event_id})
         except Exception as e:
             self.set_status(500)
@@ -183,9 +224,49 @@ class APIEventsHandler(BaseHandler):
             header_bg_color = _sanitize_hex_color(data.get("header_bg_color"))
             header_text_color = _sanitize_hex_color(data.get("header_text_color"))
             timezone = data.get("timezone", "America/Mexico_City")
+            status = data.get("status")
+            registration_mode = data.get("registration_mode")
+            registration_restricted_type = data.get("registration_restricted_type")
+            allowed_domain = data.get("allowed_domain")
+            registration_open_at = data.get("registration_open_at")
+            access_open_at = data.get("access_open_at")
+            capacity = data.get("capacity")
+            registration_schema = data.get("registration_schema")
+            # Ensure registration_schema is a valid JSON string or None
+            if registration_schema:
+                try:
+                    if isinstance(registration_schema, str):
+                        # Validate it's proper JSON
+                        parsed = json.loads(registration_schema)
+                        registration_schema = json.dumps(parsed, ensure_ascii=False)
+                    else:
+                        registration_schema = json.dumps(registration_schema, ensure_ascii=False)
+                except Exception:
+                    registration_schema = None
+            else:
+                registration_schema = None
+            
+            is_deleted = data.get("is_deleted")
 
             events_service.update_event(
-                event_id, title, logo_url, video_url, is_active, description, header_bg_color, header_text_color, timezone
+                event_id,
+                title,
+                logo_url,
+                video_url,
+                is_active,
+                description,
+                header_bg_color,
+                header_text_color,
+                timezone,
+                status,
+                registration_mode,
+                registration_restricted_type,
+                allowed_domain,
+                registration_open_at,
+                access_open_at,
+                capacity,
+                registration_schema,
+                is_deleted,
             )
 
             # If the event was closed, kick all users
@@ -301,6 +382,171 @@ class APIEventStaffHandler(BaseHandler):
         from app.services import staff_service
         ok = staff_service.remove_staff(user_id=user_id, event_id=event_id)
         self.write({"status": "success", "removed": bool(ok)})
+
+
+class APIEventWhitelistHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            event_id = int(self.get_query_argument("event_id"))
+        except Exception:
+            self.set_status(400)
+            self.write({"status": "error", "message": "event_id requerido"})
+            return
+
+        if not (self.is_superadmin() or self.is_admin_for_event(event_id)):
+            self.set_status(403)
+            return
+
+        emails = events_service.get_whitelist(event_id)
+        self.write({"status": "success", "emails": emails})
+
+    @tornado.web.authenticated
+    def put(self):
+        try:
+            data = json.loads(self.request.body)
+            event_id = int(data.get("event_id"))
+            emails = data.get("emails") or []
+        except Exception:
+            self.set_status(400)
+            self.write({"status": "error", "message": "event_id y emails requeridos"})
+            return
+
+        if not (self.is_superadmin() or self.is_admin_for_event(event_id)):
+            self.set_status(403)
+            return
+
+        count = events_service.replace_whitelist(event_id, emails)
+        self.write({"status": "success", "count": count})
+
+    @tornado.web.authenticated
+    def post(self):
+        """Procesar carga masiva de whitelist desde archivo (xlsx, xls, csv)"""
+        try:
+            event_id = int(self.get_argument("event_id"))
+        except Exception:
+            self.set_status(400)
+            self.write({"status": "error", "message": "event_id requerido"})
+            return
+
+        if not (self.is_superadmin() or self.is_admin_for_event(event_id)):
+            self.set_status(403)
+            return
+
+        # Verificar que se subió un archivo
+        if not hasattr(self.request, 'files') or 'file' not in self.request.files:
+            self.set_status(400)
+            self.write({"status": "error", "message": "No se subió ningún archivo"})
+            return
+
+        file_info = self.request.files['file'][0]
+        filename = file_info['filename']
+        content = file_info['body']
+
+        # Validar tipo de archivo
+        allowed_extensions = ['.xlsx', '.xls', '.csv']
+        file_ext = '.' + filename.split('.')[-1].lower() if '.' in filename else ''
+        
+        if file_ext not in allowed_extensions:
+            self.set_status(400)
+            self.write({"status": "error", "message": "Tipo de archivo no permitido. Use xlsx, xls o csv"})
+            return
+
+        # Validar tamaño (5MB máximo)
+        max_size = 5 * 1024 * 1024
+        if len(content) > max_size:
+            self.set_status(400)
+            self.write({"status": "error", "message": "Archivo demasiado grande. Máximo 5MB"})
+            return
+
+        try:
+            emails = self._parse_whitelist_file(content, file_ext)
+            
+            if not emails:
+                self.write({"status": "success", "emails": [], "message": "No se encontraron emails válidos en el archivo"})
+                return
+
+            # Guardar en la whitelist
+            count = events_service.replace_whitelist(event_id, emails)
+            self.write({
+                "status": "success", 
+                "emails": emails, 
+                "count": count,
+                "message": f"Se procesaron {len(emails)} emails correctamente"
+            })
+
+        except Exception as e:
+            self.set_status(500)
+            self.write({"status": "error", "message": f"Error procesando archivo: {str(e)}"})
+
+    def _parse_whitelist_file(self, content, file_ext):
+        """Parsear archivo y extraer emails"""
+        emails = []
+        
+        try:
+            if file_ext == '.csv':
+                # Procesar CSV
+                import csv
+                import io
+                
+                content_str = content.decode('utf-8', errors='ignore')
+                csv_file = io.StringIO(content_str)
+                reader = csv.reader(csv_file)
+                
+                for row in reader:
+                    for cell in row:
+                        email = self._extract_email(cell)
+                        if email:
+                            emails.append(email)
+                            
+            elif file_ext in ['.xlsx', '.xls']:
+                # Procesar Excel
+                import openpyxl
+                import io
+                
+                excel_file = io.BytesIO(content)
+                
+                if file_ext == '.xlsx':
+                    workbook = openpyxl.load_workbook(excel_file)
+                else:
+                    # Para .xls necesitaríamos xlrd, pero podemos intentar con openpyxl
+                    workbook = openpyxl.load_workbook(excel_file, read_only=True)
+                
+                for sheet_name in workbook.sheetnames:
+                    sheet = workbook[sheet_name]
+                    for row in sheet.iter_rows(values_only=True):
+                        for cell in row:
+                            if cell:
+                                email = self._extract_email(str(cell))
+                                if email:
+                                    emails.append(email)
+                                    
+        except Exception as e:
+            raise Exception(f"Error leyendo archivo: {str(e)}")
+        
+        # Limpiar y deduplicar emails
+        emails = list(set(email.lower().strip() for email in emails if email and '@' in email))
+        emails.sort()
+        
+        return emails
+
+    def _extract_email(self, text):
+        """Extraer email de un texto"""
+        import re
+        
+        # Buscar patrones de email
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        matches = re.findall(email_pattern, text)
+        
+        if matches:
+            return matches[0].lower().strip()
+        
+        # Si no hay patrón claro, verificar si el texto completo es un email
+        text = text.strip()
+        if '@' in text and '.' in text.split('@')[-1]:
+            return text.lower()
+        
+        return None
 
 
 class StaffAdminHandler(BaseHandler):

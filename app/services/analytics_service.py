@@ -176,11 +176,12 @@ def list_registered_users(event_id: int):
         return []
 
     query = (
-        "SELECT id, name, email, phone, created_at, role "
-        "FROM users "
-        "WHERE event_id=%s AND role='viewer' "
-        "AND id NOT IN (SELECT user_id FROM event_staff WHERE event_id=%s) "
-        "ORDER BY created_at DESC"
+        "SELECT u.id, u.name, u.email, u.phone, u.created_at, u.role, erd.payload "
+        "FROM users u "
+        "LEFT JOIN event_registration_data erd ON u.id = erd.user_id AND u.event_id = erd.event_id "
+        "WHERE u.event_id=%s AND u.role='viewer' "
+        "AND u.id NOT IN (SELECT user_id FROM event_staff WHERE event_id=%s) "
+        "ORDER BY u.created_at DESC"
     )
 
     with create_db_connection() as conn:

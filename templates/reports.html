@@ -325,12 +325,47 @@
             { field: "session_minutes", headerName: "Duración", width: 120, sortable: true, cellRenderer: p => `<span class="font-bold text-indigo-400">${p.value} min</span>` }
         ];
 
-        const registrationCols = [
-            { field: "name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
-            { field: "email", headerName: "Email", width: 250, sortable: true, filter: true },
-            { field: "phone", headerName: "Teléfono", width: 150, sortable: true },
-            { field: "created_at", headerName: "Fecha Registro", width: 180, sortable: true }
-        ];
+        function getRegistrationCols(data) {
+            const baseCols = [
+                { field: "name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
+                { field: "email", headerName: "Email", width: 250, sortable: true, filter: true },
+                { field: "phone", headerName: "Teléfono", width: 150, sortable: true },
+                { field: "created_at", headerName: "Fecha Registro", width: 180, sortable: true }
+            ];
+
+            // Extract extra keys from payload
+            const extraKeys = new Set();
+            data.forEach(row => {
+                if (row.payload) {
+                    try {
+                        const payload = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+                        Object.keys(payload).forEach(key => {
+                            if (!['name', 'email', 'phone'].includes(key)) {
+                                extraKeys.add(key);
+                            }
+                        });
+                    } catch (e) { }
+                }
+            });
+
+            extraKeys.forEach(key => {
+                baseCols.push({
+                    headerName: key.charAt(0).toUpperCase() + key.slice(1),
+                    valueGetter: params => {
+                        if (!params.data.payload) return "";
+                        const payload = typeof params.data.payload === 'string' ? JSON.parse(params.data.payload) : params.data.payload;
+                        return payload[key] || "";
+                    },
+                    width: 150,
+                    sortable: true,
+                    filter: true
+                });
+            });
+
+            return baseCols;
+        }
+
+        const registrationCols = getRegistrationCols(registeredUsersData);
 
         // Grid Options
         const gridOptions = {

@@ -8,7 +8,7 @@ def make_app():
 	from app.config import COOKIE_SECRET
 	from app.handlers.home import HomeHandler
 	from app.handlers.auth import LoginHandler, LogoutHandler, RegistrationHandler
-	from app.handlers.admin import EventsAdminHandler, APIEventsHandler, APIEventStaffHandler, StaffAdminHandler, APIStaffHandler, TelemetryAdminHandler, TelemetryAdminDataHandler
+	from app.handlers.admin import EventsAdminHandler, APIEventsHandler, APIEventStaffHandler, StaffAdminHandler, APIStaffHandler, TelemetryAdminHandler, TelemetryAdminDataHandler, APIEventWhitelistHandler
 	from app.handlers.assets import LogoUploadHandler
 	from app.handlers.moderator import (
 		APIChatsHandler,
@@ -46,6 +46,8 @@ def make_app():
 			(r"/admin/events", EventsAdminHandler),
 			(r"/api/admin/events", APIEventsHandler),
 			(r"/api/admin/event-staff", APIEventStaffHandler),
+			(r"/api/admin/event-whitelist", APIEventWhitelistHandler),
+			(r"/api/admin/event-whitelist/upload", APIEventWhitelistHandler),
 			(r"/api/admin/events/logo", LogoUploadHandler),
 			(r"/admin/staff", StaffAdminHandler),
 			(r"/api/admin/staff", APIStaffHandler),

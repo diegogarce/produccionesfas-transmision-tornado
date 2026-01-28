@@ -21,11 +21,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- Events table
 CREATE TABLE IF NOT EXISTS events (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
     slug VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     stream_url VARCHAR(255),
-    title VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
     logo_url VARCHAR(255),
     video_url VARCHAR(255),
     theme_color VARCHAR(50),
@@ -34,8 +33,40 @@ CREATE TABLE IF NOT EXISTS events (
     body_bg_color VARCHAR(50),
     body_text_color VARCHAR(50),
     is_active TINYINT(1) DEFAULT 1,
+    status ENUM('DRAFT','IN_REVIEW','PUBLISHED','CLOSED') DEFAULT 'PUBLISHED',
+    registration_mode ENUM('OPEN','RESTRICTED') DEFAULT 'RESTRICTED',
+    registration_restricted_type ENUM('WHITELIST','DOMAIN','BOTH') DEFAULT 'DOMAIN',
+    allowed_domain VARCHAR(120) DEFAULT 'produccionesfast.com',
+    registration_open_at DATETIME NULL,
+    access_open_at DATETIME NULL,
+    capacity INT NULL,
+    registration_schema JSON NULL,
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     timezone VARCHAR(50) DEFAULT 'America/Mexico_City'
+);
+
+-- Event whitelist (optional)
+CREATE TABLE IF NOT EXISTS event_whitelist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_event_email (event_id, email),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+-- Event registration dynamic data
+CREATE TABLE IF NOT EXISTS event_registration_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    user_id INT NOT NULL,
+    payload JSON NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_event_user (event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Event Staff table
@@ -89,7 +120,7 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- Seed an example event
-INSERT IGNORE INTO events (id, name, slug, description, stream_url, is_active) 
+INSERT IGNORE INTO events (id, title, slug, description, stream_url, is_active) 
 VALUES (1, 'Evento Demo Fast', 'demo-fast', 'Transmisión de prueba', 'https://www.youtube.com/embed/live_stream?channel=UCXXXXXXXX', 1);
 
 -- Seed an example user (Admin)

@@ -85,26 +85,34 @@
         {% end %}
 
         <form method="post" autocomplete="off" class="mt-6 space-y-4">
-            <div class="space-y-1">
-                <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Nombre
-                    Completo</label>
-                <input type="text" name="name" required placeholder="Ej. Juan Pérez"
-                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Correo
-                    Corporativo</label>
-                <input type="email" name="email" required placeholder="nombre@produccionesfast.com"
-                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Teléfono
-                    (WhatsApp)</label>
-                <input type="tel" name="phone" placeholder="+52 55..."
-                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
-            </div>
+            {% if registration_fields %}
+                {% for field in registration_fields %}
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{{ field.get('label', field.get('key')) }}</label>
+                    
+                    {% if field.get('type') == 'select' and field.get('options') %}
+                        <select name="{{ field.get('key') }}" {{ 'required' if field.get('required') else '' }} class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
+                            {% for opt in field.get('options') %}
+                                <option value="{{ opt }}">{{ opt }}</option>
+                            {% end %}
+                        </select>
+                    {% elif field.get('type') == 'textarea' %}
+                        <textarea name="{{ field.get('key') }}" rows="3" {{ 'required' if field.get('required') else '' }} placeholder="{{ field.get('placeholder', '') }}" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">{{ form_data.get(field.get('key')) if form_data else '' }}</textarea>
+                    {% else %}
+                        <input type="{{ field.get('type', 'text') }}" name="{{ field.get('key') }}" {{ 'required' if field.get('required') else '' }} value="{{ form_data.get(field.get('key')) if form_data else '' }}" placeholder="{{ field.get('placeholder', '') }}" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
+                    {% end %}
+                </div>
+                {% end %}
+            {% else %}
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Nombre Completo</label>
+                    <input type="text" name="name" required placeholder="Ej. Juan Pérez" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Correo Corporativo</label>
+                    <input type="email" name="email" required placeholder="nombre@produccionesfast.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 focus:bg-white/10 outline-none">
+                </div>
+            {% end %}
 
             <button type="submit"
                 class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2">

@@ -1,4 +1,6 @@
+import os
 import tornado.web
+from datetime import datetime
 
 from app.handlers.base import BaseHandler
 from app.services import analytics_service, chat_service, questions_service
@@ -26,9 +28,33 @@ class WatchHandler(BaseHandler):
 
         event_id = event["id"]
 
+        if event.get("is_deleted"):
+            self.render("error.html", message="Evento no disponible")
+            return
+
+        if os.getenv("EVENT_FLOW_V2", "0") == "1":
+            status = event.get("status") or ("PUBLISHED" if event.get("is_active") else "CLOSED")
+            is_staff = self.is_moderator_for_event(event_id) or self.is_admin() or self.is_superadmin()
+            if status != "PUBLISHED" and not is_staff:
+                self.render("error.html", message="El evento no está disponible aún.")
+                return
+
+            access_open_at = event.get("access_open_at")
+            if access_open_at and not is_staff:
+                try:
+                    from app.db import _get_target_timezone, now_in_timezone
+                    tz = _get_target_timezone(event.get("timezone"))
+                    access_dt = datetime.strptime(access_open_at, "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+                    if now_in_timezone(event.get("timezone")) < access_dt:
+                        self.render("error.html", message="El acceso aún no está disponible.")
+                        return
+                except Exception:
+                    pass
+
         # Check if event is active (allow staff even if paused?)
         # Let's say Viewers cannot enter if paused, but staff can.
-        if not event["is_active"] and not self.is_moderator_for_event(event_id):
+        is_staff = self.is_moderator_for_event(event_id) or self.is_admin() or self.is_superadmin()
+        if not event["is_active"] and not is_staff:
             self.render("error.html", message="Esta transmisión ha finalizado.")
             return
 

@@ -118,6 +118,7 @@ class ReportsExportHandler(BaseHandler):
     def _send_csv(self, filename_base, rows):
         import csv
         import io
+        import json
         from app.db import now_in_timezone
         from app.services import events_service
 
@@ -129,18 +130,45 @@ class ReportsExportHandler(BaseHandler):
 
         output = io.StringIO(newline="")
         writer = csv.writer(output)
-        writer.writerow(["user_id", "user_name", "start_time", "last_ping", "session_minutes", "session_seconds"])
+        
+        # Determine extra headers from payloads
+        extra_keys = []
+        if rows and "payload" in rows[0]:
+             # We need to scan all rows to get all possible extra keys
+             keys_set = set()
+             for r in rows:
+                 if r.get("payload"):
+                     try:
+                         p = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
+                         for k in p.keys():
+                             if k not in ["name", "email", "phone"]:
+                                 keys_set.add(k)
+                     except: pass
+             extra_keys = sorted(list(keys_set))
+
+        headers = ["user_id", "user_name", "start_time", "last_ping", "session_minutes", "session_seconds"]
+        if extra_keys:
+            headers += extra_keys
+        
+        writer.writerow(headers)
         for row in rows:
-            writer.writerow(
-                [
-                    row.get("user_id"),
-                    row.get("user_name"),
-                    row.get("start_time"),
-                    row.get("last_ping"),
-                    row.get("session_minutes"),
-                    row.get("session_seconds"),
-                ]
-            )
+            base_data = [
+                row.get("user_id"),
+                row.get("user_name"),
+                row.get("start_time"),
+                row.get("last_ping"),
+                row.get("session_minutes"),
+                row.get("session_seconds"),
+            ]
+            if extra_keys:
+                payload = {}
+                if row.get("payload"):
+                    try:
+                        payload = json.loads(row["payload"]) if isinstance(row["payload"], str) else row["payload"]
+                    except: pass
+                for k in extra_keys:
+                    base_data.append(payload.get(k, ""))
+            writer.writerow(base_data)
 
         # Excel on Windows often expects BOM for UTF-8 CSV.
         csv_text = "\ufeff" + output.getvalue()
