@@ -127,6 +127,44 @@ Cuando un evento se marca como `is_active = 0`:
 - Visores no pueden entrar (excepto staff)
 - Todos los WebSockets del evento se desconectan automáticamente
 
+### ⚠️ Consideraciones de Seguridad Adicionales
+
+**Para Producción, se recomienda implementar:**
+
+1. **Password Hashing**: 
+   - Actualmente las contraseñas se guardan en texto plano
+   - **IMPLEMENTAR**: bcrypt o argon2 para hash de contraseñas
+   - Modificar `auth.py` para hashear en registro y verificar en login
+
+2. **Secrets Management**:
+   - No incluir `COOKIE_SECRET` en el código
+   - Usar variables de entorno o gestores de secretos
+   - Rotar secretos periódicamente
+
+3. **HTTPS Obligatorio**:
+   - Forzar HTTPS en producción
+   - WebSocket debe usar WSS (secure)
+   - Configurar headers de seguridad (HSTS, CSP, etc.)
+
+4. **Rate Limiting**:
+   - Limitar intentos de login por IP
+   - Limitar mensajes de chat/preguntas por usuario
+   - Prevenir flood de conexiones WebSocket
+
+5. **Input Validation**:
+   - Sanitizar todos los inputs de usuario
+   - Validar formato de email más estrictamente
+   - Escapar contenido en templates para prevenir XSS
+
+6. **SQL Injection**:
+   - Actualmente usa consultas parametrizadas (✅ correcto)
+   - Mantener esta práctica en todas las queries
+
+7. **Session Security**:
+   - Implementar timeout de sesión
+   - Regenerar session ID después de login
+   - Secure y HttpOnly cookies en producción
+
 ## Esquema de Base de Datos
 
 ### users

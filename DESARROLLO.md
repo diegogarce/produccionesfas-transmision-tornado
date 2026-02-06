@@ -218,12 +218,17 @@ mysql -u root -p transmision_tornado < init.sql
 
 ```bash
 # .env
-DB_HOST=db.transmisionesfast.com
-DB_USER=root
-DB_PASSWORD=Pr0ducc10n35F45t2050
-DB_NAME=transmisionesfast_tornado
-COOKIE_SECRET=Pr0ducc10n35F45t2050
+DB_HOST=your-database-host.com
+DB_USER=your_db_user
+DB_PASSWORD=your_secure_password_here
+DB_NAME=transmision_tornado
+COOKIE_SECRET=generate_a_secure_random_secret_here  # Use: python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+**⚠️ SEGURIDAD**: 
+- **NUNCA** uses las contraseñas de ejemplo en producción
+- Genera un `COOKIE_SECRET` único con: `python3 -c "import secrets; print(secrets.token_hex(32))"`
+- Configura contraseñas fuertes para la base de datos
 
 ## Comandos Útiles
 
@@ -253,6 +258,9 @@ mysql -u root -p -e "
 - [INSTRUCCIONES.md](INSTRUCCIONES.md) - Especificación original del proyecto
 - [Tornado Docs](https://www.tornadoweb.org/) - Documentación de Tornado
 
-## Contacto
+## Contacto y Soporte
 
-Para preguntas o soporte, contactar a: `diego@produccionesfast.com`
+Para preguntas o soporte sobre el desarrollo:
+- Contactar al administrador del proyecto
+- Revisar la documentación en [ARQUITECTURA.md](ARQUITECTURA.md)
+- Abrir un issue en el repositorio

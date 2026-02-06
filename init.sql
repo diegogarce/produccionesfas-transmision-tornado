@@ -4,12 +4,14 @@ CREATE DATABASE IF NOT EXISTS transmision_tornado;
 USE transmision_tornado;
 
 -- Users table
+-- TODO: Password hashing should be implemented in production (bcrypt/argon2)
+-- Current implementation uses plain text for simplicity but should be upgraded
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
     phone VARCHAR(50),
-    password VARCHAR(255) DEFAULT 'produccionesfast2050',
+    password VARCHAR(255) DEFAULT 'produccionesfast2050',  -- Plain text - should be hashed in production
     role ENUM('visor', 'moderador', 'speaker', 'administrador') DEFAULT 'visor',
     event_id INT,
     chat_blocked TINYINT(1) DEFAULT 0,

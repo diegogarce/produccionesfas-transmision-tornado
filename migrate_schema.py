@@ -29,8 +29,10 @@ def migrate_schema():
                 print("\n🔧 Actualizando tabla 'users'...")
                 
                 # Add password column if missing
+                # NOTE: Migration uses default password. In production, require password reset.
                 if 'password' not in user_columns:
                     print("  ➕ Agregando columna 'password'...")
+                    print("  ⚠️  IMPORTANTE: Todos los usuarios tendrán password genérico. Considere forzar reset.")
                     cursor.execute(
                         "ALTER TABLE users ADD COLUMN password VARCHAR(255) DEFAULT 'produccionesfast2050' AFTER phone"
                     )
