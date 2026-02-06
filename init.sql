@@ -9,32 +9,36 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
     phone VARCHAR(50),
+    password VARCHAR(255) DEFAULT 'produccionesfast2050',
+    role ENUM('visor', 'moderador', 'speaker', 'administrador') DEFAULT 'visor',
+    event_id INT,
     chat_blocked TINYINT(1) DEFAULT 0,
     qa_blocked TINYINT(1) DEFAULT 0,
     banned TINYINT(1) DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email_event (email, event_id)
 );
 
 -- Events table
 CREATE TABLE IF NOT EXISTS events (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
     slug VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    stream_url VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
+    logo_url VARCHAR(500),
+    video_url VARCHAR(500),
     is_active TINYINT(1) DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Event Staff table
-CREATE TABLE IF NOT EXISTS event_staff (
-    user_id INT NOT NULL,
-    event_id INT NOT NULL,
-    role ENUM('admin', 'moderator', 'speaker') NOT NULL,
-    PRIMARY KEY (user_id, event_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-);
+-- Event Staff table (kept for potential future use, but current code uses users.role directly)
+-- CREATE TABLE IF NOT EXISTS event_staff (
+--     user_id INT NOT NULL,
+--     event_id INT NOT NULL,
+--     role ENUM('admin', 'moderator', 'speaker') NOT NULL,
+--     PRIMARY KEY (user_id, event_id),
+--     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+--     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+-- );
 
 -- Questions table
 CREATE TABLE IF NOT EXISTS questions (
@@ -72,13 +76,9 @@ CREATE TABLE IF NOT EXISTS session_analytics (
 );
 
 -- Seed an example event
-INSERT IGNORE INTO events (id, name, slug, description, stream_url, is_active) 
-VALUES (1, 'Evento Demo Fast', 'demo-fast', 'Transmisión de prueba', 'https://www.youtube.com/embed/live_stream?channel=UCXXXXXXXX', 1);
+INSERT IGNORE INTO events (id, slug, title, logo_url, video_url, is_active) 
+VALUES (1, 'demo-fast', 'Evento Demo Fast', 'https://produccionesfast.com/logo.png', 'https://www.youtube.com/embed/live_stream?channel=UCXXXXXXXX', 1);
 
--- Seed an example user (Admin)
-INSERT IGNORE INTO users (id, name, email, created_at) 
-VALUES (1, 'Diego Bravo', 'diego@produccionesfast.com', NOW());
-
--- Assign user as Admin/Speaker for the demo event
-INSERT IGNORE INTO event_staff (user_id, event_id, role) 
-VALUES (1, 1, 'admin');
+-- Seed an example admin user (can access all events with event_id = NULL)
+INSERT IGNORE INTO users (id, name, email, password, role, event_id, created_at) 
+VALUES (1, 'Diego Bravo', 'diego@produccionesfast.com', 'produccionesfast2050', 'administrador', NULL, NOW());
