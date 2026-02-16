@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telemetría · Producciones Fast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #050511;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: #0a0b16;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            max-height: 250px;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-300 min-h-screen antialiased">
+    <!-- Top Navigation Bar (Matching Identity) -->
+    <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Left Side: Logo | Platform Name | Status -->
+            <div class="flex items-center h-full">
+                <a href="/admin/events" class="hover:opacity-80 transition-opacity flex items-center">
+                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
+                        class="h-6 w-auto opacity-90">
+                </a>
+
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
+                <span
+                    class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Administración</span>
+
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
+                <a href="/admin/events"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Eventos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Eventos</span>
+                </a>
+
+                <div class="h-6 w-px bg-white/10"></div>
+
+                <span class="text-sm font-medium text-slate-400">Admin User</span>
+
+                <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()"
+                class="md:hidden text-slate-400 hover:text-white transition-colors p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
+            <div class="px-4 py-4 space-y-3">
+                <a href="/admin/events"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Eventos
+                </a>
+
+                <div class="border-t border-white/10 pt-3">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            menu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+    </script>
+
+    <div class="max-w-7xl mx-auto px-6 py-10 animate-fade-in">
+        <!-- Page Title -->
+        <div class="mb-10">
+            <h1 class="text-3xl font-bold text-white mb-2">Monitor del Sistema</h1>
+            <p class="text-slate-500">Métricas de rendimiento y actividad en tiempo real (Snapshots 10s).</p>
+        </div>
+
+        <!-- Real-time Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">WS Conexiones</h3>
+                <div id="stat-ws-active" class="text-2xl font-bold text-white">0</div>
+                <p class="text-[10px] text-indigo-400 mt-1">Activas</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">HTTP Peticiones</h3>
+                <div id="stat-http-total" class="text-2xl font-bold text-white">0</div>
+                <p class="text-[10px] text-emerald-400 mt-1">Total acumulado</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-amber-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Mensajes Chat</h3>
+                <div id="stat-chat-total" class="text-2xl font-bold text-white">0</div>
+                <p class="text-[10px] text-amber-400 mt-1">Procesados</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-rose-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">CPU Uso</h3>
+                <div id="stat-cpu-usage" class="text-2xl font-bold text-white">0.0%</div>
+                <p class="text-[10px] text-rose-400 mt-1">Carga proceso</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-blue-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Memoria RAM</h3>
+                <div id="stat-mem-usage" class="text-2xl font-bold text-white">0 MB</div>
+                <p class="text-[10px] text-blue-400 mt-1">Uso RSS</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-slate-500/30"></div>
+                <h3 class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-2">Respuestas OK</h3>
+                <div id="stat-http-success" class="text-2xl font-bold text-white">100%</div>
+                <p class="text-[10px] text-slate-500 mt-1">Tasa éxito</p>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div id="charts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
+                    Tráfico WebSocket (Conexiones)
+                </h3>
+                <canvas id="chart-ws"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-amber-500 rounded-full"></span>
+                    Actividad Chat
+                </h3>
+                <canvas id="chart-chat-activity"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-rose-500 rounded-full"></span>
+                    Uso de CPU (%)
+                </h3>
+                <canvas id="chart-cpu"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
+                    Uso de Memoria (MB)
+                </h3>
+                <canvas id="chart-memory"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>
+                    Internal Latency (IOLoop ms)
+                </h3>
+                <canvas id="chart-latency"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-fuchsia-500 rounded-full"></span>
+                    Latencia HTTP p95/p99 (ms)
+                </h3>
+                <canvas id="chart-http-latency"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-red-600 rounded-full"></span>
+                    Errores del Sistema
+                </h3>
+                <canvas id="chart-errors"></canvas>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-white text-sm font-bold mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-rose-400 rounded-full"></span>
+                    Tipos de Error (último snapshot)
+                </h3>
+                <div id="error-breakdown" class="space-y-2 text-sm"></div>
+                <p class="text-[10px] text-slate-500 mt-4">HTTP 4xx/5xx, excepciones y errores de DB.</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl lg:col-span-2">
+                <h3 class="text-white text-sm font-bold mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-rose-300 rounded-full"></span>
+                    Últimos errores (detalle)
+                </h3>
+                <div class="overflow-auto">
+                    <table class="w-full text-xs text-slate-300">
+                        <thead class="text-[10px] uppercase text-slate-500">
+                            <tr>
+                                <th class="text-left py-2 pr-3">Hora</th>
+                                <th class="text-left py-2 pr-3">Status</th>
+                                <th class="text-left py-2 pr-3">Tipo</th>
+                                <th class="text-left py-2 pr-3">Handler</th>
+                                <th class="text-left py-2 pr-3">Ruta</th>
+                                <th class="text-left py-2">Mensaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-table-body" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-3">Solo excepciones capturadas por el backend.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let historyData = {% raw history_json %};
+        let errorsData = {% raw errors_json %};
+        const charts = [];
+        const POLL_INTERVAL_MS = 15000;
+
+        // Improved Helper: Sum values while ignoring Prometheus internal metadata (_created)
+        function sumMetricValues(metricArray) {
+            if (!metricArray || !Array.isArray(metricArray)) return 0;
+            return metricArray
+                .filter(m => m.name && !m.name.endsWith('_created'))
+                .reduce((acc, curr) => acc + curr.value, 0);
+        }
+
+        function clearCharts() {
+            while (charts.length) {
+                const chart = charts.pop();
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            }
+        }
+
+        function initCharts() {
+            clearCharts();
+            const emptyState = document.getElementById('telemetry-empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            const timestamps = historyData.map(h => {
+                const date = new Date(h.timestamp);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+
+            // Common Chart Options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0a0b16',
+                        titleColor: '#94a3b8',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 12,
+                        usePointStyle: true,
+                        font: { family: 'Inter' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 10, family: 'Inter' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10, family: 'Inter' } }
+                    }
+                }
+            };
+
+            // 1. WS Chart - Ensure no negative values in display
+            const wsActive = historyData.map(h => {
+                const val = sumMetricValues(h.metrics['ws_connections_active']);
+                return Math.max(0, val);
+            });
+
+            charts.push(new Chart(document.getElementById('chart-ws'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Usuarios Conectados',
+                        data: wsActive,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: commonOptions
+            }));
+
+            // 2. Chat Activity Chart - Sum messages explicitly
+            const chatHistory = historyData.map(h => sumMetricValues(h.metrics['chat_messages']));
+
+            charts.push(new Chart(document.getElementById('chart-chat-activity'), {
+                type: 'bar',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Mensajes',
+                        data: chatHistory,
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        hoverBackgroundColor: '#f59e0b',
+                        borderRadius: 2
+                    }]
+                },
+                options: commonOptions
+            }));
+
+            // 3. CPU Usage Chart
+            const cpuHistory = historyData.map(h => {
+                const metric = h.metrics['process_cpu_usage_percent'] || [];
+                return metric.length > 0 ? metric[0].value : 0;
+            });
+            charts.push(new Chart(document.getElementById('chart-cpu'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'CPU %',
+                        data: cpuHistory,
+                        borderColor: '#f43f5e',
+                        backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, max: 100 } } }
+            }));
+
+            // 4. Memory Usage Chart
+            const memHistory = historyData.map(h => {
+                const metric = h.metrics['process_memory_rss_bytes'] || [];
+                return metric.length > 0 ? (metric[0].value / (1024 * 1024)) : 0;
+            });
+            charts.push(new Chart(document.getElementById('chart-memory'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Memoria (MB)',
+                        data: memHistory,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: commonOptions
+            }));
+
+            // 5. Internal Latency (IOLoop)
+            const latencyHistory = historyData.map(h => {
+                const metricsList = h.metrics['tornado_ioloop_latency_ms'] || [];
+                const sum = metricsList.find(m => m.name.endsWith('_sum'))?.value || 0;
+                const count = metricsList.find(m => m.name.endsWith('_count'))?.value || 1;
+                return count > 0 ? (sum / count) : 0;
+            });
+            charts.push(new Chart(document.getElementById('chart-latency'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Latencia (ms)',
+                        data: latencyHistory,
+                        borderColor: '#10b981',
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: commonOptions
+            }));
+
+            function histogramQuantile(q, buckets) {
+                if (!buckets || buckets.length === 0) return 0;
+
+                const sorted = buckets
+                    .filter(b => Number.isFinite(b.le) && b.count >= 0)
+                    .sort((a, b) => a.le - b.le);
+
+                const total = sorted[sorted.length - 1]?.count || 0;
+                if (total <= 0) return 0;
+
+                const target = total * q;
+                let prevLe = 0;
+                let prevCount = 0;
+
+                for (const bucket of sorted) {
+                    if (bucket.count >= target) {
+                        const bucketCount = bucket.count - prevCount;
+                        if (bucketCount <= 0) return bucket.le;
+                        const bucketStart = prevLe;
+                        const bucketEnd = bucket.le;
+                        const rankInBucket = target - prevCount;
+                        return bucketStart + (bucketEnd - bucketStart) * (rankInBucket / bucketCount);
+                    }
+                    prevLe = bucket.le;
+                    prevCount = bucket.count;
+                }
+                return sorted[sorted.length - 1].le;
+            }
+
+            function getHttpLatencyPercentiles(snapshotMetrics) {
+                const bucketsRaw = snapshotMetrics['http_request_duration_ms'] || [];
+                const bucketMap = new Map();
+
+                bucketsRaw
+                    .filter(m => m.name && m.name.endsWith('_bucket') && m.labels && m.labels.le)
+                    .forEach(m => {
+                        const le = parseFloat(m.labels.le);
+                        if (Number.isFinite(le)) {
+                            bucketMap.set(le, (bucketMap.get(le) || 0) + m.value);
+                        }
+                    });
+
+                const buckets = Array.from(bucketMap.entries()).map(([le, count]) => ({ le, count }));
+                const p95 = histogramQuantile(0.95, buckets);
+                const p99 = histogramQuantile(0.99, buckets);
+                return { p95, p99 };
+            }
+
+            // 6. Errors Chart
+            const errorHistory = historyData.map(h => {
+                const httpReqs = h.metrics['http_requests'] || [];
+                const httpErrors = httpReqs
+                    .filter(m => !m.name.endsWith('_created') && m.labels.status && (m.labels.status.startsWith('4') || m.labels.status.startsWith('5')))
+                    .reduce((acc, curr) => acc + curr.value, 0);
+
+                const dbErrors = sumMetricValues(h.metrics['db_errors']);
+                return httpErrors + dbErrors;
+            });
+            charts.push(new Chart(document.getElementById('chart-errors'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Errores',
+                        data: errorHistory,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                        fill: true,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: commonOptions
+            }));
+
+            const httpLatencyHistory = historyData.map(h => getHttpLatencyPercentiles(h.metrics || {}));
+            const p95History = httpLatencyHistory.map(h => h.p95 || 0);
+            const p99History = httpLatencyHistory.map(h => h.p99 || 0);
+
+            charts.push(new Chart(document.getElementById('chart-http-latency'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [
+                        {
+                            label: 'p95',
+                            data: p95History,
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.05)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'p99',
+                            data: p99History,
+                            borderColor: '#f472b6',
+                            backgroundColor: 'rgba(244, 114, 182, 0.05)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: true } } }
+            }));
+
+            // Update stats cards using the latest available snapshot
+            const latest = historyData[historyData.length - 1]?.metrics || {};
+
+            function renderErrorBreakdown(latestMetrics) {
+                const container = document.getElementById('error-breakdown');
+                if (!container) return;
+
+                const counts = new Map();
+
+                // HTTP 4xx/5xx by status
+                const httpReqs = latestMetrics['http_requests'] || [];
+                httpReqs
+                    .filter(m => !m.name.endsWith('_created') && m.labels && m.labels.status)
+                    .forEach(m => {
+                        const status = String(m.labels.status);
+                        if (status.startsWith('4') || status.startsWith('5')) {
+                            const key = `HTTP ${status}`;
+                            counts.set(key, (counts.get(key) || 0) + m.value);
+                        }
+                    });
+
+                // HTTP exceptions by type
+                const httpExceptions = latestMetrics['http_exceptions'] || [];
+                httpExceptions
+                    .filter(m => !m.name.endsWith('_created') && m.labels && m.labels.exception_type)
+                    .forEach(m => {
+                        const key = `EXC ${m.labels.exception_type}`;
+                        counts.set(key, (counts.get(key) || 0) + m.value);
+                    });
+
+                // DB errors by operation
+                const dbErrors = latestMetrics['db_errors'] || [];
+                dbErrors
+                    .filter(m => !m.name.endsWith('_created') && m.labels && m.labels.operation)
+                    .forEach(m => {
+                        const key = `DB ${m.labels.operation}`;
+                        counts.set(key, (counts.get(key) || 0) + m.value);
+                    });
+
+                const sorted = Array.from(counts.entries())
+                    .filter(([, value]) => value > 0)
+                    .sort((a, b) => b[1] - a[1]);
+
+                if (sorted.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500">Sin errores recientes.</p>';
+                    return;
+                }
+
+                container.innerHTML = sorted.slice(0, 12).map(([label, value]) => {
+                    return `
+                        <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/5">
+                            <span class="text-slate-300">${label}</span>
+                            <span class="text-rose-300 font-semibold">${Math.round(value)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('stat-ws-active').innerText = Math.max(0, sumMetricValues(latest['ws_connections_active']));
+
+            const totalHttp = sumMetricValues(latest['http_requests']);
+            document.getElementById('stat-http-total').innerText = totalHttp;
+
+            document.getElementById('stat-chat-total').innerText = sumMetricValues(latest['chat_messages']);
+
+            const cpuVal = latest['process_cpu_usage_percent']?.[0]?.value || 0;
+            document.getElementById('stat-cpu-usage').innerText = cpuVal.toFixed(1) + '%';
+
+            const memVal = latest['process_memory_rss_bytes']?.[0]?.value || 0;
+            document.getElementById('stat-mem-usage').innerText = (memVal / (1024 * 1024)).toFixed(0) + ' MB';
+
+            const httpMetrics = latest['http_requests'] || [];
+            const successHttp = httpMetrics
+                .filter(m => !m.name.endsWith('_created') && m.labels.status && m.labels.status.startsWith('2'))
+                .reduce((acc, curr) => acc + curr.value, 0);
+            const rate = totalHttp > 0 ? Math.round((successHttp / totalHttp) * 100) : 100;
+            document.getElementById('stat-http-success').innerText = rate + '%';
+
+            renderErrorBreakdown(latest);
+            renderErrorTable(errorsData || []);
+        }
+
+        function renderErrorTable(rows) {
+            const tbody = document.getElementById('error-table-body');
+            if (!tbody) return;
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-slate-500">Sin errores recientes.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rows.map(r => {
+                const time = r.timestamp ? new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+                const status = r.status ?? '-';
+                const type = r.exception_type ?? '-';
+                const handler = r.handler ?? '-';
+                const path = r.path ?? '-';
+                const message = r.message ?? '-';
+                return `
+                    <tr class="align-top">
+                        <td class="py-2 pr-3 text-slate-400">${time}</td>
+                        <td class="py-2 pr-3 text-rose-300">${status}</td>
+                        <td class="py-2 pr-3">${type}</td>
+                        <td class="py-2 pr-3">${handler}</td>
+                        <td class="py-2 pr-3 max-w-[240px] truncate">${path}</td>
+                        <td class="py-2 max-w-[280px] truncate text-slate-400">${message}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderEmptyState() {
+            clearCharts();
+            const container = document.getElementById('charts-container');
+            if (!container) return;
+
+            let emptyState = document.getElementById('telemetry-empty-state');
+            if (!emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.id = 'telemetry-empty-state';
+                emptyState.className = 'mb-6';
+                emptyState.innerHTML = `
+                    <div class="py-6 text-center glass-panel rounded-2xl w-full">
+                        <div class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-white mb-2">Esperando datos...</h2>
+                        <p class="text-slate-500">Los snapshots se capturan cada 10 segundos. Refresca en un momento.</p>
+                    </div>
+                `;
+                container.parentElement.insertBefore(emptyState, container);
+            }
+        }
+
+        async function refreshTelemetry() {
+            try {
+                const res = await fetch('/admin/telemetry/data', { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const payload = await res.json();
+                historyData = payload.history || [];
+                errorsData = payload.errors || [];
+
+                if (historyData.length > 0) {
+                    initCharts();
+                } else {
+                    renderEmptyState();
+                }
+
+                renderErrorTable(errorsData || []);
+            } catch (e) {
+                // silent fail to avoid UI noise
+            }
+        }
+
+        if (historyData.length > 0) {
+            initCharts();
+        } else {
+            renderEmptyState();
+        }
+
+        renderErrorTable(errorsData || []);
+
+        setInterval(refreshTelemetry, POLL_INTERVAL_MS);
+    </script>
+</body>
+
+</html>

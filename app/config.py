@@ -33,6 +33,23 @@ REDIS_CONFIG = {
     "db": 0,
 }
 
+# Telemetría: por defecto solo Redis (no toca MySQL). Para legacy: TELEMETRY_BACKEND=mysql
+TELEMETRY_BACKEND = os.environ.get("TELEMETRY_BACKEND", "redis")
+
+# Ping/heartbeat: "redis" evita miles de writes/s en MySQL con muchos usuarios. "mysql" = session_analytics.
+PING_BACKEND = os.environ.get("PING_BACKEND", "redis" if os.environ.get("REDIS_HOST") else "mysql")
+
+# Fase A: Chat reciente en Redis; caché de watch
+CHAT_RECENT_IN_REDIS = os.environ.get("CHAT_RECENT_IN_REDIS", "1") == "1"
+CHAT_REDIS_MAX_MESSAGES = int(os.environ.get("CHAT_REDIS_MAX_MESSAGES", "100"))
+WATCH_CACHE_TTL_SECONDS = int(os.environ.get("WATCH_CACHE_TTL_SECONDS", "5"))
+
+# Fase B: Caché del snapshot de reportes por evento
+REPORTS_CACHE_TTL_SECONDS = int(os.environ.get("REPORTS_CACHE_TTL_SECONDS", "5"))
+
+# Fase C: Broadcast vía Redis Pub/Sub para escalar horizontalmente
+BROADCAST_PUBSUB = os.environ.get("BROADCAST_PUBSUB", "1") == "1" if os.environ.get("REDIS_HOST") else False
+
 # Validación mínima para evitar errores críticos
 if not MYSQL_CONFIG["host"]:
     print("ERROR: DB_HOST no definido en .env", file=sys.stderr)

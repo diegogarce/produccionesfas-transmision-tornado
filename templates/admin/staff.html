@@ -7,6 +7,7 @@
     <title>Gestión de Personal · Producciones Fast</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
@@ -23,7 +24,7 @@
     </script>
     <style>
         body {
-            background-color: #050511;
+            background-color: #0f172a;
         }
 
         .glass-panel {
@@ -31,108 +32,205 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
+        /* AG Grid Custom Dark Theme (Navy Style) */
+        .ag-theme-alpine-dark {
+            --ag-background-color: #0a0b16;
+            --ag-header-background-color: #050511;
+            --ag-odd-row-background-color: #0a0b16;
+            --ag-border-color: rgba(255, 255, 255, 0.08);
+            --ag-header-column-separator-color: rgba(255, 255, 255, 0.08);
+            --ag-header-column-resize-handle-color: rgba(255, 255, 255, 0.2);
+            --ag-font-family: 'Inter', sans-serif;
+            --ag-font-size: 13px;
+            --ag-text-color: #94a3b8;
+            --ag-header-foreground-color: #64748b;
+            --ag-selected-row-background-color: rgba(79, 70, 229, 0.1);
+            --ag-row-hover-color: rgba(255, 255, 255, 0.03);
+            --ag-input-focus-border-color: #4f46e5;
+            --ag-range-selection-border-color: #4f46e5;
+            border: none !important;
+        }
+
+        .ag-header-cell-label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .ag-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .ag-cell {
+            display: flex;
+            align-items: center;
+        }
     </style>
     {% include "../includes/toast.html" %}
 </head>
 
 <body class="text-slate-300 min-h-screen antialiased">
+    <!-- Top Navigation Bar (Matching Identity) -->
     <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
-                <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
-                    class="h-6 w-auto opacity-90">
-                <div class="h-8 w-px bg-white/10 mx-4"></div>
-                <div class="flex gap-4">
-                    <a href="/admin/events"
-                        class="text-[10px] font-bold tracking-widest text-slate-500 hover:text-white uppercase transition-colors">Eventos</a>
-                    <a href="/admin/staff"
-                        class="text-[10px] font-bold tracking-widest text-indigo-400 uppercase">Personal</a>
-                </div>
+                <a href="/admin/events" class="hover:opacity-80 transition-opacity flex items-center">
+                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
+                        class="h-6 w-auto opacity-90">
+                </a>
+
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
+                <span
+                    class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Administración</span>
+
             </div>
-            <div class="flex items-center gap-4">
-                {% if is_superadmin %}
-                <button onclick="openModal()"
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-widest transition-all">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
+                <a href="/admin/events"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Eventos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>Nuevo Staff</span>
-                </button>
-                {% end %}
+                    <span class="text-xs font-bold uppercase tracking-wider">Eventos</span>
+                </a>
+
+                <a href="/admin/staff" class="flex items-center gap-2 text-indigo-400 transition-colors"
+                    title="Personal">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Personal</span>
+                </a>
+
+                <div class="h-6 w-px bg-white/10"></div>
+
+                <span class="text-sm font-medium text-slate-400">Admin User</span>
 
                 <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </a>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()"
+                class="md:hidden text-slate-400 hover:text-white transition-colors p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
+            <div class="px-4 py-4 space-y-3">
+                <a href="/admin/events"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Eventos
+                </a>
+
+                <a href="/admin/staff" class="flex items-center gap-3 text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Personal
+                </a>
+
+                <div class="border-t border-white/10 pt-3">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            menu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+    </script>
+
     <div class="max-w-7xl mx-auto px-6 py-10">
-        <div class="mb-10">
-            <h1 class="text-3xl font-bold text-white mb-2">Administración de Staff</h1>
-            <p class="text-slate-500">Gestiona los roles globales de administradores, moderadores y speakers del
-                sistema.</p>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Administración de Staff</h1>
+                <p class="text-slate-500">Gestiona los roles globales de administradores, moderadores y speakers del
+                    sistema.</p>
+            </div>
+            <button onclick="openModal()"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Miembro
+            </button>
         </div>
 
-        <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto text-sm">
-            <table class="w-full text-left">
-                <thead class="bg-white/5 border-b border-white/10">
-                    <tr>
-                        <th class="px-6 py-4 font-semibold text-slate-400">Usuario</th>
-                        <th class="px-6 py-4 font-semibold text-slate-400">Rol Global</th>
-                        <th class="px-6 py-4 font-semibold text-slate-400">Contraseña</th>
-                        <th class="px-6 py-4 font-semibold text-slate-400">Eventos Activos</th>
-                        <th class="px-6 py-4 font-semibold text-slate-400 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    {% for person in staff %}
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-white">{{ person['name'] or 'Sin nombre' }}</div>
-                            <div class="text-xs text-slate-500">{{ person['email'] }}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            {% if person['global_role'] == 'superadmin' %}
-                            <span
-                                class="px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase">Superadmin</span>
-                            {% elif person['global_role'] == 'admin' %}
-                            <span
-                                class="px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase">Admin</span>
-                            {% elif person['global_role'] == 'moderator' %}
-                            <span
-                                class="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase">Moderator</span>
-                            {% elif person['global_role'] == 'speaker' %}
-                            <span
-                                class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase">Speaker</span>
-                            {% else %}
-                            <span
-                                class="px-2 py-1 rounded-md bg-white/5 text-slate-500 text-[10px] font-bold uppercase">{{
-                                person['global_role'] }}</span>
-                            {% end %}
-                        </td>
-                        <td class="px-6 py-4 group cursor-pointer"
-                            onclick="navigator.clipboard.writeText(this.innerText).then(() => showToast('Contraseña copiada', 'success'))"
-                            title="Click para copiar">
-                            <div
-                                class="font-mono text-xs text-white bg-white/5 px-2 py-1 rounded inline-block blur-sm hover:blur-none transition-all duration-300 select-all">
-                                {{ person['password'] or '••••••••' }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-white font-medium">{{ person['event_count'] }}</div>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick='editStaff({{ json_encode(person) }})'
-                                class="text-indigo-400 hover:text-indigo-300 font-bold text-xs uppercase">Editar</button>
-                        </td>
-                    </tr>
-                    {% end %}
-                </tbody>
-            </table>
+        <!-- Advanced Filters & AG-Grid -->
+        <div class="space-y-4">
+            <!-- Filter Bar -->
+            <div
+                class="glass-panel rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-[72px] z-30 shadow-2xl">
+                <div class="relative w-full md:w-96 group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="staffSearch" onkeyup="onSearchChange()"
+                        placeholder="Buscar por nombre, email o rol..."
+                        class="block w-full bg-[#050511] border border-white/5 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all">
+                </div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <div class="flex bg-[#050511] p-1 rounded-xl border border-white/5 w-full md:w-auto">
+                        <button onclick="filterByRole('all')" id="role-all"
+                            class="role-btn px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all bg-indigo-600 text-white">Todos</button>
+                        <button onclick="filterByRole('superadmin')" id="role-superadmin"
+                            class="role-btn px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-500 hover:text-white">Superadmin</button>
+                        <button onclick="filterByRole('admin')" id="role-admin"
+                            class="role-btn px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-500 hover:text-white">Admins</button>
+                        <button onclick="filterByRole('moderator')" id="role-moderator"
+                            class="role-btn px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-slate-500 hover:text-white">Moderadores</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+                <div id="staffGrid" class="ag-theme-alpine-dark w-full h-[600px]"></div>
+            </div>
         </div>
     </div>
 
@@ -180,6 +278,124 @@
     <script>
         const modal = document.getElementById('staff-modal');
         const form = document.getElementById('staff-form');
+        let gridApi;
+
+        const staffData = {% raw json_encode(staff) %};
+
+        const gridOptions = {
+            columnDefs: [
+                {
+                    headerName: "Usuario",
+                    field: "name",
+                    flex: 2,
+                    cellRenderer: params => {
+                        return `
+                            <div class="py-2">
+                                <div class="font-bold text-white line-height-tight leading-tight">${params.data.name || 'Sin nombre'}</div>
+                                <div class="text-[11px] text-slate-500 leading-tight">${params.data.email}</div>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    headerName: "Rol Global",
+                    field: "global_role",
+                    flex: 1,
+                    cellRenderer: params => {
+                        const roles = {
+                            superadmin: { class: 'bg-purple-500/10 text-purple-400', label: 'Superadmin' },
+                            admin: { class: 'bg-indigo-500/10 text-indigo-400', label: 'Admin' },
+                            moderator: { class: 'bg-emerald-500/10 text-emerald-400', label: 'Moderator' },
+                            speaker: { class: 'bg-amber-500/10 text-amber-400', label: 'Speaker' }
+                        };
+                        const config = roles[params.value] || { class: 'bg-white/5 text-slate-500', label: params.value };
+                        return `<span class="px-2 py-0.5 rounded-md ${config.class} text-[10px] font-bold uppercase">${config.label}</span>`;
+                    }
+                },
+                {
+                    headerName: "Contraseña",
+                    field: "password",
+                    flex: 1,
+                    cellRenderer: params => {
+                        const pwd = params.value || '••••••••';
+                        return `
+                            <div class="px-2 py-1 bg-white/5 rounded font-mono text-[11px] text-white blur-[3px] hover:blur-none transition-all duration-300 cursor-pointer select-all truncate w-full" 
+                                 onclick="copyPassword('${pwd}')" title="Click para copiar">
+                                ${pwd}
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    headerName: "Eventos",
+                    field: "event_count",
+                    width: 100,
+                    cellStyle: { justifyContent: 'center' },
+                    cellRenderer: params => `<span class="font-medium text-white">${params.value}</span>`
+                },
+                {
+                    headerName: "Acciones",
+                    width: 100,
+                    cellClass: 'ag-right-aligned-cell',
+                    cellRenderer: params => {
+                        return `<button onclick='editStaff(${JSON.stringify(params.data)})' class="text-indigo-400 hover:text-indigo-300 font-bold text-[10px] uppercase tracking-wider">Editar</button>`;
+                    }
+                }
+            ],
+            rowData: staffData,
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true,
+                suppressMenu: true
+            },
+            rowHeight: 64,
+            headerHeight: 48,
+            animateRows: true,
+            onGridReady: (params) => {
+                gridApi = params.api;
+                // Auto-size columns on mobile? No, flex is better.
+            }
+        };
+
+        // Initialize Grid
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridDiv = document.querySelector('#staffGrid');
+            gridApi = agGrid.createGrid(gridDiv, gridOptions);
+        });
+
+        // Search & Filter Functions
+        function onSearchChange() {
+            gridApi.setGridOption('quickFilterText', document.getElementById('staffSearch').value);
+        }
+
+        function filterByRole(role) {
+            // Update UI buttons
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-500', 'hover:text-white');
+            });
+            const activeBtn = document.getElementById(`role-${role}`);
+            activeBtn.classList.remove('text-slate-500', 'hover:text-white');
+            activeBtn.classList.add('bg-indigo-600', 'text-white');
+
+            // Apply filter
+            if (role === 'all') {
+                gridApi.setGridOption('filterModel', null);
+            } else {
+                gridApi.setGridOption('filterModel', {
+                    global_role: {
+                        filterType: 'text',
+                        type: 'equals',
+                        filter: role
+                    }
+                });
+            }
+        }
+
+        function copyPassword(pwd) {
+            navigator.clipboard.writeText(pwd).then(() => showToast('Contraseña copiada', 'success'));
+        }
 
         function openModal() {
             modal.classList.remove('hidden');
@@ -223,7 +439,8 @@
                     showToast('Personal guardado.', 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showToast('Error al guardar.', 'error');
+                    const data = await res.json();
+                    showToast(data.error || 'Error al guardar.', 'error');
                 }
             } catch (err) {
                 showToast('Error de red.', 'error');

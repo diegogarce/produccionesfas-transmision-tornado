@@ -43,13 +43,21 @@ def create_session(data: dict) -> str:
     Returns the generated session_id.
     """
     if not redis_client:
+        print(
+            "[session_service] ERROR: redis_client is None. "
+            f"REDIS_CONFIG host={REDIS_CONFIG.get('host')} port={REDIS_CONFIG.get('port')} db={REDIS_CONFIG.get('db')}"
+        )
         return None
         
     session_id = str(uuid.uuid4())
     key = f"session:{session_id}"
     
     # Store as JSON string
-    redis_client.setex(key, SESSION_TTL, json.dumps(data))
+    try:
+        redis_client.setex(key, SESSION_TTL, json.dumps(data))
+    except Exception as exc:
+        print(f"[session_service] ERROR: setex failed for key={key}: {exc}")
+        return None
     
     return session_id
 

@@ -1,3 +1,4 @@
+import json
 import tornado.web
 
 from app.handlers.base import BaseHandler
@@ -65,6 +66,7 @@ class ReportsHandler(BaseHandler):
             active_sessions=active_sessions,
             registered_users=registered_users,
             ws_url=f"{self.get_ws_scheme()}://{self.request.host}/ws?role=reports&event_id={event_id}",
+            data_url=f"/reports/charts/data?event_id={event_id}",
             total_registered_users=total_registered_users,
             live_watchers_count=live_watchers_count,
             total_minutes_consumed=total_minutes_consumed,
@@ -118,6 +120,7 @@ class ReportsExportHandler(BaseHandler):
     def _send_csv(self, filename_base, rows):
         import csv
         import io
+        import json
         from app.db import now_in_timezone
         from app.services import events_service
 
@@ -129,18 +132,45 @@ class ReportsExportHandler(BaseHandler):
 
         output = io.StringIO(newline="")
         writer = csv.writer(output)
-        writer.writerow(["user_id", "user_name", "start_time", "last_ping", "session_minutes", "session_seconds"])
+        
+        # Determine extra headers from payloads
+        extra_keys = []
+        if rows and "payload" in rows[0]:
+             # We need to scan all rows to get all possible extra keys
+             keys_set = set()
+             for r in rows:
+                 if r.get("payload"):
+                     try:
+                         p = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
+                         for k in p.keys():
+                             if k not in ["name", "email", "phone"]:
+                                 keys_set.add(k)
+                     except: pass
+             extra_keys = sorted(list(keys_set))
+
+        headers = ["user_id", "user_name", "start_time", "last_ping", "session_minutes", "session_seconds"]
+        if extra_keys:
+            headers += extra_keys
+        
+        writer.writerow(headers)
         for row in rows:
-            writer.writerow(
-                [
-                    row.get("user_id"),
-                    row.get("user_name"),
-                    row.get("start_time"),
-                    row.get("last_ping"),
-                    row.get("session_minutes"),
-                    row.get("session_seconds"),
-                ]
-            )
+            base_data = [
+                row.get("user_id"),
+                row.get("user_name"),
+                row.get("start_time"),
+                row.get("last_ping"),
+                row.get("session_minutes"),
+                row.get("session_seconds"),
+            ]
+            if extra_keys:
+                payload = {}
+                if row.get("payload"):
+                    try:
+                        payload = json.loads(row["payload"]) if isinstance(row["payload"], str) else row["payload"]
+                    except: pass
+                for k in extra_keys:
+                    base_data.append(payload.get(k, ""))
+            writer.writerow(base_data)
 
         # Excel on Windows often expects BOM for UTF-8 CSV.
         csv_text = "\ufeff" + output.getvalue()
@@ -271,3 +301,72 @@ class ReportsExportHandler(BaseHandler):
         self.set_header("Content-Type", "application/pdf")
         self.set_header("Content-Disposition", f'attachment; filename="{filename}"')
         self.write(pdf_bytes)
+
+
+class ReportsChartsHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self, slug=None):
+        from app.services import events_service
+
+        event = None
+        if slug:
+            event = events_service.get_event_by_slug(slug)
+
+        if not event and self.current_event_id():
+            event = events_service.get_event_by_id(self.current_event_id())
+
+        if not event:
+            self.redirect("/admin/events")
+            return
+
+        event_id = event["id"]
+
+        if not self.is_admin_for_event(event_id):
+            self.redirect(f"/e/{slug}/watch" if slug else "/watch")
+            return
+
+        self.set_secure_cookie("current_event_id", str(event_id))
+
+        if slug:
+            self.redirect(f"/e/{slug}/reports?view=charts")
+        else:
+            self.redirect(f"/reports?event_id={event_id}&view=charts")
+
+
+class ReportsChartsDataHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        from app.services import events_service
+
+        try:
+            event_id = int(self.get_query_argument("event_id", default=self.current_event_id()))
+        except (TypeError, ValueError, tornado.web.MissingArgumentError):
+            event_id = None
+
+        if not event_id or not self.is_admin_for_event(event_id):
+            self.set_status(403)
+            self.finish({"error": "Acceso denegado"})
+            return
+
+        try:
+            window_minutes = int(self.get_query_argument("window", default="60"))
+        except (TypeError, ValueError):
+            window_minutes = 60
+
+        try:
+            interval_minutes = int(self.get_query_argument("interval", default="5"))
+        except (TypeError, ValueError):
+            interval_minutes = 5
+
+        event = events_service.get_event_by_id(event_id) or {}
+        tz_name = event.get("timezone")
+
+        payload = analytics_service.build_reports_charts(
+            event_id=event_id,
+            tz_name=tz_name,
+            window_minutes=window_minutes,
+            interval_minutes=interval_minutes,
+        )
+
+        self.set_header("Content-Type", "application/json")
+        self.finish(payload)

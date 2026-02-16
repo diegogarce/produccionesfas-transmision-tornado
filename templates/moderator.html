@@ -29,6 +29,7 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -63,6 +64,15 @@
                 transform: translateY(0);
             }
         }
+
+        /* Hide native video controls more aggressively */
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+
+        video::-webkit-media-controls-enclosure {
+            display: none !important;
+        }
     </style>
     {% include "includes/theme.html" %}
     {% include "includes/toast.html" %}
@@ -84,63 +94,89 @@
                 <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
 
                 <span
-                    class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Moderation
-                    Cockpit</span>
+                    class="text-[10px] font-bold tracking-[0.2em] text-indigo-400 uppercase hidden sm:block">Moderación</span>
 
-                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden lg:block"></div>
-
-                <div class="hidden lg:flex items-center gap-2">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span class="text-[10px] font-bold tracking-widest text-emerald-500 uppercase">Sistema Activo</span>
-                </div>
             </div>
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-6">
-                {% include "includes/theme_switcher.html" %}
                 <!-- Stats (Visible on desktop) -->
-                <div class="hidden lg:flex items-center gap-8 px-6 border-r border-white/5 mr-2">
-                    <div class="text-center">
-                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
-                        <p class="text-xs font-mono font-bold text-white tabular-nums" id="stat-users">0</p>
+                <div class="hidden lg:flex items-center gap-4 px-6 border-r border-white/5 mr-2">
+                    <!-- Users -->
+                    <div
+                        class="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors group">
+                        <div
+                            class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <p class="text-[9px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
+                            <p class="text-xs font-mono font-bold text-white tabular-nums leading-none" id="stat-users">
+                                0</p>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Pendientes</p>
-                        <p class="text-xs font-mono font-bold text-amber-400 tabular-nums" id="stat-pending">0</p>
+
+                    <!-- Pending -->
+                    <div
+                        class="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors group">
+                        <div
+                            class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <p class="text-[9px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Pendientes
+                            </p>
+                            <p class="text-xs font-mono font-bold text-amber-400 tabular-nums leading-none"
+                                id="stat-pending">0</p>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Aprobadas</p>
-                        <p class="text-xs font-mono font-bold text-indigo-400 tabular-nums" id="stat-approved">0</p>
+
+                    <!-- Approved -->
+                    <div
+                        class="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors group">
+                        <div
+                            class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <p class="text-[9px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Aprobadas</p>
+                            <p class="text-xs font-mono font-bold text-indigo-400 tabular-nums leading-none"
+                                id="stat-approved">0</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <!-- Link a Reportes -->
-                    <a href="/e/{{ event['slug'] }}/reports" target="_blank"
-                        class="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors"
-                        title="Ver Reportes">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        <span class="text-xs font-bold uppercase tracking-wider hidden lg:block">Reportes</span>
-                    </a>
+                <!-- Link a Reportes -->
+                <a href="/e/{{ event['slug'] }}/reports" target="_blank"
+                    class="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors"
+                    title="Ver Reportes">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 3v18h18M7 13l3 3 7-7" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider hidden lg:block">Reportes</span>
+                </a>
 
-                    <div class="h-6 w-px bg-white/10 hidden lg:block"></div>
+                <div class="h-6 w-px bg-white/10 hidden lg:block"></div>
 
-                    <span class="text-sm font-medium text-slate-400 hidden lg:block">{{ user_name }}</span>
-                    <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                            </path>
-                        </svg>
-                    </a>
-                </div>
+                <span class="text-sm font-medium text-slate-400 hidden lg:block">{{ user_name }}</span>
+
+                <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                    </svg>
+                </a>
             </div>
 
             <!-- Mobile Menu Button -->
@@ -159,19 +195,45 @@
         <div class="hidden md:hidden border-b border-white/5 bg-[#050511] z-40" id="mobile-menu">
             <div class="px-4 py-4 space-y-3">
                 <!-- Mobile Stats -->
-                <div class="flex items-center justify-around py-3 border-b border-white/10">
-                    <div class="text-center">
+                <div class="grid grid-cols-3 gap-2 px-2 py-3 border-b border-white/10">
+                    <!-- Users -->
+                    <div
+                        class="bg-white/[0.03] rounded-lg p-2 flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-blue-400 mb-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
                         <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Usuarios</p>
-                        <p class="text-sm font-mono font-bold text-white tabular-nums" id="stat-users-mobile">0</p>
+                        <p class="text-xs font-mono font-bold text-white tabular-nums" id="stat-users-mobile">0</p>
                     </div>
-                    <div class="text-center">
+
+                    <!-- Pending -->
+                    <div
+                        class="bg-white/[0.03] rounded-lg p-2 flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-amber-400 mb-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
                         <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Pendientes</p>
-                        <p class="text-sm font-mono font-bold text-amber-400 tabular-nums" id="stat-pending-mobile">0
+                        <p class="text-xs font-mono font-bold text-amber-400 tabular-nums" id="stat-pending-mobile">0
                         </p>
                     </div>
-                    <div class="text-center">
+
+                    <!-- Approved -->
+                    <div
+                        class="bg-white/[0.03] rounded-lg p-2 flex flex-col items-center justify-center border border-white/5">
+                        <div class="text-indigo-400 mb-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
                         <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">Aprobadas</p>
-                        <p class="text-sm font-mono font-bold text-indigo-400 tabular-nums" id="stat-approved-mobile">0
+                        <p class="text-xs font-mono font-bold text-indigo-400 tabular-nums" id="stat-approved-mobile">0
                         </p>
                     </div>
                 </div>
@@ -180,7 +242,7 @@
                     class="flex items-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors py-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            d="M3 3v18h18M7 13l3 3 7-7" />
                     </svg>
                     Reportes
                 </a>
@@ -213,18 +275,32 @@
         </header>
 
         <!-- Main Dashboard Grid -->
-        <main class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden bg-[#050511]">
+        <main class="flex-1 flex flex-col md:flex-row md:overflow-hidden bg-[#050511]">
 
             <!-- Left Panel: Monitor & Participants -->
             <div class="w-full md:w-[400px] xl:w-[500px] flex flex-col border-r border-white/5 bg-navy-900/30">
                 <!-- Video Monitor -->
                 <div class="aspect-video bg-black relative group overflow-hidden">
                     <!-- Official Stream Preview -->
-                    <video class="w-full h-full object-cover" autoplay playsinline muted loop>
-                        <source src="https://produccionesfast.com/assets/videos/transmisionesfast.mp4" type="video/mp4">
+                    <video id="moderator-video" class="w-full h-full object-cover" autoplay playsinline>
+                        Tu navegador no soporta el reproductor de video.
                     </video>
+
+                    <!-- Unmute Overlay -->
+                    <div id="moderator-unmute-overlay"
+                        class="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer hidden z-20">
+                        <div
+                            class="bg-indigo-600/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-2xl scale-90 hover:scale-100 transition-transform">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                            <span class="text-white font-bold uppercase tracking-widest text-[10px]">Audio</span>
+                        </div>
+                    </div>
+
                     <div
-                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
                         <span class="text-[10px] font-black tracking-[0.2em] text-white uppercase italic">Vista Previa
                             Real</span>
                     </div>
@@ -238,15 +314,59 @@
 
                 <!-- Participants List -->
                 <div class="flex-1 flex flex-col overflow-hidden">
-                    <div class="p-4 border-b border-white/5 flex items-center justify-between bg-navy-800/20">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Audiencia Conectada</h2>
-                        <button id="refresh-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                </path>
-                            </svg>
-                        </button>
+                    <div class="p-4 border-b border-white/5 bg-navy-800/20 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Audiencia Conectada
+                            </h2>
+                            <button id="refresh-btn" class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <input id="participants-search" type="search" placeholder="Buscar usuario..."
+                                    class="w-full bg-navy-950 border border-white/10 rounded-xl pl-10 pr-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/40 transition-all">
+                                <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2.5" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 3.5a7.5 7.5 0 0013.15 13.15z" />
+                                </svg>
+                            </div>
+                            <button id="filters-toggle"
+                                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-navy-950 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-300 hover:border-indigo-500/40 transition-all">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+                                </svg>
+                                <span class="hidden sm:inline">Filtros</span>
+                                <span id="filters-badge"
+                                    class="hidden items-center justify-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/20 text-indigo-200">0</span>
+                            </button>
+                        </div>
+                        <div id="filters-panel" class="hidden flex flex-wrap gap-2">
+                            <label for="filter-chat"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-navy-950 text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer transition-all hover:border-amber-500/40 hover:text-amber-300">
+                                <input id="filter-chat" type="checkbox" class="peer sr-only">
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-600 peer-checked:bg-amber-500"></span>
+                                Bloqueados Chat
+                            </label>
+                            <label for="filter-qa"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-navy-950 text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer transition-all hover:border-indigo-500/40 hover:text-indigo-300">
+                                <input id="filter-qa" type="checkbox" class="peer sr-only">
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-600 peer-checked:bg-indigo-500"></span>
+                                Bloqueados Q&amp;A
+                            </label>
+                            <label for="filter-banned"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-navy-950 text-[10px] font-bold uppercase tracking-wider text-slate-500 cursor-pointer transition-all hover:border-red-500/40 hover:text-red-300">
+                                <input id="filter-banned" type="checkbox" class="peer sr-only">
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-600 peer-checked:bg-red-500"></span>
+                                Bloqueados Evento
+                            </label>
+                        </div>
                     </div>
                     <div class="flex-1 overflow-y-auto scroll-area px-2 py-2">
                         <div id="participants-list" class="space-y-1">
@@ -310,6 +430,10 @@
                     <button id="tab-flow" onclick="switchTab('flow')"
                         class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-indigo-500 text-white transition-all">
                         Control de Flujo
+                    </button>
+                    <button id="tab-polls" onclick="switchTab('polls')"
+                        class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all">
+                        Encuestas
                     </button>
                     <button id="tab-history" onclick="switchTab('history')"
                         class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all">
@@ -425,6 +549,59 @@
                         {% end %}
                     </div>
                 </div>
+
+                <!-- Tab: Encuestas -->
+                <div id="section-polls" class="hidden flex flex-col flex-1 overflow-hidden h-full">
+                    <div
+                        class="p-4 border-b border-white/5 bg-navy-900/20 flex items-center justify-between flex-shrink-0">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Gestión de Tiempo
+                                Real
+                            </p>
+                            <h2 class="text-lg font-bold text-white">Encuestas</h2>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto scroll-area p-4 space-y-6 min-h-0">
+                        <!-- Active Poll Section -->
+                        <div id="active-poll-container" class="hidden">
+                            <h3
+                                class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <span class="relative flex h-2 w-2">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                Encuesta Activa
+                            </h3>
+                            <div
+                                class="bg-navy-800 border border-emerald-500/30 p-4 rounded-xl shadow-lg shadow-emerald-500/5">
+                                <p id="active-poll-question" class="text-white font-bold mb-4 text-sm"></p>
+                                <div id="active-poll-results" class="space-y-3 mb-4">
+                                    <!-- Results bars go here -->
+                                </div>
+                                <div class="flex justify-between items-center pt-2">
+                                    <span id="active-poll-total" class="text-[10px] font-mono text-slate-500">0
+                                        votos</span>
+                                    <button onclick="closeLivePoll()"
+                                        class="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors">Finalizar
+                                        y Guardar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Available Polls List -->
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Encuestas
+                                Disponibles
+                            </h3>
+                            <div id="available-polls-list" class="space-y-3">
+                                <!-- Polls list from API -->
+                                <p class="text-xs text-slate-600 italic">Cargando encuestas...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal for manual Q&A -->
@@ -530,6 +707,58 @@
     </div>
 
     <script>
+        // Si el evento tiene video_url vacío o nulo, usar el stream HLS local del contenedor
+        let streamUrl = "{{ event['video_url'] }}";
+        if (!streamUrl || streamUrl.trim() === '' || streamUrl === 'None') {
+            streamUrl = "https://demo-stream.transmisionesfast.com/hls/stream.m3u8";
+        }
+        const moderatorVideoEl = document.getElementById('moderator-video');
+
+        function initModeratorHls() {
+            if (!moderatorVideoEl || !streamUrl) return;
+
+            const unmuteOverlay = document.getElementById('moderator-unmute-overlay');
+
+            function attemptPlay() {
+                moderatorVideoEl.play().then(() => {
+                    unmuteOverlay.classList.add('hidden');
+                }).catch(e => {
+                    console.warn("Moderator autoplay blocked, showing overlay:", e);
+                    unmuteOverlay.classList.remove('hidden');
+                });
+            }
+
+            unmuteOverlay.onclick = () => {
+                moderatorVideoEl.muted = false;
+                moderatorVideoEl.play();
+                unmuteOverlay.classList.add('hidden');
+            };
+
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    lowLatencyMode: true,
+                    backBufferLength: 30,
+                    debug: false
+                });
+                hls.loadSource(streamUrl);
+                hls.attachMedia(moderatorVideoEl);
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error("HLS error:", data);
+                });
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log("HLS Manifest parsed (Moderator), attempting play...");
+                    attemptPlay();
+                });
+            } else if (moderatorVideoEl.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari/iOS native support
+                moderatorVideoEl.src = streamUrl;
+                attemptPlay();
+            } else {
+                console.error("HLS not supported in this browser.");
+            }
+        }
+
+        initModeratorHls();
         // Dynamically determine protocol (ws or wss) based on page loading environment
         const baseWsUrl = "{% raw ws_url %}";
         const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
@@ -544,6 +773,14 @@
         const chatMessagesContainer = document.getElementById("chat-messages");
         const participantsContainer = document.getElementById("participants-list");
         const pendingCountBadge = document.getElementById("pending-count");
+        const participantsSearch = document.getElementById("participants-search");
+        const filterChat = document.getElementById("filter-chat");
+        const filterQa = document.getElementById("filter-qa");
+        const filterBanned = document.getElementById("filter-banned");
+        const filtersToggle = document.getElementById("filters-toggle");
+        const filtersPanel = document.getElementById("filters-panel");
+        const filtersBadge = document.getElementById("filters-badge");
+        let participantsData = [];
 
         function safeWsSend(payload) {
             try {
@@ -557,6 +794,11 @@
             showToast('Reconectando...', 'warning');
             connectWs();
             return false;
+        }
+
+        function chatSignature(payload) {
+            const parts = [payload.user || "", payload.message || "", payload.timestamp || ""];
+            return encodeURIComponent(parts.join("::"));
         }
 
         function removeEmptyState(container) {
@@ -590,15 +832,19 @@
         function handleWsMessage(event) {
             const payload = JSON.parse(event.data);
             if (payload.type === "pending_question") {
-                removeEmptyState(pendingQuestionsContainer);
-                pendingQuestionsContainer.prepend(createQuestionCard(payload, 'pending'));
-                addListeners(pendingQuestionsContainer);
+                if (!pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`)) {
+                    removeEmptyState(pendingQuestionsContainer);
+                    pendingQuestionsContainer.prepend(createQuestionCard(payload, 'pending'));
+                    addListeners(pendingQuestionsContainer);
+                }
                 updateUI();
             } else if (payload.type === "approved_question") {
                 const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
                 if (el) el.remove();
-                removeEmptyState(approvedQuestionsContainer);
-                approvedQuestionsContainer.prepend(createQuestionCard(payload, 'approved'));
+                if (!approvedQuestionsContainer.querySelector(`[data-id="${payload.id}"]`)) {
+                    removeEmptyState(approvedQuestionsContainer);
+                    approvedQuestionsContainer.prepend(createQuestionCard(payload, 'approved'));
+                }
                 updateUI();
             } else if (payload.type === "rejected_question") {
                 const el = pendingQuestionsContainer.querySelector(`[data-id="${payload.id}"]`);
@@ -618,7 +864,12 @@
                 if (el) el.remove();
                 updateUI();
             } else if (payload.type === "chat") {
+                const signature = chatSignature(payload);
+                if (signature && chatMessagesContainer.querySelector(`[data-chat-signature="${signature}"]`)) {
+                    return;
+                }
                 const div = document.createElement("div");
+                div.dataset.chatSignature = signature;
                 div.className = "bg-white/5 p-3 rounded-xl border border-white/5 animate-in max-w-[90%]";
                 div.innerHTML = `<p class="text-[10px] font-bold text-indigo-400 mb-1">${payload.user}</p><p class="text-xs text-slate-300">${payload.message}</p><p class="text-[8px] text-slate-600 mt-1 text-right">${payload.timestamp}</p>`;
                 chatMessagesContainer.appendChild(div);
@@ -781,9 +1032,46 @@
             } catch (e) { console.error("Refresh failed:", e); }
         }
 
+        function applyParticipantFilters(participants) {
+            const query = (participantsSearch?.value || "").trim().toLowerCase();
+            const onlyChatBlocked = !!filterChat?.checked;
+            const onlyQaBlocked = !!filterQa?.checked;
+            const onlyBanned = !!filterBanned?.checked;
+
+            return (participants || []).filter(u => {
+                const name = (u.user_name || '').toLowerCase();
+                const matchesQuery = !query || name.includes(query);
+                if (!matchesQuery) return false;
+                if (onlyChatBlocked && !u.chat_blocked) return false;
+                if (onlyQaBlocked && !u.qa_blocked) return false;
+                if (onlyBanned && !u.banned) return false;
+                return true;
+            });
+        }
+
+        function updateFiltersBadge() {
+            if (!filtersBadge) return;
+            const count = [filterChat, filterQa, filterBanned].filter(item => item?.checked).length;
+            filtersBadge.textContent = count;
+            filtersBadge.classList.toggle("hidden", count === 0);
+            filtersBadge.classList.toggle("inline-flex", count > 0);
+        }
+
         function renderParticipants(participants) {
+            participantsData = participants || [];
+            const filtered = applyParticipantFilters(participantsData);
             participantsContainer.innerHTML = "";
-            participants.forEach(u => {
+            if (!filtered.length) {
+                participantsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 opacity-40">
+                        <p class="text-[10px] font-bold uppercase tracking-widest">Sin resultados</p>
+                    </div>
+                `;
+                stats.users = 0;
+                updateUI();
+                return;
+            }
+            filtered.forEach(u => {
                 const div = document.createElement("div");
                 div.className = "flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5";
 
@@ -818,7 +1106,7 @@
                     </div>`;
                 participantsContainer.appendChild(div);
             });
-            stats.users = participants.length;
+            stats.users = filtered.length;
             updateUI();
         }
 
@@ -837,8 +1125,183 @@
             modal.classList.add("hidden");
         };
 
+        if (participantsSearch) {
+            participantsSearch.addEventListener("input", () => renderParticipants(participantsData));
+        }
+        if (filtersToggle && filtersPanel) {
+            filtersToggle.addEventListener("click", () => {
+                filtersPanel.classList.toggle("hidden");
+            });
+        }
+        if (filterChat) {
+            filterChat.addEventListener("change", () => {
+                updateFiltersBadge();
+                renderParticipants(participantsData);
+            });
+        }
+        if (filterQa) {
+            filterQa.addEventListener("change", () => {
+                updateFiltersBadge();
+                renderParticipants(participantsData);
+            });
+        }
+        if (filterBanned) {
+            filterBanned.addEventListener("change", () => {
+                updateFiltersBadge();
+                renderParticipants(participantsData);
+            });
+        }
+
+        updateFiltersBadge();
         refresh();
         addListeners(pendingQuestionsContainer);
+
+        const eventId = {{ event['id'] }};
+        let activePollId = null;
+
+        function switchTab(tab) {
+            document.getElementById('section-flow').classList.add('hidden');
+            document.getElementById('section-history').classList.add('hidden');
+            document.getElementById('section-polls').classList.add('hidden');
+
+            document.getElementById('tab-flow').classList.remove('border-indigo-500', 'text-white');
+            document.getElementById('tab-flow').classList.add('border-transparent', 'text-slate-500');
+            document.getElementById('tab-history').classList.remove('border-indigo-500', 'text-white');
+            document.getElementById('tab-history').classList.add('border-transparent', 'text-slate-500');
+            document.getElementById('tab-polls').classList.remove('border-indigo-500', 'text-white');
+            document.getElementById('tab-polls').classList.add('border-transparent', 'text-slate-500');
+
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-slate-500');
+            document.getElementById(`tab-${tab}`).classList.add('border-indigo-500', 'text-white');
+
+            if (tab === 'polls') {
+                loadAvailablePolls();
+            }
+        }
+
+        async function loadAvailablePolls() {
+            const list = document.getElementById('available-polls-list');
+            try {
+                const res = await fetch(`/api/admin/polls?event_id=${eventId}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    // Only show polls that are ready to launch.
+                    const visiblePolls = (data.polls || []).filter(p => {
+                        if (p.status !== 'published') return false;
+                        if (activePollId && Number(p.id) === Number(activePollId)) return false;
+                        return true;
+                    });
+
+                    if (visiblePolls.length === 0) {
+                        list.innerHTML = '<p class="text-xs text-slate-600 italic">No hay encuestas disponibles.</p>';
+                        return;
+                    }
+                    list.innerHTML = visiblePolls.map(p => {
+                        return `
+                        <div class="bg-navy-800/50 p-4 rounded-xl border border-white/5 flex justify-between items-center group">
+                            <div class="min-w-0 pr-4">
+                                <p class="text-sm font-bold text-white truncate">${p.question}</p>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-mono">
+                                    ${p.options.length} OPCIONES
+                                </p>
+                            </div>
+                            <button onclick="launchPoll(${p.id})" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                                LANZAR
+                            </button>
+                        </div>
+                    `}).join('');
+                }
+            } catch (err) {
+                list.innerHTML = '<p class="text-xs text-red-500">Error al cargar encuestas.</p>';
+            }
+        }
+
+        function launchPoll(pollId) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showToast('Conexión perdida, reintentando...', 'error');
+                return;
+            }
+            ws.send(JSON.stringify({
+                type: 'poll_start',
+                poll_id: pollId,
+                duration_minutes: 5
+            }));
+            showToast('Lanzando encuesta...', 'info');
+        }
+
+        function closeLivePoll() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            ws.send(JSON.stringify({ type: 'poll_close' }));
+        }
+
+        function handlePollMessage(payload) {
+            const container = document.getElementById('active-poll-container');
+            const questionEl = document.getElementById('active-poll-question');
+            const resultsEl = document.getElementById('active-poll-results');
+            const totalEl = document.getElementById('active-poll-total');
+
+            if (payload.type === 'poll_start') {
+                container.classList.remove('hidden');
+                questionEl.textContent = payload.poll.question;
+                updatePollUI(payload.poll.options, payload.poll.results || {}, payload.poll.total_votes || 0);
+
+                // Hide launched poll from list while active
+                activePollId = payload.poll.poll_id;
+                try {
+                    loadAvailablePolls();
+                } catch (e) {
+                    // Ignore refresh failures
+                }
+            } else if (payload.type === 'poll_update_results') {
+                if (!container.classList.contains('hidden')) {
+                    const options = Array.from(resultsEl.querySelectorAll('.poll-option-label')).map(el => el.textContent);
+                    updatePollUI(options, payload.results, payload.total_votes);
+                }
+            } else if (payload.type === 'poll_end') {
+                container.classList.add('hidden');
+                showToast('Encuesta finalizada y guardada', 'success');
+
+                // Refresh available polls list (e.g. to remove closed polls)
+                activePollId = null;
+                try {
+                    loadAvailablePolls();
+                } catch (e) {
+                    // Ignore refresh failures
+                }
+            }
+        }
+
+        function updatePollUI(options, results, total) {
+            const resultsEl = document.getElementById('active-poll-results');
+            const totalEl = document.getElementById('active-poll-total');
+
+            resultsEl.innerHTML = options.map((opt, idx) => {
+                const votes = results[idx] || 0;
+                const percent = total > 0 ? Math.round((votes / total) * 100) : 0;
+                return `
+                    <div>
+                        <div class="flex justify-between text-[10px] font-bold mb-1 uppercase tracking-tighter">
+                            <span class="text-slate-300 poll-option-label">${opt}</span>
+                            <span class="text-indigo-400">${percent}% (${votes})</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-navy-950 rounded-full overflow-hidden border border-white/5">
+                            <div class="h-full bg-indigo-500 transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            totalEl.textContent = `${total} VOTOS`;
+        }
+
+        const wsOnMessage = ws.onmessage;
+        ws.onmessage = function (event) {
+            if (wsOnMessage) wsOnMessage.apply(this, arguments);
+            const payload = JSON.parse(event.data);
+            if (['poll_start', 'poll_update_results', 'poll_end'].includes(payload.type)) {
+                handlePollMessage(payload);
+            }
+        };
     </script>
 </body>
 

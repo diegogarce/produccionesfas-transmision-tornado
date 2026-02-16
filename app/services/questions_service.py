@@ -1,4 +1,5 @@
 from app.db import _normalize_timestamps, create_db_connection, now_hhmm_in_timezone
+from app import metrics
 
 
 def _fetch_event_timezone(cursor, event_id: int | None) -> str | None:
@@ -93,6 +94,12 @@ def add_question(user_id: int, question_text: str, event_id: int = None, manual_
                 (user_id, manual_user_name, question_text, event_id),
             )
             question_id = cursor.lastrowid
+            
+            # Telemetry
+            try:
+                metrics.qna_questions.labels(event_id=str(event_id) or "global").inc()
+            except:
+                pass
 
             cursor.execute(
                 "SELECT COALESCE(q.manual_user_name, u.name) AS user_name "
@@ -114,6 +121,15 @@ def approve_question(question_id: int):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='approved' WHERE id=%s", (question_id,))
+            
+            # Telemetry
+            try:
+                cursor.execute("SELECT event_id FROM questions WHERE id=%s", (question_id,))
+                qeid = cursor.fetchone()
+                eid = qeid.get("event_id") if qeid else None
+                metrics.qna_actions.labels(event_id=str(eid) or "global", action="approve").inc()
+            except:
+                pass
             cursor.execute(
                 "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text, e.timezone "
                 "FROM questions q "
@@ -137,6 +153,15 @@ def reject_question(question_id: int):
     """Delete rejected question from database"""
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
+            # Telemetry before delete
+            try:
+                cursor.execute("SELECT event_id FROM questions WHERE id=%s", (question_id,))
+                qeid = cursor.fetchone()
+                eid = qeid.get("event_id") if qeid else None
+                metrics.qna_actions.labels(event_id=str(eid) or "global", action="reject").inc()
+            except:
+                pass
+
             cursor.execute("DELETE FROM questions WHERE id=%s", (question_id,))
     return True
 
@@ -170,6 +195,15 @@ def mark_question_as_read(question_id: int):
     with create_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("UPDATE questions SET status='read' WHERE id=%s", (question_id,))
+
+            # Telemetry
+            try:
+                cursor.execute("SELECT event_id FROM questions WHERE id=%s", (question_id,))
+                qeid = cursor.fetchone()
+                eid = qeid.get("event_id") if qeid else None
+                metrics.qna_actions.labels(event_id=str(eid) or "global", action="read").inc()
+            except:
+                pass
             cursor.execute(
                 "SELECT COALESCE(q.manual_user_name, u.name) AS user_name, q.question_text, e.timezone "
                 "FROM questions q "

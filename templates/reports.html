@@ -7,6 +7,7 @@
     <title>Reportes · Producciones Fast</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- AG Grid -->
@@ -113,6 +114,15 @@
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-6">
                 {% include "includes/theme_switcher.html" %}
+                <a href="/admin/events"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Eventos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Eventos</span>
+                </a>
                 <!-- Link a Moderador -->
                 <a href="/e/{{ event['slug'] }}/mod" target="_blank"
                     class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
@@ -151,6 +161,14 @@
         <!-- Mobile Menu Panel -->
         <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
             <div class="px-4 py-4 space-y-3">
+                <a href="/admin/events"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Eventos
+                </a>
                 <a href="/e/{{ event['slug'] }}/mod" target="_blank"
                     class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,119 +205,206 @@
         }
     </script>
 
-    <div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <!-- Header -->
-        <div class="flex items-end justify-between mb-8 animate-fade-in">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in">
             <div>
-                <a href="/admin/events"
-                    class="text-xs font-bold text-slate-500 hover:text-indigo-400 mb-2 block uppercase tracking-wider flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Volver a Eventos
-                </a>
-                <!-- <h1 class="text-3xl font-bold text-white">Consola de Audiencia</h1> -->
-                <!-- <p class="text-slate-500 mt-1">Monitoreo de participantes en tiempo real.</p> -->
-
-                <div class="mb-12 animate-fade-in">
-                    <h1 class="text-3xl font-bold text-white mb-2">Reporte de Audiencia</h1>
-                    <p class="text-slate-500">Monitoreo de participantes en tiempo real.</p>
+                <div class="mb-2 md:mb-12 animate-fade-in">
+                    <h1 class="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">Reporte de Audiencia</h1>
+                    <p class="text-slate-500 text-sm md:text-base">Monitoreo de participantes en tiempo real.</p>
                 </div>
-
             </div>
 
-            <div class="flex gap-2">
-                <div class="flex items-center gap-2">
-                    <a href="/reports/export?format=csv&event_id={{ event['id'] }}"
-                        class="bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center gap-1.5 hover:border-indigo-500/30">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                        </svg>
-                        CSV
-                    </a>
-                    <a href="/reports/export?format=xlsx&event_id={{ event['id'] }}"
-                        class="bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-emerald-400 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center gap-1.5 hover:border-emerald-500/30">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Excel
-                    </a>
-                    <a href="/reports/export?format=pdf&event_id={{ event['id'] }}"
-                        class="bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-red-400 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center gap-1.5 hover:border-red-500/30">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        PDF
-                    </a>
-                </div>
+            <div class="flex flex-wrap items-center gap-2 justify-start md:justify-end">
+
+                <!-- <a href="{% if event and event.get('slug') %}/e/{{ event['slug'] }}/reports?view=charts{% else %}/reports?event_id={{ event['id'] }}&view=charts{% end %}"
+                    class="min-w-0 flex-1 sm:flex-none px-3 py-2 text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 hover:text-white rounded-lg font-bold uppercase tracking-wider border border-indigo-500/30 transition-all flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 3v18h18M7 13l3 3 7-7" />
+                    </svg>
+                    <span class="truncate">Gráficas</span>
+                </a> -->
+                <a href="/reports/export?format=csv&event_id={{ event['id'] }}"
+                    class="min-w-0 flex-1 sm:flex-none px-3 py-2 text-[10px] bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-white rounded-lg font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center justify-center gap-1.5 hover:border-indigo-500/30">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="truncate">CSV</span>
+                </a>
+                <a href="/reports/export?format=xlsx&event_id={{ event['id'] }}"
+                    class="min-w-0 flex-1 sm:flex-none px-3 py-2 text-[10px] bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-emerald-400 rounded-lg font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center justify-center gap-1.5 hover:border-emerald-500/30">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="truncate">Excel</span>
+                </a>
+                <a href="/reports/export?format=pdf&event_id={{ event['id'] }}"
+                    class="min-w-0 flex-1 sm:flex-none px-3 py-2 text-[10px] bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-red-400 rounded-lg font-bold uppercase tracking-wider border border-white/5 transition-all flex items-center justify-center gap-1.5 hover:border-red-500/30">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span class="truncate">PDF</span>
+                </a>
             </div>
         </div>
 
         <!-- View Toggle -->
-        <div class="flex gap-4 mb-6 border-b border-white/5">
+        <div class="flex gap-4 mb-6 border-b border-white/5 overflow-x-auto no-scrollbar">
             <button id="btn-attendance" onclick="switchView('attendance')"
-                class="pb-3 border-b-2 border-indigo-500 text-white text-xs font-bold uppercase tracking-widest transition-colors">
+                class="pb-3 border-b-2 border-indigo-500 text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                 Asistencia en Vivo
             </button>
             <button id="btn-registration" onclick="switchView('registration')"
-                class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">
+                class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
                 Lista de Registros
+            </button>
+            <button id="btn-charts" onclick="switchView('charts')"
+                class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap">
+                Gráficas
             </button>
         </div>
 
         <!-- Resumen estadístico -->
-        <div class="grid gap-4 mb-6 sm:grid-cols-3 animate-fade-in justify-center max-w-5xl mx-auto"
-            style="animation-delay: 0.1s;">
-            <div class="bg-gradient-to-br from-white/5 to-white/0 border border-white/20 rounded-2xl p-5 shadow-xl">
-                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="bg-navy-900/80 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-lg flex items-center gap-3">
+                <div
+                    class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"
+                        aria-hidden="true">
                         <path d="M5.5 17.5a5.5 5.5 0 0111 0" />
                         <circle cx="12" cy="9" r="3" />
                     </svg>
-                    Usuarios registrados
-                </p>
-                <p class="text-3xl font-bold text-white mt-3"><span id="metric-registered">{{ total_registered_users
-                        }}</span></p>
-                <p class="text-xs text-slate-500 mt-1">Registrados en este evento</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Registrados</p>
+                    <div class="flex items-end gap-1.5">
+                        <p class="text-xl sm:text-3xl font-bold text-white"><span id="metric-registered">{{
+                                total_registered_users
+                                }}</span></p>
+                        <p class="text-[10px] sm:text-xs text-slate-500 pb-0.5 sm:pb-1">pers.</p>
+                    </div>
+                </div>
             </div>
-            <div
-                class="bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-white/20 rounded-2xl p-5 shadow-xl">
-                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+            <div class="bg-navy-900/80 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-lg flex items-center gap-3">
+                <div
+                    class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"
+                        aria-hidden="true">
                         <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
-                    Usuarios en vivo
-                </p>
-                <p class="text-3xl font-bold text-white mt-3"><span id="metric-live">{{ live_watchers_count }}</span>
-                </p>
-                <p class="text-xs text-slate-500 mt-1">Conectados viendo Watch</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">En vivo
+                    </p>
+                    <div class="flex items-end gap-1.5">
+                        <p class="text-xl sm:text-3xl font-bold text-white"><span id="metric-live">{{
+                                live_watchers_count }}</span>
+                        </p>
+                        <p class="text-[10px] sm:text-xs text-slate-500 pb-0.5 sm:pb-1">con.</p>
+                    </div>
+                </div>
             </div>
             <div
-                class="bg-gradient-to-br from-indigo-500/20 to-blue-500/10 border border-white/30 rounded-2xl p-5 shadow-xl">
-                <p class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-200">
-                    <svg class="w-4 h-4 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" aria-hidden="true">
+                class="bg-navy-900/80 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-lg flex items-center gap-3 col-span-2 lg:col-span-1">
+                <div
+                    class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"
+                        aria-hidden="true">
                         <circle cx="12" cy="12" r="7" />
                         <path d="M12 8v4l3 2" />
                     </svg>
-                    Minutos consumidos
-                </p>
-                <p class="text-3xl font-bold text-white mt-3"><span id="metric-minutes">{{ total_minutes_consumed
-                        }}</span> min</p>
-                <p class="text-xs text-slate-200/70 mt-1">Total acumulado en sesiones activas</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Tiempo
+                        visto</p>
+                    <div class="flex items-end gap-1.5">
+                        <p class="text-xl sm:text-3xl font-bold text-white"><span id="metric-minutes">{{
+                                total_minutes_consumed
+                                }}</span></p>
+                        <p class="text-[10px] sm:text-xs text-slate-500 pb-0.5 sm:pb-1">min</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div id="reports-charts" class="hidden animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Participantes activos
+                            </h2>
+                            <span class="text-xs text-slate-500"
+                                title="Personas conectadas recientemente. Si sube, hay más audiencia en ese momento.">ⓘ</span>
+                        </div>
+                        <span class="text-xs text-slate-500">Últimos 60 min</span>
+                    </div>
+                    <canvas id="chart-active" height="120"></canvas>
+                </div>
+
+                <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Interacción (Chat +
+                                Preguntas)</h2>
+                            <span class="text-xs text-slate-500"
+                                title="Mide cuántos mensajes y preguntas se enviaron por tramo de tiempo.">ⓘ</span>
+                        </div>
+                        <span class="text-xs text-slate-500">Intervalo 5 min</span>
+                    </div>
+                    <canvas id="chart-engagement" height="120"></canvas>
+                </div>
+
+                <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Tiempo promedio visto
+                            </h2>
+                            <span class="text-xs text-slate-500"
+                                title="Promedio de minutos que cada persona ha visto la transmisión en ese tramo.">ⓘ</span>
+                        </div>
+                        <span class="text-xs text-slate-500">Últimos 60 min</span>
+                    </div>
+                    <canvas id="chart-retention" height="120"></canvas>
+                </div>
+
+                <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Distribución de
+                                preguntas</h2>
+                            <span class="text-xs text-slate-500"
+                                title="Muestra cuántas preguntas están en revisión, aprobadas, rechazadas o ya atendidas.">ⓘ</span>
+                        </div>
+                        <span class="text-xs text-slate-500">En revisión · Aprobadas · Rechazadas · Respondidas</span>
+                    </div>
+                    <div class="grid lg:grid-cols-2 gap-6 items-center">
+                        <div class="flex items-center justify-center">
+                            <canvas id="chart-questions" height="160" class="w-full max-w-[560px]"></canvas>
+                        </div>
+                        <div class="text-sm text-slate-400 space-y-2">
+                            <p>Este gráfico ayuda a ver si las preguntas avanzan o se están acumulando.</p>
+                            <p>Si crece la parte de <span class="text-amber-300">en revisión</span>, conviene sumar
+                                apoyo en moderación.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- AG Grid Container -->
-        <div class="animate-fade-in" style="animation-delay: 0.1s;">
-            <div id="myGrid" class="ag-theme-alpine-dark w-full h-[600px]"></div>
+        <div id="reports-grid" class="animate-fade-in" style="animation-delay: 0.1s;">
+            <div id="myGrid" class="ag-theme-alpine-dark w-full h-[420px] md:h-[600px]"></div>
         </div>
     </div>
 
@@ -309,6 +414,7 @@
         const metricRegisteredEl = document.getElementById("metric-registered");
         const metricLiveEl = document.getElementById("metric-live");
         const metricMinutesEl = document.getElementById("metric-minutes");
+        const dataUrl = "{{ data_url }}";
 
         // Data from server
         let activeSessionsData = {% raw json_encode(active_sessions) %};
@@ -325,12 +431,47 @@
             { field: "session_minutes", headerName: "Duración", width: 120, sortable: true, cellRenderer: p => `<span class="font-bold text-indigo-400">${p.value} min</span>` }
         ];
 
-        const registrationCols = [
-            { field: "name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
-            { field: "email", headerName: "Email", width: 250, sortable: true, filter: true },
-            { field: "phone", headerName: "Teléfono", width: 150, sortable: true },
-            { field: "created_at", headerName: "Fecha Registro", width: 180, sortable: true }
-        ];
+        function getRegistrationCols(data) {
+            const baseCols = [
+                { field: "name", headerName: "Nombre", flex: 1, minWidth: 200, sortable: true, filter: true },
+                { field: "email", headerName: "Email", width: 250, sortable: true, filter: true },
+                { field: "phone", headerName: "Teléfono", width: 150, sortable: true },
+                { field: "created_at", headerName: "Fecha Registro", width: 180, sortable: true }
+            ];
+
+            // Extract extra keys from payload
+            const extraKeys = new Set();
+            data.forEach(row => {
+                if (row.payload) {
+                    try {
+                        const payload = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+                        Object.keys(payload).forEach(key => {
+                            if (!['name', 'email', 'phone'].includes(key)) {
+                                extraKeys.add(key);
+                            }
+                        });
+                    } catch (e) { }
+                }
+            });
+
+            extraKeys.forEach(key => {
+                baseCols.push({
+                    headerName: key.charAt(0).toUpperCase() + key.slice(1),
+                    valueGetter: params => {
+                        if (!params.data.payload) return "";
+                        const payload = typeof params.data.payload === 'string' ? JSON.parse(params.data.payload) : params.data.payload;
+                        return payload[key] || "";
+                    },
+                    width: 150,
+                    sortable: true,
+                    filter: true
+                });
+            });
+
+            return baseCols;
+        }
+
+        const registrationCols = getRegistrationCols(registeredUsersData);
 
         // Grid Options
         const gridOptions = {
@@ -343,39 +484,241 @@
             overlayNoRowsTemplate: '<span class="text-slate-500">Sin datos disponibles</span>',
         };
 
+        const chartColors = {
+            primary: '#4f46e5',
+            secondary: '#22d3ee',
+            accent: '#f97316',
+            muted: '#94a3b8',
+            success: '#10b981',
+            warning: '#f59e0b'
+        };
+
+        let activeChart;
+        let engagementChart;
+        let retentionChart;
+        let questionsChart;
+
+        function initCharts() {
+            if (activeChart) return;
+            const activeCanvas = document.getElementById('chart-active');
+            if (!activeCanvas) return;
+
+            const activeCtx = activeCanvas.getContext('2d');
+            const engagementCtx = document.getElementById('chart-engagement').getContext('2d');
+            const retentionCtx = document.getElementById('chart-retention').getContext('2d');
+            const questionsCtx = document.getElementById('chart-questions').getContext('2d');
+
+            activeChart = new Chart(activeCtx, {
+                type: 'line',
+                data: {
+                    labels: [], datasets: [{
+                        label: 'Activos',
+                        data: [],
+                        borderColor: chartColors.primary,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                        y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            engagementChart = new Chart(engagementCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Chats',
+                            data: [],
+                            borderColor: chartColors.secondary,
+                            backgroundColor: 'rgba(34, 211, 238, 0.2)',
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 2
+                        },
+                        {
+                            label: 'Preguntas',
+                            data: [],
+                            borderColor: chartColors.accent,
+                            backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                        y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                    },
+                    plugins: { legend: { labels: { color: chartColors.muted } } }
+                }
+            });
+
+            retentionChart = new Chart(retentionCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Minutos promedio',
+                        data: [],
+                        borderColor: chartColors.success,
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                        y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            questionsChart = new Chart(questionsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(59, 130, 246, 0.7)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: chartColors.muted } } }
+                }
+            });
+        }
+
+        function updateCharts(payload) {
+            if (!payload || !activeChart || !engagementChart || !retentionChart || !questionsChart) return;
+
+            const statusLabelMap = {
+                pending: 'En revisión',
+                approved: 'Aprobadas',
+                rejected: 'Rechazadas',
+                read: 'Respondidas'
+            };
+
+            if (payload.active_participants) {
+                activeChart.data.labels = payload.active_participants.labels || [];
+                activeChart.data.datasets[0].data = payload.active_participants.series || [];
+                activeChart.update('none');
+            }
+
+            if (payload.engagement) {
+                engagementChart.data.labels = payload.engagement.labels || [];
+                engagementChart.data.datasets[0].data = payload.engagement.chat || [];
+                engagementChart.data.datasets[1].data = payload.engagement.questions || [];
+                engagementChart.update('none');
+            }
+
+            if (payload.retention) {
+                retentionChart.data.labels = payload.retention.labels || [];
+                retentionChart.data.datasets[0].data = payload.retention.series || [];
+                retentionChart.update('none');
+            }
+
+            if (payload.question_status) {
+                const rawLabels = payload.question_status.labels || [];
+                questionsChart.data.labels = rawLabels.map(label => statusLabelMap[label] || label);
+                questionsChart.data.datasets[0].data = payload.question_status.series || [];
+                questionsChart.update('none');
+            }
+        }
+
+        async function loadCharts() {
+            try {
+                const response = await fetch(dataUrl, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('No se pudo cargar las gráficas');
+                const payload = await response.json();
+                updateCharts(payload);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function applyTabStyles(view) {
+            const btnAtt = document.getElementById('btn-attendance');
+            const btnReg = document.getElementById('btn-registration');
+            const btnCharts = document.getElementById('btn-charts');
+            const all = [btnAtt, btnReg, btnCharts];
+            all.forEach(btn => {
+                if (!btn) return;
+                btn.classList.remove('text-white');
+                btn.classList.add('text-slate-500');
+                btn.classList.remove('border-indigo-500');
+                btn.classList.add('border-transparent');
+            });
+            const activeBtn = view === 'attendance' ? btnAtt : view === 'registration' ? btnReg : btnCharts;
+            if (activeBtn) {
+                activeBtn.classList.add('text-white');
+                activeBtn.classList.remove('text-slate-500');
+                activeBtn.classList.add('border-indigo-500');
+                activeBtn.classList.remove('border-transparent');
+            }
+        }
+
         // Initialize Grid
         document.addEventListener('DOMContentLoaded', () => {
             const gridDiv = document.querySelector('#myGrid');
             gridApi = agGrid.createGrid(gridDiv, gridOptions);
+            const urlParams = new URLSearchParams(window.location.search);
+            const view = urlParams.get('view') || 'attendance';
+            switchView(view);
         });
 
         function switchView(view) {
             currentView = view;
-            const btnAtt = document.getElementById('btn-attendance');
-            const btnReg = document.getElementById('btn-registration');
+            const gridSection = document.getElementById('reports-grid');
+            const chartsSection = document.getElementById('reports-charts');
+
+            applyTabStyles(view);
+
+            if (view === 'charts') {
+                if (gridSection) gridSection.classList.add('hidden');
+                if (chartsSection) chartsSection.classList.remove('hidden');
+                initCharts();
+                loadCharts();
+                return;
+            }
+
+            if (chartsSection) chartsSection.classList.add('hidden');
+            if (gridSection) gridSection.classList.remove('hidden');
 
             if (view === 'attendance') {
-                if (btnAtt && btnReg) {
-                    btnAtt.classList.replace('text-slate-500', 'text-white');
-                    btnAtt.classList.replace('border-transparent', 'border-indigo-500');
-                    btnReg.classList.replace('text-white', 'text-slate-500');
-                    btnReg.classList.replace('border-indigo-500', 'border-transparent');
-                }
                 if (gridApi) {
                     gridApi.setGridOption('columnDefs', attendanceCols);
                     gridApi.setGridOption('rowData', activeSessionsData);
                 }
-            } else {
-                if (btnAtt && btnReg) {
-                    btnReg.classList.replace('text-slate-500', 'text-white');
-                    btnReg.classList.replace('border-transparent', 'border-indigo-500');
-                    btnAtt.classList.replace('text-white', 'text-slate-500');
-                    btnAtt.classList.replace('border-indigo-500', 'border-transparent');
-                }
-                if (gridApi) {
-                    gridApi.setGridOption('columnDefs', registrationCols);
-                    gridApi.setGridOption('rowData', registeredUsersData);
-                }
+                return;
+            }
+
+            if (gridApi) {
+                gridApi.setGridOption('columnDefs', registrationCols);
+                gridApi.setGridOption('rowData', registeredUsersData);
             }
         }
 
@@ -423,6 +766,9 @@
                     if (metricMinutesEl && payload.total_minutes_consumed !== undefined) {
                         metricMinutesEl.textContent = payload.total_minutes_consumed;
                     }
+                }
+                if (payload.type === "reports_charts") {
+                    updateCharts(payload);
                 }
             } catch (e) {
                 console.error("Error parsing WS message", e);

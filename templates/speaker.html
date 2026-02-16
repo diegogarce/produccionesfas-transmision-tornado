@@ -220,6 +220,7 @@
             console.log("WS Message:", payload.type, payload);
 
             if (payload.type === "approved_question") {
+                if (list.querySelector(`[data-id="${payload.id}"]`)) return;
                 const div = document.createElement("div");
                 div.className = "p-6 rounded-2xl bg-white/5 border border-white/5 animate-in group cursor-pointer";
                 div.dataset.id = payload.id;

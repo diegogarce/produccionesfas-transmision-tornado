@@ -1,9 +1,12 @@
 import tornado.web
+import time
 from app.services import session_service
+from app import metrics
 
 
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
+        self._start_time = time.time()
         self.session = None
         self._staff_role_cache = {}
 
@@ -168,6 +171,51 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             # Fallback to default Tornado behavior for other errors
             super().write_error(status_code, **kwargs)
+
+    def on_finish(self):
+        # Record HTTP metrics
+        try:
+            handler_name = self.__class__.__name__
+            status = self.get_status()
+            method = self.request.method
+            
+            # Duration in ms
+            duration = (time.time() - self._start_time) * 1000
+            
+            metrics.http_requests.labels(
+                handler=handler_name, 
+                method=method, 
+                status=status
+            ).inc()
+            
+            metrics.http_request_duration_ms.labels(
+                handler=handler_name
+            ).observe(duration)
+        except Exception:
+            pass
+
+    def log_exception(self, typ, value, tb):
+        # Record exception metrics
+        try:
+            metrics.http_exceptions.labels(
+                handler=self.__class__.__name__,
+                exception_type=typ.__name__
+            ).inc()
+            try:
+                from app.services import telemetry_service
+                telemetry_service.record_http_exception(
+                    handler=self.__class__.__name__,
+                    method=self.request.method if self.request else None,
+                    status=self.get_status(),
+                    exception_type=typ.__name__,
+                    message=str(value),
+                    path=self.request.uri if self.request else None
+                )
+            except Exception:
+                pass
+        except Exception:
+            pass
+        super().log_exception(typ, value, tb)
 
 
 class NotFoundHandler(BaseHandler):

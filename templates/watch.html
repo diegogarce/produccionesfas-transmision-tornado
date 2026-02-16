@@ -7,6 +7,7 @@
     <title>Stream: {{ event['title'] }} · Producciones Fast</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -63,13 +64,22 @@
             border-bottom: 2px solid #4f46e5;
             background: rgba(79, 70, 229, 0.1);
         }
+
+        /* Hide native video controls more aggressively */
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+
+        video::-webkit-media-controls-enclosure {
+            display: none !important;
+        }
     </style>
     {% include "includes/theme.html" %}
     {% include "includes/toast.html" %}
 </head>
 
 <body class="bg-[#050511] text-slate-300 min-h-screen">
-    <div class="flex flex-col min-h-screen lg:h-screen overflow-x-hidden">
+    <div class="flex flex-col h-screen overflow-hidden">
         <!-- Top Navigation Bar (Matching Identity) -->
         <header class="glass event-header h-16 flex items-center justify-between px-6 z-50 flex-shrink-0"
             style="{% if event and event.get('header_bg_color') %}--event-header-bg: {{ event.get('header_bg_color') }};{% end %}{% if event and event.get('header_text_color') %}--event-header-text: {{ event.get('header_text_color') }};{% end %}">
@@ -126,21 +136,32 @@
         </header>
 
         <!-- Main Layout -->
-        <div class="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
+        <div class="flex-1 flex flex-col lg:flex-row lg:overflow-hidden min-h-0">
             <!-- Video Stage (Left) -->
-            <div class="flex-1 flex flex-col bg-black relative">
+            <div class="w-full lg:flex-1 flex flex-col bg-black relative h-[35vh] lg:h-auto flex-shrink-0">
                 <!-- Video Container -->
                 <div class="flex-1 flex items-center justify-center relative group">
                     <!-- Official Video Player -->
-                    <video id="video-player" class="w-full h-full object-contain bg-black shadow-2xl" autoplay controls
-                        playsinline loop>
-                        <source src="{{ event['video_url'] }}" type="video/mp4">
+                    <video id="video-player" class="w-full h-full object-contain bg-black shadow-2xl" autoplay
+                        playsinline>
                         Tu navegador no soporta el reproductor de video.
                     </video>
 
                     <!-- Overlay Controls (Bottom) -->
+                    <div id="video-unmute-overlay"
+                        class="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer hidden z-20">
+                        <div
+                            class="bg-indigo-600/90 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl scale-110 animate-pulse">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                            <span class="text-white font-bold uppercase tracking-widest text-sm">Habilitar Audio</span>
+                        </div>
+                    </div>
+
                     <div
-                        class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <div class="flex items-center justify-between">
                             <h3 class="font-bold text-lg text-white">{{ event['title'] }}</h3>
                             <div class="flex items-center gap-2">
@@ -165,7 +186,7 @@
 
             <!-- Interaction Siderbar (Right) -->
             <div
-                class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl min-h-[500px] lg:min-h-0">
+                class="w-full lg:w-[400px] border-l border-white/5 flex flex-col bg-navy-900/40 backdrop-blur-xl flex-1 lg:flex-none min-h-0">
                 <!-- Tab Switching -->
                 <div class="flex h-14 border-b border-white/5">
                     <button data-tab="chat"
@@ -186,11 +207,19 @@
                         </svg>
                         Preguntas
                     </button>
+                    <button data-tab="polls"
+                        class="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 transition-all tab-btn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Votación
+                    </button>
                 </div>
 
                 <!-- Chat Content -->
-                <div id="chat-tab" class="flex-1 flex flex-col overflow-hidden">
-                    <div id="chat-panel" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
+                <div id="chat-tab" class="flex-1 flex flex-col overflow-hidden min-h-0">
+                    <div id="chat-panel" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll min-h-0">
                         {% for chat in chats %}
                         <div class="flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300">
                             <div
@@ -211,8 +240,8 @@
                         {% end %}
                     </div>
 
-                    <!-- Chat Input -->
-                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
+                    <!-- Chat Input (Sticky) -->
+                    <div class="p-3 border-t border-white/5 bg-navy-900/90 backdrop-blur-md sticky bottom-0">
                         <form id="chat-form" class="relative group">
                             <input id="chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off"
                                 class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all pr-12 text-white placeholder-slate-500">
@@ -228,8 +257,8 @@
                 </div>
 
                 <!-- Q&A Content -->
-                <div id="qa-panel" class="hidden flex-1 flex flex-col overflow-hidden">
-                    <div id="qa-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
+                <div id="qa-panel" class="hidden flex-1 flex flex-col overflow-hidden min-h-0">
+                    <div id="qa-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll min-h-0">
                         <div class="px-2 py-1 mb-1">
                             <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 opacity-60 italic">
                                 Preguntas Aprobadas</p>
@@ -252,8 +281,8 @@
                         {% end %}
                     </div>
 
-                    <!-- Q&A Input -->
-                    <div class="p-3 border-t border-white/5 bg-navy-900/40">
+                    <!-- Q&A Input (Sticky) -->
+                    <div class="p-3 border-t border-white/5 bg-navy-900/90 backdrop-blur-md sticky bottom-0">
                         <form id="question-form" class="flex flex-col gap-2">
                             <div class="relative">
                                 <textarea id="question-input" placeholder="Tu pregunta para el ponente..." rows="2"
@@ -272,11 +301,114 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Polls Content -->
+                <div id="polls-tab" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <div class="flex-1 overflow-y-auto p-4 custom-scroll">
+                        <div id="no-poll-message"
+                            class="flex flex-col items-center justify-center h-full opacity-40 text-center py-10">
+                            <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p class="text-sm font-bold uppercase tracking-widest">No hay encuestas activas</p>
+                            <p class="text-xs mt-2">Espera a que el moderador inicie una votación.</p>
+                        </div>
+
+                        <div id="active-poll-display" class="hidden">
+                            <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-6 shadow-xl">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span
+                                        class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Encuesta
+                                        en vivo</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="poll-countdown"
+                                            class="text-[10px] font-mono text-slate-400">--:--</span>
+                                        <span id="poll-countdown-badge"
+                                            class="hidden text-[10px] font-black uppercase tracking-wider text-red-400">Tiempo
+                                            terminado</span>
+                                    </div>
+                                </div>
+                                <h3 id="poll-question-text" class="text-lg font-bold text-white mb-6 leading-tight">
+                                </h3>
+
+                                <div id="poll-voting-options" class="space-y-3">
+                                    <!-- Radio options go here -->
+                                </div>
+
+                                <div id="poll-results-display" class="hidden space-y-4">
+                                    <!-- Results bars go here -->
+                                </div>
+
+                                <div class="mt-8 flex items-center justify-between">
+                                    <span id="poll-total-votes" class="text-[10px] font-mono text-slate-500 uppercase">0
+                                        VOTOS</span>
+                                    <button id="submit-vote-btn" onclick="submitPollVote()"
+                                        class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                                        VOTAR AHORA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Si el evento tiene video_url vacío o nulo, usar el stream HLS local del contenedor
+        let streamUrl = "{{ event['video_url'] }}";
+        if (!streamUrl || streamUrl.trim() === '' || streamUrl === 'None') {
+            streamUrl = "https://demo-stream.transmisionesfast.com/hls/stream.m3u8";
+        }
+        const videoEl = document.getElementById('video-player');
+
+        function initHlsPlayer() {
+            if (!videoEl || !streamUrl) return;
+
+            const unmuteOverlay = document.getElementById('video-unmute-overlay');
+
+            function attemptPlay() {
+                videoEl.play().then(() => {
+                    unmuteOverlay.classList.add('hidden');
+                }).catch(e => {
+                    console.warn("Autoplay blocked, showing unmute overlay:", e);
+                    unmuteOverlay.classList.remove('hidden');
+                });
+            }
+
+            unmuteOverlay.onclick = () => {
+                videoEl.muted = false;
+                videoEl.play();
+                unmuteOverlay.classList.add('hidden');
+            };
+
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    lowLatencyMode: true,
+                    backBufferLength: 30,
+                    debug: false
+                });
+                hls.loadSource(streamUrl);
+                hls.attachMedia(videoEl);
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error("HLS error:", data);
+                });
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log("HLS Manifest parsed, attempting play...");
+                    attemptPlay();
+                });
+            } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari/iOS native support
+                videoEl.src = streamUrl;
+                attemptPlay();
+            } else {
+                console.error("HLS not supported in this browser.");
+            }
+        }
+
+        initHlsPlayer();
         const currentUserId = "{{ user_id }}";
         // Dynamically determine protocol (ws or wss) based on page loading environment
         const baseWsUrl = "{% raw ws_url %}";
@@ -304,6 +436,7 @@
                 const tab = btn.dataset.tab;
                 document.getElementById("chat-tab").classList.toggle("hidden", tab !== "chat");
                 document.getElementById("qa-panel").classList.toggle("hidden", tab !== "qa");
+                document.getElementById("polls-tab").classList.toggle("hidden", tab !== "polls");
             });
         });
 
@@ -352,7 +485,12 @@
                 if (payload.type === "chat") {
                     appendChat(payload);
                 } else if (payload.type === "approved_question") {
-                    appendQuestion(payload);
+                    const existing = qaList.querySelector(`[data-id="${payload.id}"]`);
+                    if (!existing) {
+                        appendQuestion(payload);
+                    }
+                } else if (["poll_start", "poll_update_results", "poll_end"].includes(payload.type)) {
+                    handlePollMessage(payload);
                 } else if (payload.type === "count_update") {
                     if (viewersHeader) viewersHeader.textContent = payload.count + " viendo";
                     if (viewersMobile) viewersMobile.textContent = payload.count + "k"; // Just an example format
@@ -387,8 +525,18 @@
 
         connectWs();
 
+        function chatSignature(payload) {
+            const parts = [payload.user || "", payload.message || "", payload.timestamp || ""];
+            return encodeURIComponent(parts.join("::"));
+        }
+
         function appendChat(payload) {
+            const signature = chatSignature(payload);
+            if (signature && chatPanel.querySelector(`[data-chat-signature="${signature}"]`)) {
+                return;
+            }
             const div = document.createElement("div");
+            div.dataset.chatSignature = signature;
             div.className = "flex items-start gap-2.5 group animate-in slide-in-from-bottom-2 duration-300";
             div.innerHTML = `
                 <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400/80 flex items-center justify-center text-[9px] font-black border border-indigo-500/10 flex-shrink-0 mt-0.5">
@@ -465,6 +613,191 @@
             @keyframes pop { to { opacity: 1; transform: scale(1); } }
         `;
         document.head.appendChild(style);
+        document.head.appendChild(style);
+
+        let hasVoted = false;
+        let currentPollOptions = [];
+        let currentPollId = null;
+        let pollCloseAt = null;
+        let pollCountdownTimer = null;
+
+        function parseUtcCloseAt(closeAtStr) {
+            if (!closeAtStr) return null;
+            try {
+                // Stored as UTC without timezone; force UTC parsing.
+                return new Date(String(closeAtStr).replace(' ', 'T') + 'Z');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function formatCountdown(msRemaining) {
+            const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function stopPollCountdown() {
+            if (pollCountdownTimer) {
+                clearInterval(pollCountdownTimer);
+                pollCountdownTimer = null;
+            }
+        }
+
+        function setPollExpiredUI() {
+            const submitBtn = document.getElementById('submit-vote-btn');
+            const badge = document.getElementById('poll-countdown-badge');
+            if (badge) badge.classList.remove('hidden');
+            if (submitBtn) {
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        function setPollActiveUI() {
+            const submitBtn = document.getElementById('submit-vote-btn');
+            const badge = document.getElementById('poll-countdown-badge');
+            if (badge) badge.classList.add('hidden');
+            if (submitBtn) {
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitBtn.removeAttribute('disabled');
+            }
+        }
+
+        function startPollCountdown(closeAtStr) {
+            stopPollCountdown();
+            const countdownEl = document.getElementById('poll-countdown');
+            pollCloseAt = parseUtcCloseAt(closeAtStr);
+
+            if (!countdownEl || !pollCloseAt || isNaN(pollCloseAt.getTime())) {
+                if (countdownEl) countdownEl.textContent = '--:--';
+                return;
+            }
+
+            const tick = () => {
+                const msRemaining = pollCloseAt.getTime() - Date.now();
+                countdownEl.textContent = formatCountdown(msRemaining);
+                if (msRemaining <= 0) {
+                    stopPollCountdown();
+                    setPollExpiredUI();
+                    // If user didn't vote, show results anyway when time ends.
+                    if (!hasVoted) {
+                        document.getElementById('poll-voting-options').classList.add('hidden');
+                        document.getElementById('poll-results-display').classList.remove('hidden');
+                        document.getElementById('submit-vote-btn').classList.add('hidden');
+                    }
+                }
+            };
+
+            setPollActiveUI();
+            tick();
+            pollCountdownTimer = setInterval(tick, 1000);
+        }
+
+        function handlePollMessage(payload) {
+            const noMessage = document.getElementById('no-poll-message');
+            const display = document.getElementById('active-poll-display');
+            const questionText = document.getElementById('poll-question-text');
+            const totalVotes = document.getElementById('poll-total-votes');
+            const submitBtn = document.getElementById('submit-vote-btn');
+
+            if (payload.type === 'poll_start') {
+                hasVoted = false;
+                currentPollOptions = payload.poll.options;
+                currentPollId = payload.poll.poll_id;
+                noMessage.classList.add('hidden');
+                display.classList.remove('hidden');
+                questionText.textContent = payload.poll.question;
+
+                document.getElementById('poll-voting-options').classList.remove('hidden');
+                document.getElementById('poll-results-display').classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+
+                renderVotingOptions(payload.poll.options);
+                totalVotes.textContent = `${payload.poll.total_votes || 0} VOTOS`;
+
+                // Prepare countdown (reload-safe, based on absolute close_at)
+                startPollCountdown(payload.poll.close_at);
+
+                // If server already includes results, keep them ready for after vote.
+                if (payload.poll.results && (payload.poll.total_votes || 0) > 0) {
+                    renderPollResults(currentPollOptions, payload.poll.results, payload.poll.total_votes || 0);
+                }
+
+                const pollTabBtn = document.querySelector('[data-tab="polls"]');
+                if (pollTabBtn) pollTabBtn.click();
+            } else if (payload.type === 'poll_update_results') {
+                if (hasVoted) {
+                    renderPollResults(currentPollOptions, payload.results, payload.total_votes);
+                }
+                totalVotes.textContent = `${payload.total_votes} VOTOS`;
+            } else if (payload.type === 'poll_end') {
+                noMessage.classList.remove('hidden');
+                display.classList.add('hidden');
+                hasVoted = false;
+                currentPollId = null;
+                pollCloseAt = null;
+                stopPollCountdown();
+            }
+        }
+
+        function renderVotingOptions(options) {
+            const container = document.getElementById('poll-voting-options');
+            container.innerHTML = options.map((opt, idx) => `
+                <label class="flex items-center gap-3 p-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-all group">
+                    <input type="radio" name="poll_choice" value="${idx}" class="w-4 h-4 text-indigo-600 bg-navy-950 border-white/10 focus:ring-indigo-500">
+                    <span class="text-sm text-slate-300 group-hover:text-white transition-colors">${opt}</span>
+                </label>
+            `).join('');
+        }
+
+        function submitPollVote() {
+            const selected = document.querySelector('input[name="poll_choice"]:checked');
+            if (!selected) {
+                showToast('Selecciona una opción', 'warning');
+                return;
+            }
+
+            // Client-side guard: don't allow voting after expiry.
+            if (pollCloseAt && (pollCloseAt.getTime() - Date.now()) <= 0) {
+                showToast('Tiempo terminado. Ya no puedes votar.', 'error');
+                setPollExpiredUI();
+                return;
+            }
+
+            if (safeWsSend({
+                type: 'poll_vote',
+                option_index: selected.value
+            })) {
+                hasVoted = true;
+                document.getElementById('poll-voting-options').classList.add('hidden');
+                document.getElementById('poll-results-display').classList.remove('hidden');
+                document.getElementById('submit-vote-btn').classList.add('hidden');
+                showToast('¡Voto registrado!', 'success');
+            }
+        }
+
+        function renderPollResults(options, results, total) {
+            const container = document.getElementById('poll-results-display');
+            container.innerHTML = options.map((opt, idx) => {
+                const votes = results[idx] || 0;
+                const percent = total > 0 ? Math.round((votes / total) * 100) : 0;
+                return `
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-bold uppercase tracking-tighter">
+                            <span class="text-slate-400">${opt}</span>
+                            <span class="text-indigo-400 font-mono">${percent}%</span>
+                        </div>
+                        <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                            <div class="h-full bg-indigo-500 transition-all duration-700 ease-out" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Poll messages are handled inside connectWs() so reconnections keep working.
     </script>
 </body>
 

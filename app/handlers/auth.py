@@ -1,8 +1,72 @@
+import os
+import json
+from datetime import datetime
 import tornado.escape
 
 from app.db import create_db_connection
 from app.handlers.base import BaseHandler
 from app.services import analytics_service, session_service
+
+
+DEFAULT_REGISTRATION_SCHEMA = {
+    "fields": [
+        {"key": "name", "label": "Nombre completo", "type": "text", "required": True},
+        {"key": "email", "label": "Correo corporativo", "type": "email", "required": True},
+        {"key": "phone", "label": "Teléfono", "type": "tel", "required": False},
+    ]
+}
+
+
+def _parse_registration_schema(event):
+    if not event:
+        return DEFAULT_REGISTRATION_SCHEMA
+
+    raw = event.get("registration_schema")
+    # print(f"DEBUG: Raw schema from DB for event {event.get('id')}: {raw} (Type: {type(raw)})")
+    
+    if not raw:
+        return DEFAULT_REGISTRATION_SCHEMA
+
+    try:
+        # Handle if it's already a dict (JSON column in newer MySQL/PyMySQL)
+        if isinstance(raw, dict):
+            schema = raw
+        # Handle if it's a string (legacy TEXT column or stringified JSON)
+        elif isinstance(raw, str):
+            schema = json.loads(raw)
+        else:
+            return DEFAULT_REGISTRATION_SCHEMA
+            
+        # Basic validation: must have 'fields' as a list
+        if not isinstance(schema, dict) or not isinstance(schema.get("fields"), list):
+            # print("DEBUG: Schema is not a dict or fields is not a list")
+            return DEFAULT_REGISTRATION_SCHEMA
+            
+        # print(f"DEBUG: Successfully parsed schema with {len(schema['fields'])} fields")
+        return schema
+    except Exception as e:
+        # print(f"DEBUG: Error parsing registration_schema: {e}")
+        return DEFAULT_REGISTRATION_SCHEMA
+
+
+def _get_schema_fields(event):
+    schema = _parse_registration_schema(event)
+    fields = []
+    for f in schema.get("fields", []):
+        key = (f or {}).get("key")
+        if not key:
+            continue
+        fields.append({
+            "key": key,
+            "label": (f or {}).get("label") or key,
+            "type": (f or {}).get("type") or "text",
+            "required": bool((f or {}).get("required")),
+            "placeholder": (f or {}).get("placeholder") or "",
+            "options": (f or {}).get("options") or [],
+        })
+    if not fields:
+        return DEFAULT_REGISTRATION_SCHEMA.get("fields", [])
+    return fields
 
 
 class RegistrationHandler(BaseHandler):
@@ -19,58 +83,213 @@ class RegistrationHandler(BaseHandler):
         if not event:
             self.render("error.html", message="Evento no encontrado")
             return
+        if event.get("is_deleted"):
+            self.render("error.html", message="Evento no disponible")
+            return
             
         if not event["is_active"]:
             self.render("error.html", message="El registro para este evento ha finalizado.")
             return
 
-        self.render("register.html", event=event, error=None)
+        if os.getenv("EVENT_FLOW_V2", "1") == "1":
+            status = event.get("status") or ("PUBLISHED" if event.get("is_active") else "CLOSED")
+            if status == "DRAFT":
+                self.render("error.html", message="El registro para este evento aún no está disponible (Borrador).")
+                return
+            if status == "CLOSED":
+                self.render("error.html", message="El registro para este evento ha finalizado.")
+                return
+            if status != "PUBLISHED":
+                self.render("error.html", message="El evento no está disponible para registro.")
+                return
+
+            registration_open_at = event.get("registration_open_at")
+            registration_close_at = event.get("registration_close_at")
+            
+            from app.db import _get_target_timezone, now_in_timezone
+            tz = _get_target_timezone(event.get("timezone"))
+            now = now_in_timezone(event.get("timezone"))
+
+            if registration_open_at:
+                try:
+                    open_dt = datetime.strptime(registration_open_at, "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+                    if now < open_dt:
+                        self.render("error.html", message="El registro aún no está disponible.")
+                        return
+                except Exception:
+                    pass
+            
+            if registration_close_at:
+                try:
+                    close_dt = datetime.strptime(registration_close_at, "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+                    if now > close_dt:
+                        self.render("error.html", message="El registro para este evento ha finalizado.")
+                        return
+                except Exception:
+                    pass
+
+        registration_fields = _get_schema_fields(event)
+        self.render("register.html", event=event, error=None, registration_fields=registration_fields, form_data={})
 
     def post(self, slug=None):
-        name = self.get_body_argument("name", strip=True)
-        email = self.get_body_argument("email", strip=True).lower()
-        phone = self.get_body_argument("phone", strip=True)
-        
+        print(f"DEBUG: POST received for slug={slug}")
         from app.services import events_service
         event = events_service.get_event_by_slug(slug)
         event_id = event["id"] if event else None
+        print(f"DEBUG: Found event_id={event_id}")
 
         if not event_id:
             self.render("error.html", message="Evento no encontrado")
             return
 
-        if not (name and email):
-            self.render("register.html", event=event, error="Nombre y correo son obligatorios.")
+        registration_fields = _get_schema_fields(event)
+        print(f"DEBUG: Schema fields: {registration_fields}")
+        
+        form_data = {}
+        for field in registration_fields:
+            value = self.get_body_argument(field["key"], default="", strip=True)
+            form_data[field["key"]] = value
+            if field["required"] and not value:
+                print(f"DEBUG: Missing required field {field['key']}")
+                self.render("register.html", event=event, error=f"{field['label']} es obligatorio.", registration_fields=registration_fields, form_data=form_data)
+                return
+        
+        print(f"DEBUG: Form data collected: {form_data}")
+
+        name = form_data.get("name", "").strip()
+        email = form_data.get("email", "").strip().lower() if form_data.get("email") is not None else ""
+        phone = form_data.get("phone", "").strip() if form_data.get("phone") is not None else ""
+
+        if event.get("is_deleted"):
+            self.render("error.html", message="Evento no disponible")
             return
 
-        # Restricted domain check
-        if not email.endswith("@produccionesfast.com"):
-            self.render(
-                "register.html", 
-                event=event,
-                error="Registro restringido"
-            )
+        # Check registration restrictions based on event settings
+        reg_mode = event.get("registration_mode")
+        restricted_type = event.get("registration_restricted_type")
+        allowed_domain = event.get("allowed_domain")
+        
+        # Determine if we have new-style registration fields
+        has_new_fields = reg_mode is not None
+        
+        if has_new_fields:
+            # New flow: respect registration_mode setting
+            status = event.get("status") or ("PUBLISHED" if event.get("is_active") else "CLOSED")
+            if status == "DRAFT":
+                self.render("register.html", event=event, error="El evento está en borrador.", registration_fields=registration_fields, form_data=form_data)
+                return
+            if status == "CLOSED":
+                self.render("register.html", event=event, error="El registro ha finalizado.", registration_fields=registration_fields, form_data=form_data)
+                return
+            if status != "PUBLISHED":
+                self.render("register.html", event=event, error="El evento no está disponible para registro.", registration_fields=registration_fields, form_data=form_data)
+                return
+
+            registration_open_at = event.get("registration_open_at")
+            registration_close_at = event.get("registration_close_at")
+            
+            from app.db import _get_target_timezone, now_in_timezone
+            tz = _get_target_timezone(event.get("timezone"))
+            now = now_in_timezone(event.get("timezone"))
+
+            if registration_open_at:
+                try:
+                    open_dt = datetime.strptime(registration_open_at, "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+                    if now < open_dt:
+                        self.render("register.html", event=event, error="El registro aún no está disponible.", registration_fields=registration_fields, form_data=form_data)
+                        return
+                except Exception:
+                    pass
+
+            if registration_close_at:
+                try:
+                    close_dt = datetime.strptime(registration_close_at, "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+                    if now > close_dt:
+                        self.render("register.html", event=event, error="El registro para este evento ha finalizado.", registration_fields=registration_fields, form_data=form_data)
+                        return
+                except Exception:
+                    pass
+
+            capacity = event.get("capacity")
+            if capacity:
+                try:
+                    capacity_val = int(capacity)
+                except Exception:
+                    capacity_val = 0
+                if capacity_val > 0:
+                    registered_count = events_service.get_registration_count(event_id)
+                    if registered_count >= capacity_val:
+                        self.render("register.html", event=event, error="Cupo completo.", registration_fields=registration_fields, form_data=form_data)
+                        return
+
+            # Only apply restrictions if mode is RESTRICTED
+            if reg_mode == "RESTRICTED":
+                if not email:
+                    self.render("register.html", event=event, error="Correo requerido para registro restringido.", registration_fields=registration_fields, form_data=form_data)
+                    return
+                restricted_type = restricted_type or "DOMAIN"
+                email_domain = email.split("@")[-1].lower()
+                if restricted_type in ("DOMAIN", "BOTH"):
+                    domains = allowed_domain or "produccionesfast.com"
+                    allowed_domains = [d.strip().lower().lstrip("@") for d in domains.replace(" ", ",").replace(";", ",").split(",") if d.strip()]
+                    if email_domain not in allowed_domains:
+                        self.render("register.html", event=event, error="Registro restringido", registration_fields=registration_fields, form_data=form_data)
+                        return
+                if restricted_type in ("WHITELIST", "BOTH"):
+                    if not events_service.is_email_whitelisted(event_id, email):
+                        self.render("register.html", event=event, error="Registro restringido", registration_fields=registration_fields, form_data=form_data)
+                        return
+            # If reg_mode == "OPEN", no domain/whitelist restrictions apply
+        else:
+            # Legacy flow: always restrict to produccionesfast.com
+            if email and not email.endswith("@produccionesfast.com"):
+                self.render(
+                    "register.html", 
+                    event=event,
+                    error="Registro restringido",
+                    registration_fields=registration_fields,
+                    form_data=form_data
+                )
+                return
+
+        if not name:
+            self.render("register.html", event=event, error="Nombre es obligatorio.", registration_fields=registration_fields, form_data=form_data)
             return
 
         with create_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT id, role FROM users WHERE email=%s AND event_id=%s",
-                    (email, event_id),
-                )
-                user = cursor.fetchone()
+                user = None
+                if email:
+                    cursor.execute(
+                        "SELECT id, role FROM users WHERE email=%s AND event_id=%s",
+                        (email, event_id),
+                    )
+                    user = cursor.fetchone()
                 if user:
+                    print(f"DEBUG: User already exists for email {email} and event {event_id}")
                     login_url = f"/e/{slug}/login" if slug else "/login"
                     self.redirect(f"{login_url}?email={tornado.escape.url_escape(email)}")
                     return
                 else:
+                    print(f"DEBUG: Creating new user for email {email} and event {event_id}")
                     # Default role is 'viewer', default password in DB is 'produccionesfast2050'
                     cursor.execute(
                         "INSERT INTO users (name, email, phone, role, event_id) VALUES (%s, %s, %s, %s, %s)",
-                        (name, email, phone, "viewer", event_id),
+                        (name, email or None, phone, "viewer", event_id),
                     )
                     user_id = cursor.lastrowid
                     user_role = "viewer"
+                    print(f"DEBUG: New user_id: {user_id}")
+
+                if user_id:
+                    payload = json.dumps(form_data)
+                    print(f"DEBUG: Saving payload for user {user_id}: {payload}")
+                    cursor.execute(
+                        "INSERT INTO event_registration_data (event_id, user_id, payload) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE payload=VALUES(payload)",
+                        (event_id, user_id, payload),
+                    )
+                else:
+                    print(f"DEBUG: No user_id generated for event {event_id}")
         
         # Create Session in Redis
         session_data = {
@@ -80,6 +299,8 @@ class RegistrationHandler(BaseHandler):
             "current_event_id": event_id
         }
         session_id = session_service.create_session(session_data)
+        if not session_id:
+            print("[auth] ERROR: session_id is None during registration.")
         is_https = (self.request.protocol == "https") or (self.request.headers.get("X-Forwarded-Proto") == "https")
         self.set_secure_cookie("session_id", session_id, httponly=True, secure=is_https, samesite="Lax")
 
@@ -256,6 +477,8 @@ class LoginHandler(BaseHandler):
             "current_event_id": selected_event_id
         }
         session_id = session_service.create_session(session_data)
+        if not session_id:
+            print("[auth] ERROR: session_id is None during login.")
         is_https = (self.request.protocol == "https") or (self.request.headers.get("X-Forwarded-Proto") == "https")
         self.set_secure_cookie("session_id", session_id, httponly=True, secure=is_https, samesite="Lax")
 

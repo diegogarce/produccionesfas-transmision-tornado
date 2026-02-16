@@ -48,7 +48,49 @@
     </script>
     <style>
         body {
-            background-color: #050511;
+            background-color: #0f172a;
+        }
+
+        /* Scrollbar styling */
+        body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: #0a0b16;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.4);
+            border-radius: 999px;
+            border: 2px solid #0a0b16;
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.7);
+        }
+
+        #event-modal::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #event-modal::-webkit-scrollbar-track {
+            background: #0a0b16;
+        }
+
+        #event-modal::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.45);
+            border-radius: 999px;
+            border: 2px solid #0a0b16;
+        }
+
+        #event-modal::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.7);
+        }
+
+        #event-modal {
+            scrollbar-color: rgba(148, 163, 184, 0.55) #0a0b16;
+            scrollbar-width: thin;
         }
 
         .glass-panel {
@@ -79,18 +121,39 @@
         /* Custom SweetAlert2 Dark Theme Override */
         div:where(.swal2-container).swal2-center>.swal2-popup {
             background: #0a0b16 !important;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 1.5rem !important;
+            color: #fff !important;
         }
 
         div:where(.swal2-container) .swal2-title {
             color: #fff !important;
             font-family: 'Inter', sans-serif !important;
+            font-weight: 700 !important;
         }
 
         div:where(.swal2-container) .swal2-html-container {
             color: #94a3b8 !important;
             font-family: 'Inter', sans-serif !important;
+            line-height: 1.6 !important;
+        }
+
+        div:where(.swal2-container) .swal2-actions {
+            gap: 1rem !important;
+        }
+
+        div:where(.swal2-container) .swal2-confirm {
+            background-color: #4f46e5 !important;
+            border-radius: 0.75rem !important;
+            font-weight: 600 !important;
+            padding: 0.6rem 2rem !important;
+        }
+
+        div:where(.swal2-container) .swal2-cancel {
+            background-color: #1f2236 !important;
+            border-radius: 0.75rem !important;
+            font-weight: 600 !important;
+            padding: 0.6rem 2rem !important;
         }
 
         div:where(.swal2-icon).swal2-warning {
@@ -152,39 +215,111 @@
     <!-- Top Navigation Bar (Matching Identity) -->
     <nav class="border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Left Side: Logo | Platform Name | Status -->
             <div class="flex items-center h-full">
-                <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
-                    class="h-6 w-auto opacity-90">
-                <div class="h-8 w-px bg-white/10 mx-4"></div>
-                <div class="flex gap-4">
-                    <a href="/admin/events"
-                        class="text-[10px] font-bold tracking-widest text-slate-500 hover:text-white uppercase transition-colors">Eventos</a>
-                    {% if is_superadmin %}
-                    <a href="/admin/staff"
-                        class="text-[10px] font-bold tracking-widest text-indigo-400 uppercase">Personal</a>
-                    {% end %}
-                </div>
+                <a href="/admin/events" class="hover:opacity-80 transition-opacity flex items-center">
+                    <img src="https://produccionesfast.com/assets/img/logo.png" alt="Producciones Fast"
+                        class="h-6 w-auto opacity-90">
+                </a>
+
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
+                <span
+                    class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Administración</span>
+
             </div>
-            <div class="flex items-center gap-4">
-                {% if is_superadmin %}
-                <button onclick="openModal()"
-                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-400 text-[10px] font-bold uppercase tracking-widest transition-all">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#" onclick="openModal(); return false;"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Nuevo Evento">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>Nuevo Evento</span>
-                </button>
-                {% end %}
+                    <span class="text-xs font-bold uppercase tracking-wider">Nuevo Evento</span>
+                </a>
+
+                <a href="/admin/staff"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    title="Personal">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Personal</span>
+                </a>
+
+                <div class="h-6 w-px bg-white/10"></div>
+
+                <span class="text-sm font-medium text-slate-400">Admin User</span>
 
                 <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </a>
             </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()"
+                class="md:hidden text-slate-400 hover:text-white transition-colors p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="close-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div class="hidden md:hidden border-t border-white/5 bg-[#050511]" id="mobile-menu">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#" onclick="toggleMobileMenu(); openModal(); return false;"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nuevo Evento
+                </a>
+
+                <a href="/admin/staff"
+                    class="flex items-center gap-3 text-slate-400 hover:text-indigo-400 transition-colors py-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Personal
+                </a>
+
+                <div class="border-t border-white/10 pt-3">
+                    <span class="text-sm font-medium text-slate-400 block mb-3">Admin User</span>
+                    <a href="/logout"
+                        class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors py-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            if (menu && menuIcon && closeIcon) {
+                menu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            }
+        }
+    </script>
 
     <div class="max-w-7xl mx-auto px-6 py-10">
         <!-- Page Title & Stats -->
@@ -193,8 +328,66 @@
             <p class="text-slate-500">Administra y monitorea todas tus transmisiones activas.</p>
         </div>
 
+        <!-- Search & Filter Bar -->
+        <div class="sticky top-16 z-30 bg-[#0f172a]/95 backdrop-blur-md py-4 mb-6 border-b border-white/5 -mx-6 px-6 transition-all duration-300 shadow-lg shadow-black/20"
+            id="filter-bar">
+            <div class="flex flex-col sm:flex-row gap-4 justify-between">
+                <!-- Search -->
+                <div class="relative flex-1 group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="event-search"
+                        class="block w-full pl-10 pr-3 py-2 border border-white/10 rounded-lg leading-5 bg-navy-800/50 text-slate-300 placeholder-slate-500 focus:outline-none focus:bg-navy-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 sm:text-sm transition-all"
+                        placeholder="Buscar eventos por nombre, slug o ID..." onkeyup="filterEvents()">
+                </div>
+
+                <!-- Filters & View Toggle -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+                    <div class="flex bg-navy-800/50 rounded-lg p-1 border border-white/5 shrink-0">
+                        <button onclick="setFilter('all')"
+                            class="filter-btn active px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all text-white bg-indigo-500/20 shadow-sm border border-indigo-500/30"
+                            data-filter="all">Todos</button>
+                        <button onclick="setFilter('live')"
+                            class="filter-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                            data-filter="live">En Vivo</button>
+                        <button onclick="setFilter('offline')"
+                            class="filter-btn px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                            data-filter="offline">Offline</button>
+                    </div>
+
+                    <div class="w-px h-6 bg-white/10 shrink-0"></div>
+
+                    <div class="flex bg-navy-800/50 rounded-lg p-1 border border-white/5 shrink-0">
+                        <button onclick="setView('grid')"
+                            class="view-btn active p-1.5 rounded-md text-indigo-200 bg-indigo-500/20 border border-indigo-500/30"
+                            data-view="grid" title="Vista Cuadrícula">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                </path>
+                            </svg>
+                        </button>
+                        <button onclick="setView('list')"
+                            class="view-btn p-1.5 rounded-md text-slate-400 hover:text-white border border-transparent hover:bg-white/5"
+                            data-view="list" title="Vista Lista">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Events Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+        <div id="events-grid"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 transition-all duration-300">
             {% if not events and not is_superadmin %}
             <div class="col-span-full py-20 text-center animate-fade-in">
                 <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -211,8 +404,10 @@
 
             {% for event in events %}
             <!-- Event Card -->
-            <div
-                class="bg-navy-900 border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/30 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl shadow-black/40 animate-fade-in">
+            <div class="bg-navy-900 border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/30 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl shadow-black/40 animate-fade-in event-card"
+                data-event-card-id="{{ event['id'] }}"
+                data-event-status="{{ 'live' if event['is_active'] else 'offline' }}"
+                data-event-search="{{ event['title'].lower() }} {{ event['slug'].lower() }} {{ event['id'] }}">
                 <!-- Status Bar -->
                 <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-navy-800/50">
                     <div class="flex items-center gap-2">
@@ -241,12 +436,13 @@
                 </div>
 
                 <div class="p-6">
-                    <h3
-                        class="text-xl font-bold text-white mb-1 truncate group-hover:text-indigo-400 transition-colors">
+                    <h3 class="text-xl font-bold text-white mb-1 truncate group-hover:text-indigo-400 transition-colors"
+                        data-event-title>
                         {{ event['title'] }}</h3>
                     <div class="flex items-center gap-2 mb-6">
                         <a href="/e/{{ event['slug'] }}/watch" target="_blank"
-                            class="text-xs text-slate-500 font-mono hover:text-white transition-colors flex items-center gap-1 group/link">
+                            class="text-xs text-slate-500 font-mono hover:text-white transition-colors flex items-center gap-1 group/link"
+                            data-event-slug-link>
                             /e/{{ event['slug'] }}
                             <svg class="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -256,9 +452,9 @@
                         </a>
 
                         <div class="ml-auto flex items-center gap-2">
-                            <button onclick="copyToClipboard(window.location.origin + '/e/{{ event['slug'] }}')"
+                            <button onclick="copyToClipboard(window.location.origin + '/e/{{ event['slug'] }}/login')"
                                 class="text-[9px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-wider flex items-center gap-1 transition-colors"
-                                title="Copiar link de acceso">
+                                title="Copiar link de acceso" data-event-copy-access>
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -266,10 +462,9 @@
                                 Acceso
                             </button>
                             <div class="w-px h-3 bg-white/10"></div>
-                            <button
-                                onclick="copyToClipboard(window.location.origin + '/e/{{ event['slug'] }}/register')"
+                            <button onclick="copyToClipboard(window.location.origin + '/e/{{ event['slug'] }}')"
                                 class="text-[9px] font-bold text-slate-500 hover:text-emerald-400 uppercase tracking-wider flex items-center gap-1 transition-colors"
-                                title="Copiar link de registro">
+                                title="Copiar link de registro" data-event-copy-register>
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                         d="M12 4v16m8-8H4" />
@@ -282,7 +477,8 @@
                     <!-- Action Grid -->
                     <div class="grid grid-cols-3 gap-2 mb-6">
                         <a href="/e/{{ event['slug'] }}/mod" target="_blank"
-                            class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
+                            class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn"
+                            data-event-mod-link>
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-indigo-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -292,7 +488,8 @@
                         </a>
 
                         <a href="/e/{{ event['slug'] }}/speaker" target="_blank"
-                            class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
+                            class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn"
+                            data-event-speaker-link>
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-amber-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -301,19 +498,31 @@
                             <span class="text-[9px] uppercase font-bold text-slate-500">Speaker</span>
                         </a>
 
-                        <a href="/e/{{ event['slug'] }}/reports" target="_blank"
+                        <button onclick="openPollsModal({{ event['id'] }}, '{{ event['title'] }}')"
                             class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn">
                             <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-emerald-400 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
+                            <span class="text-[9px] uppercase font-bold text-slate-500">Encuestas</span>
+                        </button>
+
+                        <a href="/e/{{ event['slug'] }}/reports" target="_blank"
+                            class="bg-navy-800 hover:bg-navy-700 border border-white/5 rounded-lg py-3 flex flex-col items-center justify-center gap-1 transition-all group/btn"
+                            data-event-reports-link>
+                            <svg class="w-5 h-5 text-slate-400 group-hover/btn:text-emerald-400 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                             <span class="text-[9px] uppercase font-bold text-slate-500">Reporte</span>
                         </a>
                     </div>
 
                     <a href="/e/{{ event['slug'] }}/watch" target="_blank"
-                        class="w-full bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/main mb-4">
+                        class="w-full bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 group/main mb-4"
+                        data-event-watch-link>
                         Abrir Sala
                         <svg class="w-4 h-4 transform group-hover/main:translate-x-1 transition-transform" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
@@ -363,193 +572,460 @@
         </div>
     </div>
 
-    <!-- Modal Evento -->
+    <!-- Overlay Evento -->
     <div id="event-modal"
-        class="fixed inset-0 bg-[#050511]/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all duration-300">
-        <div
-            class="bg-navy-900 border border-white/5 max-w-4xl w-full rounded-2xl p-8 relative shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]">
-            <!-- Close Button -->
-            <button onclick="closeModal()"
-                class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+        class="fixed inset-0 bg-[#050511]/95 backdrop-blur-sm z-50 hidden overflow-y-auto transition-all duration-300 animate-fade-in">
+        <div class="min-h-screen w-full">
+            <div class="bg-navy-900/90 border-b border-white/5 w-full min-h-screen px-6 sm:px-10 py-10 relative">
+                <div class="max-w-6xl mx-auto w-full">
+                    <!-- Close Button -->
+                    <button onclick="closeModal()"
+                        class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
 
-            <h2 id="modal-title" class="text-2xl font-bold text-white mb-1">Nuevo Evento</h2>
-            <p class="text-slate-500 text-sm mb-8">Configura los detalles y la apariencia de tu transmisión</p>
+                    <h2 id="modal-title" class="text-2xl font-bold text-white mb-1">Nuevo Evento</h2>
+                    <p class="text-slate-500 text-sm mb-8">Configura los detalles y la apariencia de tu transmisión</p>
 
-            <form id="event-form">
-                <input type="hidden" id="event-id">
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <!-- Columna Izquierda: Información General -->
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/5">
-                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Información General
-                            </h3>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nombre del
-                                Evento</label>
-                            <input type="text" id="title" placeholder="Ej: Tech Summit 2026" required
-                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium">
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Descripción /
-                                Transcripción</label>
-                            <textarea id="description" placeholder="Detalles o descripción del evento..." rows="3"
-                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium resize-none text-sm font-sans"></textarea>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug
-                                URL</label>
-                            <div class="flex">
-                                <span
-                                    class="bg-navy-800 border border-r-0 border-white/10 rounded-l-lg px-3 py-3 text-slate-500 text-sm flex items-center font-mono">/e/</span>
-                                <input type="text" id="slug" placeholder="tech-summit-2026" required
-                                    class="w-full bg-navy-950 border border-white/10 rounded-r-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium font-mono">
-                            </div>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video Stream
-                                URL</label>
-                            <input type="text" id="video_url"
-                                value="https://produccionesfast.com/assets/videos/transmisionesfast.mp4"
-                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Zona horaria
-                                del evento</label>
-                            <select id="timezone"
-                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
-                                <option value="America/Mexico_City" selected>CDMX (America/Mexico_City)</option>
-                                <option value="UTC">UTC</option>
-                                <option value="America/New_York">USA Este (America/New_York)</option>
-                                <option value="America/Los_Angeles">USA Pacífico (America/Los_Angeles)</option>
-                            </select>
-                        </div>
-
-                        <div class="pt-4">
-                            <label
-                                class="flex items-center gap-3 cursor-pointer group p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
-                                <div class="relative">
-                                    <input type="checkbox" id="is_active" class="peer sr-only">
-                                    <div
-                                        class="w-10 h-6 bg-navy-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white">
-                                    </div>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span
-                                        class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Evento
-                                        Activo</span>
-                                    <span class="text-[10px] text-slate-500">Visible para el público</span>
-                                </div>
-                            </label>
-                        </div>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button type="button" data-tab-target="general"
+                            class="tab-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-indigo-600 text-white">
+                            General
+                        </button>
+                        <button type="button" data-tab-target="registro"
+                            class="tab-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-white/5 text-slate-400 hover:text-white">
+                            Registro
+                        </button>
+                        <button type="button" data-tab-target="visual"
+                            class="tab-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-white/5 text-slate-400 hover:text-white">
+                            Visual
+                        </button>
                     </div>
 
-                    <!-- Columna Derecha: Personalización Visual -->
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/5">
-                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.172-1.172a4 4 0 115.656 5.656L10 17.657" />
-                            </svg>
-                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Personalización
-                                Visual</h3>
-                        </div>
+                    <form id="event-form">
+                        <input type="hidden" id="event-id">
 
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Logo del
-                                    Evento</label>
-                                <span id="logo-upload-status" class="text-[10px] text-indigo-400 font-bold"></span>
-                            </div>
+                        <div class="space-y-8">
+                            <!-- Tab: General -->
+                            <section id="tab-general" data-tab-panel class="space-y-6">
+                                <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Información
+                                        General
+                                    </h3>
+                                </div>
 
-                            <div class="bg-navy-950 border border-white/10 rounded-xl p-4 space-y-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="relative group">
-                                        <img id="logo-preview" src="https://produccionesfast.com/assets/img/logo.png"
-                                            alt="Logo preview"
-                                            class="w-20 h-20 rounded-lg border border-white/10 object-contain bg-navy-900 p-2 transition-transform group-hover:scale-105">
-                                        <button type="button" id="logo-upload-trigger"
-                                            class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div class="flex-1 space-y-1">
-                                        <p class="text-xs text-slate-300 font-medium">Cambiar Logo</p>
-                                        <p class="text-[10px] text-slate-500 leading-relaxed">Recomendado: PNG
-                                            transparente, máx 5MB.</p>
-                                        <input type="file" id="logo_upload_input"
-                                            accept="image/png,image/jpeg,image/webp" class="sr-only">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nombre
+                                        del
+                                        Evento</label>
+                                    <input type="text" id="title" placeholder="Ej: Tech Summit 2026" required
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label
+                                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Descripción
+                                        /
+                                        Transcripción</label>
+                                    <textarea id="description" placeholder="Detalles o descripción del evento..."
+                                        rows="3"
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium resize-none text-sm font-sans"></textarea>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug
+                                        URL</label>
+                                    <div class="flex">
+                                        <span
+                                            class="bg-navy-800 border border-r-0 border-white/10 rounded-l-lg px-3 py-3 text-slate-500 text-sm flex items-center font-mono">/e/</span>
+                                        <input type="text" id="slug" placeholder="tech-summit-2026" required
+                                            class="w-full bg-navy-950 border border-white/10 rounded-r-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all font-medium font-mono">
                                     </div>
                                 </div>
-                                <input type="text" id="logo_url"
-                                    value="https://produccionesfast.com/assets/img/logo.png"
-                                    data-default-logo="https://produccionesfast.com/assets/img/logo.png"
-                                    class="w-full bg-navy-900 border border-white/5 rounded-lg px-3 py-2 text-[11px] font-mono text-slate-400 focus:outline-none focus:border-indigo-500/30 transition-all">
-                            </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 gap-4">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Colores del
-                                    Header</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div
-                                        class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
-                                        <input type="color" id="header_bg_color" value="#0a0b16"
-                                            class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
-                                        <div class="flex flex-col">
-                                            <span class="text-[9px] font-bold text-slate-500 uppercase">Fondo</span>
-                                            <input type="text" id="header_bg_color_text" value="#0a0b16"
-                                                class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video
+                                        Stream
+                                        URL</label>
+                                    <input type="text" id="video_url"
+                                        value="https://produccionesfast.com/assets/videos/transmisionesfast.mp4"
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm font-mono text-slate-300">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Zona
+                                        horaria
+                                        del evento</label>
+                                    <select id="timezone"
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                        <option value="America/Mexico_City" selected>CDMX (America/Mexico_City)</option>
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">USA Este (America/New_York)</option>
+                                        <option value="America/Los_Angeles">USA Pacífico (America/Los_Angeles)</option>
+                                    </select>
+                                </div>
+
+                                <div class="pt-4">
+                                    <label
+                                        class="flex items-center gap-3 cursor-pointer group p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
+                                        <div class="relative">
+                                            <input type="checkbox" id="is_active" class="peer sr-only">
+                                            <div
+                                                class="w-10 h-6 bg-navy-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div
-                                        class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
-                                        <input type="color" id="header_text_color" value="#e2e8f0"
-                                            class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
                                         <div class="flex flex-col">
-                                            <span class="text-[9px] font-bold text-slate-500 uppercase">Texto</span>
-                                            <input type="text" id="header_text_color_text" value="#e2e8f0"
-                                                class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                            <span
+                                                class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Evento
+                                                Activo</span>
+                                            <span class="text-[10px] text-slate-500">Visible para el público</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {% if is_superadmin %}
+                                <div class="pt-4">
+                                    <label
+                                        class="flex items-center gap-3 cursor-pointer group p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
+                                        <div class="relative">
+                                            <input type="checkbox" id="is_deleted" class="peer sr-only">
+                                            <div
+                                                class="w-10 h-6 bg-navy-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500/80 peer-checked:after:bg-white">
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Eliminado
+                                                lógico</span>
+                                            <span class="text-[10px] text-slate-500">Oculta el evento sin
+                                                borrarlo</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                {% end %}
+                            </section>
+
+                            <!-- Tab: Registro -->
+                            <section id="tab-registro" data-tab-panel class="space-y-6 hidden">
+                                <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                                    <svg class="w-4 h-4 text-fuchsia-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6v6l4 2" />
+                                    </svg>
+                                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">Flujo y
+                                        Registro</h3>
+                                </div>
+
+                                <!-- Plantilla de registro (AL PRINCIPIO) -->
+                                <div class="space-y-4">
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Plantilla
+                                            de formulario</label>
+                                        <select id="registration_schema_preset"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                            <option value="default">Nombre + Correo + Teléfono</option>
+                                            <option value="name_only">Solo Nombre</option>
+                                            <option value="name_email">Nombre + Correo</option>
+                                            <option value="name_email_employee">Nombre + Correo + No. Empleado</option>
+                                            <option value="name_email_company">Nombre + Correo + Empresa</option>
+                                            <option value="custom">Personalizado (Editor Manual)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Visual Form Builder Interface -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <label
+                                                class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Campos
+                                                del Formulario</label>
+                                            <button type="button" onclick="window.formBuilder.addField()"
+                                                class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-widest">+
+                                                Agregar Campo</button>
+                                        </div>
+                                        <div id="form-builder-container"
+                                            class="space-y-3 p-4 bg-navy-950/50 border border-white/5 rounded-xl">
+                                            <!-- Los campos se renderizan aquí dinámicamente -->
+                                        </div>
+                                        <details class="group">
+                                            <summary
+                                                class="text-[10px] font-bold text-slate-500 uppercase cursor-pointer list-none hover:text-slate-400">
+                                                Ver JSON Avanzado</summary>
+                                            <textarea id="registration_schema" name="registration_schema" rows="5"
+                                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 mt-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-indigo-500/30"></textarea>
+                                        </details>
+                                    </div>
+                                </div>
+
+                                <!-- Estatus y Modo -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Estatus
+                                            de
+                                            publicación</label>
+                                        <select id="status"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                            <option value="DRAFT">Borrador</option>
+                                            <option value="PUBLISHED">Publicado</option>
+                                            <option value="CLOSED">Cerrado</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Criterio
+                                            de
+                                            acceso</label>
+                                        <select id="registration_mode" onchange="updateRegistrationRestrictionsUI()"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                            <option value="OPEN">Abierto (Público)</option>
+                                            <option value="RESTRICTED">Restringido (Seguro)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Restricciones -->
+                                <div id="registration-restrictions-group"
+                                    class="space-y-6 pt-4 border-t border-white/5 hidden">
+                                    <div id="registration-restricted-type-section" class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tipo
+                                            de
+                                            Restricción</label>
+                                        <select id="registration_restricted_type" name="registration_restricted_type"
+                                            onchange="updateRegistrationRestrictionsUI()"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                            <option value="DOMAIN">Por Dominio</option>
+                                            <option value="WHITELIST">Whitelist Avanzada</option>
+                                            <option value="BOTH">Ambos (Dominio + Whitelist)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Sección de Dominios -->
+                                    <div id="domain-section" class="space-y-1.5 hidden">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Dominios
+                                            Permitidos</label>
+                                        <div id="domain-tags-container"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 transition-all text-sm min-h-[48px] flex flex-wrap gap-2 items-center cursor-text">
+                                            <input type="text" id="domain-tag-input" placeholder="ej. empresa.com"
+                                                class="flex-1 min-w-[120px] bg-transparent outline-none text-sm placeholder-slate-700">
+                                        </div>
+                                        <input type="hidden" id="allowed_domain" name="allowed_domain" value="">
+                                        <p class="text-[10px] text-slate-500">Presiona Enter o coma para añadir.</p>
+                                    </div>
+
+                                    <!-- Whitelist Avanzada -->
+                                    <div id="whitelist-group" class="space-y-6 hidden">
+                                        <div id="whitelist-section" class="space-y-3">
+                                            <div class="flex items-center justify-between">
+                                                <label
+                                                    class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Invitados
+                                                    Autorizados (Emails)</label>
+                                                <span id="whitelist-status"
+                                                    class="text-[10px] font-bold text-indigo-400"></span>
+                                            </div>
+                                            <textarea id="whitelist_emails" rows="5"
+                                                placeholder="ejemplo@empresa.com, invitado@correo.com"
+                                                class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 text-sm font-mono"></textarea>
+                                            <div class="flex justify-end">
+                                                <button type="button" id="whitelist-save"
+                                                    class="px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all">Actualizar
+                                                    Lista</button>
+                                            </div>
+                                        </div>
+
+                                        <div id="upload-section" class="space-y-4 border-t border-white/5 pt-4">
+                                            <label
+                                                class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Carga
+                                                Masiva desde Excel/CSV</label>
+                                            <div class="flex flex-col gap-4">
+                                                <input type="file" id="whitelist-file" accept=".csv,.xlsx,.xls"
+                                                    class="hidden">
+                                                <button type="button"
+                                                    onclick="document.getElementById('whitelist-file').click()"
+                                                    class="w-full border-2 border-dashed border-white/10 rounded-xl py-6 flex flex-col items-center gap-2 hover:bg-white/5 transition-colors group">
+                                                    <svg class="w-8 h-8 text-slate-500 group-hover:text-indigo-400"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                    </svg>
+                                                    <span class="text-xs text-slate-500">Subir archivo Excel/CSV</span>
+                                                </button>
+                                                <div id="upload-preview"
+                                                    class="hidden flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                                                    <span id="upload-filename"
+                                                        class="text-xs text-indigo-300 font-medium truncate">archivo.csv</span>
+                                                    <button type="button" id="upload-process"
+                                                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg font-bold text-[10px] uppercase">Procesar
+                                                        Ahora</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-white/5">
-                    <button type="button" onclick="closeModal()"
-                        class="px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-widest">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-xs uppercase tracking-widest">
-                        Guardar Evento
-                    </button>
+                                <!-- Fechas y capacidad -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Apertura
+                                            de
+                                            registro</label>
+                                        <input type="datetime-local" id="registration_open_at"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cierre
+                                            de registro</label>
+                                        <input type="datetime-local" id="registration_close_at"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Acceso
+                                        al
+                                        evento</label>
+                                    <input type="datetime-local" id="access_open_at"
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Cupo</label>
+                                        <input type="number" id="capacity" min="0" placeholder="Ej. 500"
+                                            class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mensaje
+                                        éxito registro</label>
+                                    <textarea id="registration_success_message" rows="3"
+                                        placeholder="¡Tu registro ha quedado listo! Te esperamos..."
+                                        class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm"></textarea>
+                                </div>
+
+                            </section>
+
+                            <!-- Tab: Visual -->
+                            <section id="tab-visual" data-tab-panel class="space-y-6 hidden">
+                                <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.172-1.172a4 4 0 115.656 5.656L10 17.657" />
+                                    </svg>
+                                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300">
+                                        Personalización
+                                        Visual</h3>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Logo
+                                            del
+                                            Evento</label>
+                                        <span id="logo-upload-status"
+                                            class="text-[10px] text-indigo-400 font-bold"></span>
+                                    </div>
+
+                                    <div class="bg-navy-950 border border-white/10 rounded-xl p-4 space-y-4">
+                                        <div class="flex items-center gap-4">
+                                            <div class="relative group">
+                                                <img id="logo-preview"
+                                                    src="https://produccionesfast.com/assets/img/logo.png"
+                                                    alt="Logo preview"
+                                                    class="w-20 h-20 rounded-lg border border-white/10 object-contain bg-navy-900 p-2 transition-transform group-hover:scale-105">
+                                                <button type="button" id="logo-upload-trigger"
+                                                    class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex-1 space-y-1">
+                                                <p class="text-xs text-slate-300 font-medium">Cambiar Logo</p>
+                                                <p class="text-[10px] text-slate-500 leading-relaxed">Recomendado: PNG
+                                                    transparente, máx 5MB.</p>
+                                                <input type="file" id="logo_upload_input"
+                                                    accept="image/png,image/jpeg,image/webp" class="sr-only">
+                                            </div>
+                                        </div>
+                                        <input type="text" id="logo_url"
+                                            value="https://produccionesfast.com/assets/img/logo.png"
+                                            data-default-logo="https://produccionesfast.com/assets/img/logo.png"
+                                            class="w-full bg-navy-900 border border-white/5 rounded-lg px-3 py-2 text-[11px] font-mono text-slate-400 focus:outline-none focus:border-indigo-500/30 transition-all">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Colores
+                                            del
+                                            Header</label>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div
+                                                class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                                                <input type="color" id="header_bg_color" value="#0a0b16"
+                                                    class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
+                                                <div class="flex flex-col">
+                                                    <span
+                                                        class="text-[9px] font-bold text-slate-500 uppercase">Fondo</span>
+                                                    <input type="text" id="header_bg_color_text" value="#0a0b16"
+                                                        class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="bg-navy-950 border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                                                <input type="color" id="header_text_color" value="#e2e8f0"
+                                                    class="h-8 w-8 rounded-md border-0 bg-transparent cursor-pointer">
+                                                <div class="flex flex-col">
+                                                    <span
+                                                        class="text-[9px] font-bold text-slate-500 uppercase">Texto</span>
+                                                    <input type="text" id="header_text_color_text" value="#e2e8f0"
+                                                        class="bg-transparent border-0 p-0 text-xs text-white font-mono focus:outline-none w-16">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-white/5">
+                            <button type="button" onclick="closeModal()"
+                                class="px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-widest">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 text-xs uppercase tracking-widest">
+                                Guardar Evento
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -587,7 +1063,8 @@
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300 mb-3">Agregar / Cambiar rol
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300 mb-3">Agregar /
+                        Cambiar rol
                     </h3>
                     <div class="bg-navy-950 border border-white/10 rounded-2xl p-4">
                         <form id="staff-form" class="space-y-4">
@@ -601,7 +1078,8 @@
                                     <option value="moderator">Moderator (Exclusivo)</option>
                                     <option value="speaker">Speaker (Exclusivo)</option>
                                 </select>
-                                <p class="text-[9px] text-slate-500">Selecciona primero el rol para filtrar usuarios
+                                <p class="text-[9px] text-slate-500">Selecciona primero el rol para filtrar
+                                    usuarios
                                     disponibles.</p>
                             </div>
                             <div>
@@ -626,6 +1104,7 @@
     {% end %}
 
     <script>
+        // Declarar todas las variables al inicio para evitar ReferenceError
         const modal = document.getElementById('event-modal');
         const form = document.getElementById('event-form');
         let editingId = null;
@@ -638,8 +1117,587 @@
         const headerBgColorText = document.getElementById('header_bg_color_text');
         const headerTextColor = document.getElementById('header_text_color');
         const headerTextColorText = document.getElementById('header_text_color_text');
+        const statusInput = document.getElementById('status');
+        const registrationModeInput = document.getElementById('registration_mode');
+        const registrationRestrictedTypeInput = document.getElementById('registration_restricted_type');
+        const allowedDomainInput = document.getElementById('allowed_domain');
+        const domainTagsContainer = document.getElementById('domain-tags-container');
+        const domainTagInput = document.getElementById('domain-tag-input');
+        const uploadProcessBtn = document.getElementById('upload-process');
+        const uploadStatus = document.getElementById('upload-status');
+        const tabButtons = document.querySelectorAll('[data-tab-target]');
+        const tabPanels = document.querySelectorAll('[data-tab-panel]');
         const LOGO_MAX_BYTES = 5 * 1024 * 1024;
-        const defaultLogoUrl = logoUrlInput.dataset.defaultLogo || logoUrlInput.value || '';
+        const defaultLogoUrl = logoUrlInput?.dataset?.defaultLogo || logoUrlInput?.value || '';
+
+        const registrationOpenInput = document.getElementById('registration_open_at');
+        const registrationCloseInput = document.getElementById('registration_close_at');
+        const accessOpenInput = document.getElementById('access_open_at');
+        const capacityInput = document.getElementById('capacity');
+        const registrationSuccessMessageInput = document.getElementById('registration_success_message');
+        const isDeletedInput = document.getElementById('is_deleted');
+        const whitelistTextarea = document.getElementById('whitelist_emails');
+        const whitelistStatus = document.getElementById('whitelist-status');
+        const whitelistContainer = document.getElementById('whitelist-container');
+        const whitelistFormContainer = document.getElementById('whitelist-form-container');
+        const whitelistFormFields = document.getElementById('whitelist-form-fields');
+        const whitelistAddTrigger = document.getElementById('whitelist-add-trigger');
+        const whitelistAddEntry = document.getElementById('whitelist-add-entry');
+        const whitelistCancelAdd = document.getElementById('whitelist-cancel-add');
+        const whitelistClearForm = document.getElementById('whitelist-clear-form');
+        const whitelistEntriesContainer = document.getElementById('whitelist-entries-container');
+        const whitelistHeaderRow = document.getElementById('whitelist-header-row');
+        const whitelistEntriesBody = document.getElementById('whitelist-entries-body');
+        const whitelistCount = document.getElementById('whitelist-count');
+        const whitelistClearAll = document.getElementById('whitelist-clear-all');
+        const whitelistSaveAdvanced = document.getElementById('whitelist-save-advanced');
+        const whitelistToggleMode = document.getElementById('whitelist-toggle-mode');
+        const registrationSchemaPreset = document.getElementById('registration_schema_preset');
+        const registrationSchemaInput = document.getElementById('registration_schema');
+        const whitelistSaveBtn = document.getElementById('whitelist-save');
+        const whitelistFileInput = document.getElementById('whitelist-file');
+        const uploadPreview = document.getElementById('upload-preview');
+        const uploadFilename = document.getElementById('upload-filename');
+
+        const registrationSchemaPresets = {
+            default: {
+                fields: [
+                    { key: 'name', label: 'Nombre completo', type: 'text', required: true },
+                    { key: 'email', label: 'Correo corporativo', type: 'email', required: true },
+                    { key: 'phone', label: 'Teléfono', type: 'tel', required: false }
+                ]
+            },
+            name_only: {
+                fields: [
+                    { key: 'name', label: 'Nombre completo', type: 'text', required: true }
+                ]
+            },
+            name_email: {
+                fields: [
+                    { key: 'name', label: 'Nombre completo', type: 'text', required: true },
+                    { key: 'email', label: 'Correo', type: 'email', required: true }
+                ]
+            },
+            name_email_employee: {
+                fields: [
+                    { key: 'name', label: 'Nombre completo', type: 'text', required: true },
+                    { key: 'email', label: 'Correo', type: 'email', required: true },
+                    { key: 'employee_id', label: 'Número de empleado', type: 'text', required: true }
+                ]
+            },
+            name_email_company: {
+                fields: [
+                    { key: 'name', label: 'Nombre completo', type: 'text', required: true },
+                    { key: 'email', label: 'Correo', type: 'email', required: true },
+                    { key: 'company', label: 'Empresa', type: 'text', required: true }
+                ]
+            }
+        };
+
+        // --- Visual Form Builder logic ---
+        // --- Visual Form Builder logic ---
+        window.formBuilder = {
+            get container() { return document.getElementById('form-builder-container'); },
+            get schemaInput() { return document.getElementById('registration_schema'); },
+
+            init() {
+                if (this.schemaInput) {
+                    this.schemaInput.addEventListener('input', () => this.renderFromSchema());
+                }
+                this.renderFromSchema(); // Initial render
+            },
+
+            renderFromSchema() {
+                const container = this.container;
+                const schemaInput = this.schemaInput;
+                if (!container || !schemaInput) return;
+
+                try {
+                    const schema = JSON.parse(schemaInput.value || '{"fields":[]}');
+                    container.innerHTML = '';
+                    const fields = schema.fields || [];
+
+                    if (fields.length === 0) {
+                        container.innerHTML = '<div class="text-[10px] text-slate-500 text-center py-4">No hay campos configurados.</div>';
+                        return;
+                    }
+
+                    fields.forEach((field, index) => {
+                        container.appendChild(this.createFieldElement(field, index));
+                    });
+                } catch (e) {
+                    // JSON might be invalid while typing, skip render
+                }
+            },
+
+            createFieldElement(field, index) {
+                const div = document.createElement('div');
+                div.className = 'bg-navy-900 border border-white/10 rounded-lg p-3 flex flex-wrap gap-3 items-end animate-fade-in group/field';
+                div.innerHTML = `
+                    <div class="flex-1 min-w-[120px] space-y-1">
+                        <label class="text-[9px] font-bold uppercase text-slate-500">Etiqueta</label>
+                        <input type="text" value="${field.label || ''}" oninput="window.formBuilder.updateField(${index}, 'label', this.value)" 
+                            class="w-full bg-navy-950 border border-white/5 rounded px-2 py-1.5 text-xs text-white focus:border-indigo-500/50 outline-none">
+                    </div>
+                    <div class="w-24 space-y-1">
+                        <label class="text-[9px] font-bold uppercase text-slate-500">ID (Key)</label>
+                        <input type="text" value="${field.key || ''}" oninput="window.formBuilder.updateField(${index}, 'key', this.value)" 
+                            class="w-full bg-navy-950 border border-white/5 rounded px-2 py-1.5 text-xs text-white focus:border-indigo-500/50 outline-none font-mono">
+                    </div>
+                    <div class="w-24 space-y-1">
+                        <label class="text-[9px] font-bold uppercase text-slate-500">Tipo</label>
+                        <select onchange="window.formBuilder.updateField(${index}, 'type', this.value)" 
+                            class="w-full bg-navy-950 border border-white/5 rounded px-2 py-1.5 text-xs text-white focus:border-indigo-500/50 outline-none">
+                            <option value="text" ${field.type === 'text' ? 'selected' : ''}>Texto</option>
+                            <option value="email" ${field.type === 'email' ? 'selected' : ''}>Email</option>
+                            <option value="tel" ${field.type === 'tel' ? 'selected' : ''}>Tel</option>
+                            <option value="number" ${field.type === 'number' ? 'selected' : ''}>Número</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 pb-2">
+                        <input type="checkbox" ${field.required ? 'checked' : ''} onchange="window.formBuilder.updateField(${index}, 'required', this.checked)" 
+                            class="w-3.5 h-3.5 rounded bg-navy-950 border-white/10 text-indigo-600 focus:ring-0 focus:ring-offset-0">
+                        <span class="text-[9px] font-bold uppercase text-slate-500">Req</span>
+                    </div>
+                    <button type="button" onclick="window.formBuilder.removeField(${index})" 
+                        class="p-2 text-slate-500 hover:text-rose-400 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                `;
+                return div;
+            },
+
+            addField() {
+                const schema = this.getSchema();
+                schema.fields.push({ key: 'field_' + Date.now(), label: 'Nuevo Campo', type: 'text', required: false });
+                this.saveSchema(schema);
+            },
+
+            removeField(index) {
+                const schema = this.getSchema();
+                schema.fields.splice(index, 1);
+                this.saveSchema(schema);
+            },
+
+            updateField(index, key, value) {
+                const schema = this.getSchema();
+                if (schema.fields[index]) {
+                    schema.fields[index][key] = value;
+                    this.saveSchema(schema, false); // Don't re-render to avoid losing focus
+                }
+            },
+
+            getSchema() {
+                try {
+                    const val = this.schemaInput ? this.schemaInput.value : '';
+                    return JSON.parse(val || '{"fields":[]}');
+                } catch (e) {
+                    return { fields: [] };
+                }
+            },
+
+            saveSchema(schema, shouldRender = true) {
+                const input = this.schemaInput;
+                if (!input) return;
+                input.value = JSON.stringify(schema, null, 2);
+                if (shouldRender) this.renderFromSchema();
+            }
+        };
+
+        function toggleJsonView() {
+            registrationSchemaInput.classList.toggle('hidden');
+        }
+
+        // Initialize builder if exists
+        if (window.formBuilder) {
+            window.formBuilder.init();
+        }
+
+        // --- Funciones auxiliares ---
+        function setWhitelistStatus(message = '') {
+            if (whitelistStatus) {
+                whitelistStatus.textContent = message;
+                whitelistStatus.classList.remove('text-emerald-400', 'text-amber-400', 'text-red-400', 'text-slate-500');
+                if (!message) {
+                    whitelistStatus.classList.add('text-slate-500');
+                } else {
+                    whitelistStatus.classList.add('text-emerald-400');
+                }
+            }
+        }
+
+        function setRegistrationSchemaPreset(presetKey) {
+            if (!registrationSchemaInput) return;
+            if (presetKey !== 'custom' && registrationSchemaPresets[presetKey]) {
+                registrationSchemaInput.value = JSON.stringify(registrationSchemaPresets[presetKey], null, 2);
+            }
+            if (window.formBuilder) window.formBuilder.renderFromSchema();
+        }
+
+        // --- Domain Tags System ---
+        const domainTags = {
+            container: domainTagsContainer,
+            input: domainTagInput,
+            hiddenInput: allowedDomainInput,
+            tags: [],
+
+            init() {
+                if (!this.container || !this.input) return;
+
+                // Event listeners
+                this.container.addEventListener('click', () => this.input.focus());
+
+                this.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        this.addTag(this.input.value.trim());
+                    }
+                });
+
+                this.input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        if (this.input.value.trim()) {
+                            this.addTag(this.input.value.trim());
+                        }
+                    }, 100);
+                });
+
+                // Load initial domains
+                this.loadFromHidden();
+            },
+
+            addTag(domain) {
+                if (!domain || this.tags.includes(domain)) {
+                    this.input.value = '';
+                    return;
+                }
+
+                // Validate domain format
+                if (!this.isValidDomain(domain)) {
+                    this.showError('Dominio inválido');
+                    this.input.value = '';
+                    return;
+                }
+
+                this.tags.push(domain);
+                this.renderTags();
+                this.updateHidden();
+                this.input.value = '';
+            },
+
+            removeTag(index) {
+                this.tags.splice(index, 1);
+                this.renderTags();
+                this.updateHidden();
+            },
+
+            renderTags() {
+                // Remove existing tags
+                this.container.querySelectorAll('.domain-tag').forEach(tag => tag.remove());
+
+                // Add tags before input
+                this.tags.forEach((tag, index) => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'domain-tag inline-flex items-center gap-1 px-2 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded text-xs text-indigo-300';
+                    tagElement.innerHTML = `
+                        <span>${tag}</span>
+                        <button type="button" class="hover:text-indigo-100 transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    `;
+
+                    tagElement.querySelector('button').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.removeTag(index);
+                    });
+
+                    this.container.insertBefore(tagElement, this.input);
+                });
+            },
+
+            updateHidden() {
+                this.hiddenInput.value = this.tags.join(',');
+            },
+
+            loadFromHidden() {
+                this.tags = []; // Clear current tags first
+                const value = this.hiddenInput.value;
+                if (value) {
+                    this.tags = value.split(',').map(d => d.trim()).filter(d => d);
+                }
+                this.renderTags();
+            },
+
+            isValidDomain(domain) {
+                // Basic domain validation
+                const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*$/;
+                return domainRegex.test(domain) && domain.includes('.');
+            },
+
+            showError(message) {
+                // Simple error display
+                const error = document.createElement('div');
+                error.className = 'text-red-400 text-xs mt-1';
+                error.textContent = message;
+                this.container.appendChild(error);
+                setTimeout(() => error.remove(), 2000);
+            }
+        };
+
+        // Initialize domain tags
+        domainTags.init();
+
+        // --- Funciones globales ---
+        function showToast(message, type = 'info') {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    icon: type === 'error' ? 'error' : type === 'success' ? 'success' : 'info',
+                    title: message,
+                    background: '#0a0b16',
+                    color: '#fff'
+                });
+            } else {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+
+        // --- Función para controlar la visibilidad de secciones de registro ---
+        function updateRegistrationRestrictionsUI() {
+            const registrationMode = registrationModeInput ? registrationModeInput.value : 'OPEN';
+            const restrictedType = registrationRestrictedTypeInput ? registrationRestrictedTypeInput.value : 'DOMAIN';
+
+            const group = document.getElementById('registration-restrictions-group');
+            const restrictedTypeSection = document.getElementById('registration-restricted-type-section');
+            const domainSection = document.getElementById('domain-section');
+            const whitelistGroup = document.getElementById('whitelist-group');
+
+            if (registrationMode === 'OPEN') {
+                if (group) group.classList.add('hidden');
+            } else {
+                if (group) group.classList.remove('hidden');
+
+                if (restrictedType === 'DOMAIN') {
+                    if (domainSection) domainSection.classList.remove('hidden');
+                    if (whitelistGroup) whitelistGroup.classList.add('hidden');
+                } else if (restrictedType === 'WHITELIST') {
+                    if (domainSection) domainSection.classList.add('hidden');
+                    if (whitelistGroup) whitelistGroup.classList.remove('hidden');
+                } else if (restrictedType === 'BOTH') {
+                    if (domainSection) domainSection.classList.remove('hidden');
+                    if (whitelistGroup) whitelistGroup.classList.remove('hidden');
+                }
+            }
+        }
+
+        function parseWhitelistInput(raw) {
+            if (!raw) return [];
+            return raw
+                .split(/\s|,|;/)
+                .map(s => s.trim().toLowerCase())
+                .filter(s => s && s.includes('@'));
+        }
+
+        async function loadWhitelist(eventId) {
+            if (!whitelistTextarea || !eventId) return;
+            setWhitelistStatus('Cargando…', 'neutral');
+            try {
+                const res = await fetch(`/api/admin/event-whitelist?event_id=${encodeURIComponent(eventId)}`);
+                if (res.status === 401) {
+                    window.location.reload();
+                    return;
+                }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || 'No se pudo cargar la whitelist.');
+                whitelistTextarea.value = (data.emails || []).join('\n');
+                setWhitelistStatus('Cargada', 'success');
+            } catch (err) {
+                setWhitelistStatus('Error', 'error');
+            }
+        }
+
+        async function saveWhitelist(eventId) {
+            if (!whitelistTextarea || !eventId) return false;
+            const emails = parseWhitelistInput(whitelistTextarea.value || '');
+            setWhitelistStatus('Guardando…', 'neutral');
+            try {
+                const res = await fetch('/api/admin/event-whitelist', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_id: eventId, emails })
+                });
+                if (res.status === 401) {
+                    window.location.reload();
+                    return false;
+                }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || 'No se pudo guardar la whitelist.');
+                setWhitelistStatus(`Guardada (${data.count || emails.length})`, 'success');
+                return true;
+            } catch (err) {
+                setWhitelistStatus('Error', 'error');
+                return false;
+            }
+        }
+
+        // --- Upload masivo de whitelist ---
+        function setUploadStatus(message = '', tone = '') {
+            if (!uploadStatus) return;
+            uploadStatus.textContent = message;
+            uploadStatus.classList.remove('text-emerald-400', 'text-amber-400', 'text-red-400', 'text-slate-500');
+            if (!message) {
+                uploadStatus.classList.add('text-slate-500');
+                return;
+            }
+            const toneClass = tone === 'success' ? 'text-emerald-400' : tone === 'error' ? 'text-red-400' : 'text-amber-400';
+            uploadStatus.classList.add(toneClass);
+        }
+
+        function validateFile(file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['.xlsx', '.xls', '.csv'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+
+            if (!allowedTypes.includes(fileExt)) {
+                setUploadStatus('Formato no válido', 'error');
+                return false;
+            }
+
+            if (file.size > maxSize) {
+                setUploadStatus('Archivo demasiado grande (máx. 5MB)', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        async function processWhitelistFile(file) {
+            if (!validateFile(file)) return;
+
+            setUploadStatus('Procesando...', 'neutral');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('event_id', editingId);
+
+            try {
+                const response = await fetch('/api/admin/event-whitelist/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    window.location.reload();
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Error al procesar archivo');
+                }
+
+                // Actualizar el textarea con los emails procesados
+                if (result.emails && result.emails.length > 0) {
+                    whitelistTextarea.value = result.emails.join('\n');
+                    setUploadStatus(`Procesado: ${result.emails.length} emails`, 'success');
+
+                    // Opcional: guardar automáticamente
+                    if (editingId) {
+                        await saveWhitelist(editingId);
+                    }
+                } else {
+                    setUploadStatus('No se encontraron emails válidos', 'error');
+                }
+
+            } catch (error) {
+                setUploadStatus(error.message || 'Error al procesar archivo', 'error');
+            }
+
+            // Limpiar preview
+            uploadPreview.classList.add('hidden');
+            whitelistFileInput.value = '';
+        }
+
+        // Event listeners para carga de archivos
+        if (whitelistFileInput) {
+            whitelistFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    uploadPreview.classList.add('hidden');
+                    return;
+                }
+
+                if (!validateFile(file)) {
+                    e.target.value = '';
+                    return;
+                }
+
+                // Mostrar preview
+                uploadFilename.textContent = file.name;
+                uploadPreview.classList.remove('hidden');
+                setUploadStatus('Listo para procesar', 'success');
+            });
+        }
+
+        if (uploadProcessBtn) {
+            uploadProcessBtn.addEventListener('click', async () => {
+                const file = whitelistFileInput.files[0];
+                if (file) {
+                    await processWhitelistFile(file);
+                }
+            });
+        }
+
+        function setActiveTab(tabId) {
+            tabPanels.forEach(panel => {
+                panel.classList.toggle('hidden', panel.id !== `tab-${tabId}`);
+            });
+            tabButtons.forEach(btn => {
+                const isActive = btn.getAttribute('data-tab-target') === tabId;
+                btn.classList.toggle('bg-indigo-600', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('bg-white/5', !isActive);
+                btn.classList.toggle('text-slate-400', !isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+        }
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setActiveTab(btn.getAttribute('data-tab-target'));
+            });
+        });
+
+        // Event listeners para actualizar la UI de restricciones de registro
+        if (registrationModeInput) {
+            registrationModeInput.addEventListener('change', updateRegistrationRestrictionsUI);
+        }
+
+        if (registrationRestrictedTypeInput) {
+            registrationRestrictedTypeInput.addEventListener('change', updateRegistrationRestrictionsUI);
+        }
+
+        function toDatetimeLocal(value) {
+            if (!value) return '';
+            const v = String(value).trim();
+            if (!v) return '';
+            if (v.includes('T')) return v.slice(0, 16);
+            return v.replace(' ', 'T').slice(0, 16);
+        }
+
+        function fromDatetimeLocal(value) {
+            if (!value) return null;
+            const v = String(value).trim();
+            if (!v) return null;
+            return v.replace('T', ' ').slice(0, 16);
+        }
 
         function normalizeHexColor(value) {
             if (!value) return '';
@@ -750,6 +1808,22 @@
             document.getElementById('slug').disabled = false;
             document.getElementById('is_active').checked = true;
             document.getElementById('timezone').value = 'America/Mexico_City';
+            setActiveTab('general');
+            if (statusInput) statusInput.value = 'PUBLISHED';
+            if (registrationModeInput) registrationModeInput.value = 'RESTRICTED';
+            if (registrationRestrictedTypeInput) registrationRestrictedTypeInput.value = 'DOMAIN';
+            if (allowedDomainInput) allowedDomainInput.value = 'produccionesfast.com';
+            if (registrationOpenInput) registrationOpenInput.value = '';
+            if (registrationCloseInput) registrationCloseInput.value = '';
+            if (accessOpenInput) accessOpenInput.value = '';
+            if (capacityInput) capacityInput.value = '';
+            if (registrationSuccessMessageInput) registrationSuccessMessageInput.value = '';
+            if (isDeletedInput) isDeletedInput.checked = false;
+            if (whitelistTextarea) whitelistTextarea.value = '';
+            setWhitelistStatus('');
+            if (registrationSchemaPreset) registrationSchemaPreset.value = 'default';
+            setRegistrationSchemaPreset('default');
+            if (window.formBuilder) window.formBuilder.renderFromSchema();
             modal.classList.remove('hidden');
         }
 
@@ -784,7 +1858,63 @@
             }
 
             document.getElementById('is_active').checked = event.is_active;
+            setActiveTab('general');
+            if (statusInput) statusInput.value = event.status || 'PUBLISHED';
+            if (registrationModeInput) registrationModeInput.value = event.registration_mode || 'RESTRICTED';
+            if (registrationRestrictedTypeInput) registrationRestrictedTypeInput.value = event.registration_restricted_type || 'DOMAIN';
+            if (allowedDomainInput) {
+                allowedDomainInput.value = event.allowed_domain || 'produccionesfast.com';
+                // Cargar dominios en el sistema de tags
+                domainTags.loadFromHidden();
+            }
+            if (registrationOpenInput) registrationOpenInput.value = toDatetimeLocal(event.registration_open_at);
+            if (registrationCloseInput) registrationCloseInput.value = toDatetimeLocal(event.registration_close_at);
+            if (accessOpenInput) accessOpenInput.value = toDatetimeLocal(event.access_open_at);
+            if (capacityInput) capacityInput.value = event.capacity ?? '';
+            if (registrationSuccessMessageInput) registrationSuccessMessageInput.value = event.registration_success_message || '';
+            if (isDeletedInput) isDeletedInput.checked = Boolean(event.is_deleted);
+            if (whitelistTextarea) whitelistTextarea.value = '';
+            setWhitelistStatus('');
+            if (registrationSchemaInput) {
+                if (event.registration_schema) {
+                    try {
+                        const schemaObj = (typeof event.registration_schema === 'string')
+                            ? JSON.parse(event.registration_schema)
+                            : event.registration_schema;
+                        registrationSchemaInput.value = JSON.stringify(schemaObj, null, 2);
+                    } catch (e) {
+                        registrationSchemaInput.value = (typeof event.registration_schema === 'string')
+                            ? event.registration_schema
+                            : JSON.stringify(event.registration_schema);
+                    }
+                    if (registrationSchemaPreset) registrationSchemaPreset.value = 'custom';
+                } else {
+                    if (registrationSchemaPreset) registrationSchemaPreset.value = 'default';
+                    setRegistrationSchemaPreset('default');
+                }
+            }
             modal.classList.remove('hidden');
+            // Refresh form builder UI
+            if (window.formBuilder) {
+                window.formBuilder.renderFromSchema();
+            }
+
+            // Actualizar la interfaz de restricciones según el modo de registro
+            updateRegistrationRestrictionsUI();
+
+            if (registrationRestrictedTypeInput && ['WHITELIST', 'BOTH'].includes(registrationRestrictedTypeInput.value)) {
+                loadWhitelist(editingId);
+            }
+        }
+
+        if (whitelistSaveBtn) {
+            whitelistSaveBtn.addEventListener('click', async () => {
+                if (!editingId) {
+                    showToast('Guarda el evento antes de cargar whitelist.', 'error');
+                    return;
+                }
+                await saveWhitelist(editingId);
+            });
         }
 
         function openEditWithData(btn) {
@@ -1011,15 +2141,12 @@
                 text: `Estás a punto de ${actionText} el evento "${title}". ${current_status ? 'Los usuarios ya no podrán ver el stream.' : 'Será visible para todos.'}`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: current_status ? '#ef4444' : '#10b981',
-                cancelButtonColor: '#1f2937',
+                confirmButtonColor: current_status ? '#ef4444' : '#4f46e5',
+                cancelButtonColor: '#1e293b',
                 confirmButtonText: `Sí, ${actionText}`,
                 cancelButtonText: 'Cancelar',
                 background: '#0a0b16',
-                color: '#e2e8f0',
-                customClass: {
-                    popup: 'border border-white/10 rounded-2xl'
-                }
+                color: '#fff'
             });
 
             if (!result.isConfirmed) return;
@@ -1067,6 +2194,62 @@
             }
         }
 
+        function updateEventCard(eventId, payload) {
+            const card = document.querySelector(`[data-event-card-id="${eventId}"]`);
+            if (!card) return;
+
+            const titleEl = card.querySelector('[data-event-title]');
+            if (titleEl && payload.title) titleEl.textContent = payload.title;
+
+            const slug = payload.slug;
+            if (slug) {
+                const slugLink = card.querySelector('[data-event-slug-link]');
+                if (slugLink) {
+                    slugLink.textContent = `/e/${slug}`;
+                    slugLink.href = `/e/${slug}/watch`;
+                }
+
+                const watchLink = card.querySelector('[data-event-watch-link]');
+                if (watchLink) watchLink.href = `/e/${slug}/watch`;
+
+                const modLink = card.querySelector('[data-event-mod-link]');
+                if (modLink) modLink.href = `/e/${slug}/mod`;
+
+                const speakerLink = card.querySelector('[data-event-speaker-link]');
+                if (speakerLink) speakerLink.href = `/e/${slug}/speaker`;
+
+                const reportsLink = card.querySelector('[data-event-reports-link]');
+                if (reportsLink) reportsLink.href = `/e/${slug}/reports`;
+
+                const copyAccess = card.querySelector('[data-event-copy-access]');
+                if (copyAccess) {
+                    copyAccess.setAttribute('onclick', `copyToClipboard(window.location.origin + '/e/${slug}')`);
+                }
+
+                const copyRegister = card.querySelector('[data-event-copy-register]');
+                if (copyRegister) {
+                    copyRegister.setAttribute('onclick', `copyToClipboard(window.location.origin + '/e/${slug}/register')`);
+                }
+            }
+
+            const dataElements = card.querySelectorAll('[data-event]');
+            if (dataElements.length) {
+                let baseEvent = {};
+                try {
+                    baseEvent = JSON.parse(dataElements[0].getAttribute('data-event') || '{}');
+                } catch (e) {
+                    baseEvent = {};
+                }
+                const mergedEvent = {
+                    ...baseEvent,
+                    ...payload,
+                    id: eventId,
+                };
+                const serialized = JSON.stringify(mergedEvent);
+                dataElements.forEach(el => el.setAttribute('data-event', serialized));
+            }
+        }
+
         form.onsubmit = async (e) => {
             e.preventDefault();
 
@@ -1078,6 +2261,15 @@
                 showToast('Por favor completa los campos obligatorios.', 'error');
                 return;
             }
+            if (registrationSchemaInput && registrationSchemaInput.value.trim()) {
+                try {
+                    const parsedSchema = JSON.parse(registrationSchemaInput.value);
+                    registrationSchemaInput.value = JSON.stringify(parsedSchema, null, 2);
+                } catch (err) {
+                    showToast('Schema de registro inválido (JSON).', 'error');
+                    return;
+                }
+            }
 
             const payload = {
                 title: title,
@@ -1088,7 +2280,18 @@
                 header_bg_color: normalizeHexColor(headerBgColorText.value) || headerBgColor.value,
                 header_text_color: normalizeHexColor(headerTextColorText.value) || headerTextColor.value,
                 timezone: document.getElementById('timezone').value || 'America/Mexico_City',
-                is_active: document.getElementById('is_active').checked ? 1 : 0
+                is_active: document.getElementById('is_active').checked ? 1 : 0,
+                status: statusInput ? statusInput.value : undefined,
+                registration_mode: registrationModeInput ? registrationModeInput.value : undefined,
+                registration_restricted_type: registrationRestrictedTypeInput ? registrationRestrictedTypeInput.value : undefined,
+                allowed_domain: allowedDomainInput ? allowedDomainInput.value : undefined,
+                registration_open_at: registrationOpenInput ? fromDatetimeLocal(registrationOpenInput.value) : undefined,
+                registration_close_at: registrationCloseInput ? fromDatetimeLocal(registrationCloseInput.value) : undefined,
+                access_open_at: accessOpenInput ? fromDatetimeLocal(accessOpenInput.value) : undefined,
+                capacity: capacityInput && capacityInput.value !== '' ? parseInt(capacityInput.value, 10) : null,
+                registration_schema: registrationSchemaInput ? registrationSchemaInput.value : undefined,
+                registration_success_message: registrationSuccessMessageInput ? registrationSuccessMessageInput.value : undefined,
+                is_deleted: isDeletedInput ? (isDeletedInput.checked ? 1 : 0) : undefined
             };
 
             const method = editingId ? 'PUT' : 'POST';
@@ -1106,11 +2309,24 @@
                     return;
                 }
 
+                const data = await res.json().catch(() => ({}));
                 if (res.ok) {
-                    showToast('Evento guardado correctamente.', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    const eventIdToSave = editingId || data.event_id;
+                    const restrictedType = registrationRestrictedTypeInput ? registrationRestrictedTypeInput.value : '';
+                    if (eventIdToSave && ['WHITELIST', 'BOTH'].includes(restrictedType)) {
+                        await saveWhitelist(eventIdToSave);
+                    }
+
+                    if (editingId) {
+                        updateEventCard(editingId, payload);
+                        showToast('Evento guardado correctamente.', 'success');
+                        closeModal();
+                    } else {
+                        showToast('Evento guardado correctamente.', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 } else {
-                    showToast('Ocurrió un error al guardar el evento.', 'error');
+                    showToast(data.message || 'Ocurrió un error al guardar el evento.', 'error');
                 }
             } catch (err) {
                 showToast('Error de conexión con el servidor.', 'error');
@@ -1219,7 +2435,8 @@
                     <div class="p-3 rounded-lg border border-white/5 bg-white/5">
                         <span
                             class="block text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1">Speaker</span>
-                        <span class="text-sm font-medium text-white block truncate" id="info-speaker">Sin asignar</span>
+                        <span class="text-sm font-medium text-white block truncate" id="info-speaker">Sin
+                            asignar</span>
                     </div>
                 </div>
             </div>
@@ -1245,6 +2462,541 @@
             document.getElementById('info-speaker').textContent = event.speaker_name || 'Sin asignar';
 
             document.getElementById('info-modal').classList.remove('hidden');
+        }
+    </script>
+
+    <style>
+        /* List View Styles */
+        #events-grid.list-view {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+
+        /* Desktop List View Transformation */
+        @media (min-width: 768px) {
+            #events-grid.list-view .event-card {
+                display: flex;
+                align-items: center;
+                padding: 0.75rem 1.5rem;
+                height: 80px;
+            }
+
+            #events-grid.list-view .event-card>div:first-child {
+                /* Status Bar */
+                background: transparent;
+                border: none;
+                padding: 0;
+                width: 140px;
+                flex-shrink: 0;
+                margin-right: 2rem;
+            }
+
+            #events-grid.list-view .event-card>div:last-child {
+                /* Content Body */
+                padding: 0;
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+
+            #events-grid.list-view h3[data-event-title] {
+                /* Title */
+                font-size: 1rem;
+                margin-bottom: 0;
+                width: 25%;
+                min-width: 200px;
+                margin-right: 1rem;
+            }
+
+            #events-grid.list-view [data-event-slug-link] {
+                /* Slug */
+                margin-bottom: 0;
+                margin-right: auto;
+            }
+
+            /* Hide Copy Buttons in List View */
+            #events-grid.list-view [data-event-copy-access],
+            #events-grid.list-view [data-event-copy-register],
+            #events-grid.list-view .w-px.bg-white\/10 {
+                display: none;
+            }
+
+            /* Compact Action Buttons */
+            #events-grid.list-view .grid.grid-cols-3 {
+                display: flex;
+                gap: 0.5rem;
+                margin-bottom: 0;
+                margin-right: 1.5rem;
+            }
+
+            #events-grid.list-view .group\/btn {
+                padding: 0.4rem;
+                width: 32px;
+                height: 32px;
+                border-radius: 6px;
+            }
+
+            #events-grid.list-view .group\/btn span {
+                display: none;
+            }
+
+            #events-grid.list-view .group\/btn svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+
+            /* Main Button Compact */
+            #events-grid.list-view a[href*="watch"] {
+                width: auto;
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Search & Filter Logic
+        let currentFilter = 'all';
+        let currentView = localStorage.getItem('eventsView') || 'grid';
+
+        function initView() {
+            setView(currentView);
+        }
+
+        function setView(view) {
+            currentView = view;
+            localStorage.setItem('eventsView', view);
+
+            const grid = document.getElementById('events-grid');
+            const btns = document.querySelectorAll('.view-btn');
+
+            if (view === 'list') {
+                grid.classList.add('list-view');
+            } else {
+                grid.classList.remove('list-view');
+            }
+
+            btns.forEach(btn => {
+                if (btn.dataset.view === view) {
+                    btn.classList.add('text-indigo-200', 'bg-indigo-500/20', 'border-indigo-500/30');
+                    btn.classList.remove('text-slate-400', 'hover:text-white', 'border-transparent', 'hover:bg-white/5');
+                } else {
+                    btn.classList.remove('text-indigo-200', 'bg-indigo-500/20', 'border-indigo-500/30');
+                    btn.classList.add('text-slate-400', 'hover:text-white', 'border-transparent', 'hover:bg-white/5');
+                }
+            });
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('text-white', 'bg-indigo-500/20', 'shadow-sm', 'border-indigo-500/30');
+                    btn.classList.remove('text-slate-400', 'hover:text-white', 'border-transparent', 'hover:bg-white/5');
+                } else {
+                    btn.classList.remove('text-white', 'bg-indigo-500/20', 'shadow-sm', 'border-indigo-500/30');
+                    btn.classList.add('text-slate-400', 'hover:text-white', 'border-transparent', 'hover:bg-white/5');
+                }
+            });
+
+            filterEvents();
+        }
+
+        function filterEvents() {
+            const search = document.getElementById('event-search').value.toLowerCase();
+            const cards = document.querySelectorAll('.event-card');
+
+            cards.forEach(card => {
+                const searchData = card.dataset.eventSearch;
+                const statusData = card.dataset.eventStatus;
+
+                const matchesSearch = search === '' || searchData.includes(search);
+                const matchesFilter = currentFilter === 'all' ||
+                    (currentFilter === 'live' && statusData === 'live') ||
+                    (currentFilter === 'offline' && statusData === 'offline');
+
+                if (matchesSearch && matchesFilter) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initView();
+        });
+    </script>
+    <!-- Polls Management Overlay -->
+    <div id="polls-modal"
+        class="fixed inset-0 bg-[#050511]/95 backdrop-blur-sm z-50 hidden overflow-y-auto transition-all duration-300 animate-fade-in"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="min-h-screen w-full">
+            <div class="max-w-6xl mx-auto px-6 py-10">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.35em] text-slate-500">Administración</p>
+                        <h2 class="text-2xl font-bold text-white" id="polls-modal-title">Encuestas</h2>
+                    </div>
+                    <button onclick="closePollsModal()" class="text-slate-500 hover:text-white transition-colors"
+                        aria-label="Cerrar">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="polls-grid" class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                    <!-- Create Poll Form -->
+                    <div id="poll-form-panel"
+                        class="hidden bg-navy-900/70 rounded-2xl border border-white/10 p-6 shadow-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider" id="poll-form-title">
+                                Nueva
+                                Encuesta</h4>
+                            <button id="poll-cancel-edit" onclick="cancelPollEdit()"
+                                class="hidden text-[10px] font-bold text-slate-400 hover:text-white uppercase tracking-wider">Cancelar
+                                edición</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Pregunta</label>
+                                <input type="text" id="poll-question"
+                                    class="w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                    placeholder="¿Qué te parece el evento?">
+                            </div>
+                            <div id="poll-options-container" class="space-y-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Opciones</label>
+                                <input type="text"
+                                    class="poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                    placeholder="Opción 1">
+                                <input type="text"
+                                    class="poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                    placeholder="Opción 2">
+                            </div>
+                            <button onclick="addPollOption()"
+                                class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Añadir Opción
+                            </button>
+                            <button onclick="savePoll()" id="poll-save-btn"
+                                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition-colors text-sm uppercase tracking-wider">Crear
+                                Encuesta</button>
+                        </div>
+                    </div>
+                    <div id="poll-results-panel"
+                        class="hidden bg-navy-900/70 rounded-2xl border border-white/10 p-6 shadow-2xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Resultados</h5>
+                            <div class="flex items-center gap-3">
+                                <button onclick="showPollForm()"
+                                    class="text-[10px] font-bold text-indigo-300 hover:text-white uppercase tracking-wider">Crear
+                                    encuesta</button>
+                                <button onclick="closePollResults()"
+                                    class="text-[10px] font-bold text-slate-500 hover:text-white uppercase tracking-wider">Cerrar</button>
+                            </div>
+                        </div>
+                        <div id="poll-results-content" class="space-y-3">
+                            <p class="text-xs text-slate-500">Selecciona una encuesta para ver resultados.</p>
+                        </div>
+                    </div>
+
+                    <!-- Polls List -->
+                    <div class="bg-navy-900/70 rounded-2xl border border-white/10 p-6 shadow-2xl flex flex-col">
+                        <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Encuestas Guardadas
+                        </h4>
+                        <div id="polls-list" class="space-y-3 max-h-[520px] overflow-y-auto custom-scroll">
+                            <!-- Polls will be injected here -->
+                            <p class="text-xs text-slate-600 italic">No hay encuestas para este evento.</p>
+                        </div>
+                        <button onclick="openNewPoll()"
+                            class="mt-6 w-full bg-indigo-600/80 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition-colors text-xs uppercase tracking-wider">Crear
+                            nueva encuesta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPollEventId = null;
+        let currentPollEditingId = null;
+        const pollsCache = {};
+
+        function openPollsModal(eventId, eventTitle) {
+            currentPollEventId = eventId;
+            document.getElementById('polls-modal-title').textContent = `Encuestas: ${eventTitle}`;
+            document.getElementById('polls-modal').classList.remove('hidden');
+            setPollLayout(false);
+            loadPolls(eventId);
+        }
+
+        function closePollsModal() {
+            document.getElementById('polls-modal').classList.add('hidden');
+            currentPollEventId = null;
+            resetPollForm();
+            closePollResults();
+            setPollLayout(false);
+        }
+
+        function setPollLayout(showSidePanel) {
+            const grid = document.getElementById('polls-grid');
+            if (!grid) return;
+            if (showSidePanel) {
+                grid.classList.remove('lg:grid-cols-1');
+                grid.classList.add('lg:grid-cols-[1.1fr_0.9fr]');
+            } else {
+                grid.classList.add('lg:grid-cols-1');
+                grid.classList.remove('lg:grid-cols-[1.1fr_0.9fr]');
+            }
+        }
+
+        function openNewPoll() {
+            closePollResults();
+            resetPollForm();
+            document.getElementById('poll-form-panel').classList.remove('hidden');
+            setPollLayout(true);
+        }
+
+        function showPollForm() {
+            document.getElementById('poll-results-panel').classList.add('hidden');
+            document.getElementById('poll-form-panel').classList.remove('hidden');
+            setPollLayout(true);
+        }
+
+        function resetPollForm() {
+            currentPollEditingId = null;
+            document.getElementById('poll-form-title').textContent = 'Nueva Encuesta';
+            document.getElementById('poll-save-btn').textContent = 'Crear Encuesta';
+            document.getElementById('poll-cancel-edit').classList.add('hidden');
+            document.getElementById('poll-form-panel').classList.remove('hidden');
+            document.getElementById('poll-question').value = '';
+            document.getElementById('poll-options-container').innerHTML = `
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Opciones</label>
+                <input type="text" class="poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Opción 1">
+                <input type="text" class="poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Opción 2">
+            `;
+        }
+
+        function cancelPollEdit() {
+            resetPollForm();
+        }
+
+        function addPollOption() {
+            const container = document.getElementById('poll-options-container');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500';
+            input.placeholder = `Opción ${container.querySelectorAll('.poll-option').length + 1}`;
+            container.appendChild(input);
+        }
+
+        async function loadPolls(eventId) {
+            const list = document.getElementById('polls-list');
+            list.innerHTML = '<p class="text-xs text-slate-500">Cargando...</p>';
+            try {
+                const res = await fetch(`/api/admin/polls?event_id=${eventId}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    Object.keys(pollsCache).forEach(key => delete pollsCache[key]);
+                    if (data.polls.length === 0) {
+                        list.innerHTML = `
+                            <div class="flex flex-col items-center justify-center py-10 text-center">
+                                <button onclick="openNewPoll()" class="w-12 h-12 rounded-full bg-indigo-600/30 text-indigo-200 flex items-center justify-center text-2xl font-bold hover:bg-indigo-500/50 transition-colors">+</button>
+                                <p class="mt-3 text-sm font-bold text-white">Crear tu primera encuesta</p>
+                                <p class="text-xs text-slate-500">Empieza agregando una pregunta y opciones.</p>
+                            </div>
+                        `;
+                        setPollLayout(false);
+                        return;
+                    }
+                    list.innerHTML = data.polls.map(p => {
+                        pollsCache[p.id] = p;
+                        let statusBadge = '<span class="text-[10px] font-bold text-slate-600 uppercase">Borrador</span>';
+                        let actions = '';
+
+                        if (p.status === 'published') {
+                            statusBadge = '<span class="text-[10px] font-bold text-emerald-400 uppercase">Publicada</span>';
+                            actions = `
+                                <button onclick="showPollResults(${p.id})" class="text-[10px] font-bold text-slate-300 hover:text-white uppercase tracking-wider">Resultados</button>
+                                <button onclick="updatePollStatus(${p.id}, ${eventId}, 'closed')" class="text-[10px] font-bold text-red-400 hover:text-red-300 uppercase tracking-wider">Cerrar</button>
+                            `;
+                        } else if (p.status === 'closed') {
+                            statusBadge = '<span class="text-[10px] font-bold text-red-500 uppercase">Cerrada</span>';
+                            actions = `<button onclick="showPollResults(${p.id})" class="text-[10px] font-bold text-slate-300 hover:text-white uppercase tracking-wider">Resultados</button>`;
+                        } else {
+                            // Draft
+                            actions = `
+                                <button onclick="startEditPoll(${p.id})" class="text-[10px] font-bold text-slate-300 hover:text-white uppercase tracking-wider">Editar</button>
+                                <button onclick="updatePollStatus(${p.id}, ${eventId}, 'published')" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider">Publicar</button>
+                            `;
+                        }
+
+                        return `
+                        <div class="bg-navy-800/50 p-3 rounded-lg border border-white/5 flex justify-between items-center group">
+                            <div class="min-w-0 pr-4">
+                                <p class="text-sm font-bold text-white truncate">${p.question}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    ${statusBadge}
+                                    <span class="text-[10px] text-slate-500">· ${p.options.length} opciones</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                ${actions}
+                            </div>
+                        </div>
+                    `}).join('');
+                }
+            } catch (err) {
+                list.innerHTML = '<p class="text-xs text-red-500">Error al cargar encuestas.</p>';
+            }
+        }
+
+        async function updatePollStatus(pollId, eventId, newStatus) {
+            try {
+                const res = await fetch('/api/admin/polls', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ poll_id: pollId, event_id: eventId, status: newStatus })
+                });
+                if (res.ok) {
+                    showToast(`Encuesta ${newStatus === 'published' ? 'publicada' : 'cerrada'}`, 'success');
+                    loadPolls(eventId);
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.message || 'Error al actualizar estado', 'error');
+                }
+            } catch (e) {
+                showToast('Error de conexión', 'error');
+            }
+        }
+
+        function startEditPoll(pollId) {
+            showPollForm();
+            closePollResults();
+            setPollLayout(true);
+            const poll = pollsCache[pollId];
+            if (!poll) return;
+            if (poll.status !== 'draft') {
+                showToast('Solo puedes editar encuestas en borrador', 'error');
+                return;
+            }
+            currentPollEditingId = pollId;
+            document.getElementById('poll-form-title').textContent = 'Editar Encuesta';
+            document.getElementById('poll-save-btn').textContent = 'Guardar cambios';
+            document.getElementById('poll-cancel-edit').classList.remove('hidden');
+            document.getElementById('poll-question').value = poll.question || '';
+            const container = document.getElementById('poll-options-container');
+            container.innerHTML = '<label class="block text-xs font-bold text-slate-500 uppercase mb-1">Opciones</label>';
+            (poll.options || []).forEach((opt, idx) => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'poll-option w-full bg-navy-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500';
+                input.placeholder = `Opción ${idx + 1}`;
+                input.value = opt;
+                container.appendChild(input);
+            });
+        }
+
+        async function showPollResults(pollId) {
+            document.getElementById('poll-form-panel').classList.add('hidden');
+            const panel = document.getElementById('poll-results-panel');
+            const content = document.getElementById('poll-results-content');
+            panel.classList.remove('hidden');
+            setPollLayout(true);
+            content.innerHTML = '<p class="text-xs text-slate-500">Cargando resultados...</p>';
+            try {
+                const res = await fetch(`/api/admin/polls?event_id=${currentPollEventId}&poll_id=${pollId}`);
+                const data = await res.json();
+                if (data.status !== 'success' || !data.results) {
+                    content.innerHTML = '<p class="text-xs text-red-500">No se pudieron cargar los resultados.</p>';
+                    return;
+                }
+                const results = data.results;
+                if (!results.results || results.results.length === 0) {
+                    content.innerHTML = '<p class="text-xs text-slate-500">No hay resultados disponibles.</p>';
+                    return;
+                }
+                const total = results.total_votes || 0;
+                content.innerHTML = `
+                    <div class="mb-2">
+                        <p class="text-sm font-bold text-white">${results.question}</p>
+                        <p class="text-[10px] text-slate-500">${total} votos</p>
+                    </div>
+                    <div class="space-y-3">
+                        ${results.results.map(r => {
+                    const percent = total ? Math.round((r.votes / total) * 100) : 0;
+                    return `
+                                <div>
+                                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
+                                        <span class="text-slate-300">${r.option}</span>
+                                        <span class="text-indigo-300">${percent}% (${r.votes})</span>
+                                    </div>
+                                    <div class="h-2 bg-navy-950/60 rounded-full overflow-hidden">
+                                        <div class="h-full bg-indigo-500/70" style="width:${percent}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                }).join('')}
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = '<p class="text-xs text-red-500">Error al cargar resultados.</p>';
+            }
+        }
+
+        function closePollResults() {
+            const panel = document.getElementById('poll-results-panel');
+            const content = document.getElementById('poll-results-content');
+            panel.classList.add('hidden');
+            content.innerHTML = '<p class="text-xs text-slate-500">Selecciona una encuesta para ver resultados.</p>';
+            if (document.getElementById('poll-form-panel').classList.contains('hidden')) {
+                setPollLayout(false);
+            }
+        }
+
+        async function savePoll() {
+            const question = document.getElementById('poll-question').value.trim();
+            const options = Array.from(document.querySelectorAll('.poll-option'))
+                .map(i => i.value.trim())
+                .filter(v => v !== '');
+
+            if (!question || options.length < 2) {
+                Swal.fire('Error', 'Pregunta y al menos 2 opciones son requeridas', 'error');
+                return;
+            }
+
+            try {
+                const isEdit = !!currentPollEditingId;
+                const res = await fetch('/api/admin/polls', {
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_id: currentPollEventId,
+                        poll_id: currentPollEditingId,
+                        question,
+                        options,
+                        status: 'draft'
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast(isEdit ? 'Encuesta actualizada' : 'Encuesta guardada (Borrador)', 'success');
+                    loadPolls(currentPollEventId);
+                    resetPollForm();
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Fallo de conexión', 'error');
+            }
         }
     </script>
 </body>

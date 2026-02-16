@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficas · Reporte de Audiencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            950: '#050511',
+                            900: '#0a0b16',
+                            800: '#151725',
+                            700: '#1f2236',
+                        },
+                        brand: {
+                            blue: '#4f46e5',
+                        }
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050511;
+        }
+    </style>
+    {% include "includes/theme.html" %}
+</head>
+
+<body class="text-slate-300 min-h-screen antialiased">
+
+    <nav class="event-header border-b border-white/5 bg-[#050511]/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center h-full">
+                <a href="/admin/events" class="hover:opacity-80 transition-opacity flex items-center">
+                    <img src="{{ event['logo_url'] if event and event.get('logo_url') else 'https://produccionesfast.com/assets/img/logo.png' }}"
+                        alt="Logo" class="h-6 w-auto">
+                </a>
+                <div class="h-8 w-px bg-white/10 mx-4 sm:mx-6 hidden sm:block"></div>
+                <span class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase hidden sm:block">Gráficas
+                    de Audiencia</span>
+            </div>
+
+            <div class="hidden md:flex items-center gap-6">
+                {% include "includes/theme_switcher.html" %}
+                <span class="text-sm font-medium text-slate-400">Admin User</span>
+                <a href="/logout" class="text-slate-500 hover:text-white transition-colors" title="Cerrar Sesión">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-10">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+                <a href="{% if event and event.get('slug') %}/e/{{ event['slug'] }}/reports{% else %}/reports?event_id={{ event['id'] }}{% end %}"
+                    class="text-xs font-bold text-slate-500 hover:text-indigo-400 mb-2 block uppercase tracking-wider flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Volver a Reportes
+                </a>
+                <h1 class="text-3xl font-bold text-white">Gráficas del Evento</h1>
+                <p class="text-slate-500">Picos de participación, interacción y el estado de las preguntas.</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold">
+                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5"
+                    id="connection-status">
+                    <span class="w-2 h-2 rounded-full bg-amber-400" id="connection-dot"></span>
+                    <span class="text-slate-300" id="connection-text">Conectando...</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+            <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Participantes activos
+                        </h2>
+                        <span class="text-xs text-slate-500"
+                            title="Personas conectadas recientemente. Si sube, hay más audiencia en ese momento.">ⓘ</span>
+                    </div>
+                    <span class="text-xs text-slate-500">Últimos 60 min</span>
+                </div>
+                <canvas id="chart-active" height="120"></canvas>
+            </div>
+
+            <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Interacción (Chat +
+                            Preguntas)</h2>
+                        <span class="text-xs text-slate-500"
+                            title="Mide cuántos mensajes y preguntas se enviaron por tramo de tiempo.">ⓘ</span>
+                    </div>
+                    <span class="text-xs text-slate-500">Intervalo 5 min</span>
+                </div>
+                <canvas id="chart-engagement" height="120"></canvas>
+            </div>
+
+            <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Tiempo promedio visto
+                        </h2>
+                        <span class="text-xs text-slate-500"
+                            title="Promedio de minutos que cada persona ha visto la transmisión en ese tramo.">ⓘ</span>
+                    </div>
+                    <span class="text-xs text-slate-500">Últimos 60 min</span>
+                </div>
+                <canvas id="chart-retention" height="120"></canvas>
+            </div>
+
+            <div class="bg-navy-900/70 border border-white/10 rounded-2xl p-5 lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Distribución de preguntas
+                        </h2>
+                        <span class="text-xs text-slate-500"
+                            title="Muestra cuántas preguntas están en revisión, aprobadas, rechazadas o ya atendidas.">ⓘ</span>
+                    </div>
+                    <span class="text-xs text-slate-500">En revisión · Aprobadas · Rechazadas · Respondidas</span>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-6 items-center">
+                    <div class="flex items-center justify-center">
+                        <canvas id="chart-questions" height="160" class="w-full max-w-[560px]"></canvas>
+                    </div>
+                    <div class="text-sm text-slate-400 space-y-2">
+                        <p>Este gráfico ayuda a ver si las preguntas avanzan o se están acumulando.</p>
+                        <p>Si crece la parte de <span class="text-amber-300">en revisión</span>, conviene sumar apoyo en
+                            moderación.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dataUrl = "{{ data_url }}";
+        const wsUrl = "{{ ws_url }}";
+
+        const connectionDot = document.getElementById('connection-dot');
+        const connectionText = document.getElementById('connection-text');
+
+        const chartColors = {
+            primary: '#4f46e5',
+            secondary: '#22d3ee',
+            accent: '#f97316',
+            muted: '#94a3b8',
+            success: '#10b981',
+            warning: '#f59e0b'
+        };
+
+        const activeCtx = document.getElementById('chart-active').getContext('2d');
+        const engagementCtx = document.getElementById('chart-engagement').getContext('2d');
+        const retentionCtx = document.getElementById('chart-retention').getContext('2d');
+        const questionsCtx = document.getElementById('chart-questions').getContext('2d');
+
+        const activeChart = new Chart(activeCtx, {
+            type: 'line',
+            data: {
+                labels: [], datasets: [{
+                    label: 'Activos',
+                    data: [],
+                    borderColor: chartColors.primary,
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                    y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const engagementChart = new Chart(engagementCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Chats',
+                        data: [],
+                        borderColor: chartColors.secondary,
+                        backgroundColor: 'rgba(34, 211, 238, 0.2)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2
+                    },
+                    {
+                        label: 'Preguntas',
+                        data: [],
+                        borderColor: chartColors.accent,
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                    y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                },
+                plugins: { legend: { labels: { color: chartColors.muted } } }
+            }
+        });
+
+        const retentionChart = new Chart(retentionCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Minutos promedio',
+                    data: [],
+                    borderColor: chartColors.success,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                    y: { ticks: { color: chartColors.muted }, grid: { color: 'rgba(148,163,184,0.08)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const questionsChart = new Chart(questionsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(59, 130, 246, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: chartColors.muted } } }
+            }
+        });
+
+        function updateCharts(payload) {
+            if (!payload) return;
+
+            const statusLabelMap = {
+                pending: 'En revisión',
+                approved: 'Aprobadas',
+                rejected: 'Rechazadas',
+                read: 'Respondidas'
+            };
+
+            if (payload.active_participants) {
+                activeChart.data.labels = payload.active_participants.labels || [];
+                activeChart.data.datasets[0].data = payload.active_participants.series || [];
+                activeChart.update('none');
+            }
+
+            if (payload.engagement) {
+                engagementChart.data.labels = payload.engagement.labels || [];
+                engagementChart.data.datasets[0].data = payload.engagement.chat || [];
+                engagementChart.data.datasets[1].data = payload.engagement.questions || [];
+                engagementChart.update('none');
+            }
+
+            if (payload.retention) {
+                retentionChart.data.labels = payload.retention.labels || [];
+                retentionChart.data.datasets[0].data = payload.retention.series || [];
+                retentionChart.update('none');
+            }
+
+            if (payload.question_status) {
+                const rawLabels = payload.question_status.labels || [];
+                questionsChart.data.labels = rawLabels.map(label => statusLabelMap[label] || label);
+                questionsChart.data.datasets[0].data = payload.question_status.series || [];
+                questionsChart.update('none');
+            }
+        }
+
+        async function loadCharts() {
+            try {
+                const response = await fetch(dataUrl, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('No se pudo cargar las gráficas');
+                const payload = await response.json();
+                updateCharts(payload);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function setConnectionState(connected) {
+            if (connected) {
+                connectionDot.classList.remove('bg-amber-400');
+                connectionDot.classList.add('bg-emerald-400');
+                connectionText.textContent = 'En tiempo real';
+            } else {
+                connectionDot.classList.remove('bg-emerald-400');
+                connectionDot.classList.add('bg-amber-400');
+                connectionText.textContent = 'Reconectando...';
+            }
+        }
+
+        function initWebSocket() {
+            const socket = new WebSocket(wsUrl);
+
+            socket.addEventListener('open', () => setConnectionState(true));
+            socket.addEventListener('close', () => {
+                setConnectionState(false);
+                setTimeout(initWebSocket, 2500);
+            });
+            socket.addEventListener('error', () => setConnectionState(false));
+            socket.addEventListener('message', event => {
+                try {
+                    const payload = JSON.parse(event.data);
+                    if (payload.type === 'reports_charts') {
+                        updateCharts(payload);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCharts();
+            initWebSocket();
+        });
+    </script>
+</body>
+
+</html>

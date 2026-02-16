@@ -3,9 +3,9 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: transmisionesfast-tornado-dev
+    container_name: transmisionesfast-tornado
     ports:
-      - "8069:8888"
+      - "8000:8888"
     environment:
       # Credenciales para tu base de datos remota
       - DB_HOST=${DB_HOST}
@@ -13,19 +13,44 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - COOKIE_SECRET=${COOKIE_SECRET}
-      # Redis interno en la red Docker
+      # Redis interno en la red Docker (telemetría solo Redis, no MySQL)
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - TELEMETRY_BACKEND=redis
+      - PING_BACKEND=redis
+      - CHAT_RECENT_IN_REDIS=1
+      - WATCH_CACHE_TTL_SECONDS=5
+      - REPORTS_CACHE_TTL_SECONDS=5
+      - BROADCAST_PUBSUB=1
     volumes:
-      # Si necesitas persistir logs u otros archivos en tu volumen extra
-      - /mnt/tornado/logs:/app/logs
+      # Código local para desarrollo rápido (Hot Reload/Quick Restart)
+      - .:/app
+      # Logs en volumen externo
+      - /mnt/transmisionesfast_app/transmision-tornado/logs:/app/logs
     restart: always
     depends_on:
       - redis
+    # Límites de logs para no llenar el disco principal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"  # Tornado puede generar muchos logs
+        max-file: "5"
 
   redis:
     image: redis:alpine
-    container_name: transmisionesfast-redis-dev
+    container_name: transmisionesfast-redis
     ports:
-      - "6369:6379"
+      - "9000:6379"
     restart: always
+    volumes:
+      # Persistencia de Redis en volumen externo
+      - /mnt/transmisionesfast_app/transmision-tornado/redis-data:/data
+    # Habilitar persistencia AOF (append-only file)
+    command: redis-server --appendonly yes --save 60 1
+    # Límites de logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "30m"
+        max-file: "3"
